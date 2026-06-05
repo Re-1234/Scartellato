@@ -2,14 +2,13 @@ import lark
 from lark import Lark, grammar
 
 
-
 def compilatore(source: str) -> str:
-   valore = 2
-   valore = "ciao"
-   Grammar = (r"""
+    valore = 2
+    valore = "ciao"
+    Grammar = (r"""
                //tipo di dati
-               
-               BOOLEAN : /"true"|"false"/
+
+               LOTA : /"sasicchj"|"friariell"/
                BOOLEAN1: "boolean"
                NUMR: /\d+?(.\d+) /
                NUMR1: "numer
@@ -22,7 +21,7 @@ def compilatore(source: str) -> str:
                VOID: "vacant"
                //tipo generico   
                TYP: "var" 
-            
+
               //operazioni
                DIVISIONEUGUALE: "*="
                MOLTIPLICAUGUALE: "/="
@@ -36,7 +35,7 @@ def compilatore(source: str) -> str:
                PLUSPLUS: "++"
                MENMEN: "--"
                RESTO: "%"
-               
+
               //operazioni logiche          
                OR: "or" | "||" 
                AND: "and" | "&&"
@@ -47,7 +46,7 @@ def compilatore(source: str) -> str:
                MAGGIOREUGUALE: ">="
                MINORE: "<"
                MINOREUGUALE: "<="
-               
+
               //PARENTESSI 
                TONDASINISTRA: ")"
                TONDADESTRA: "("
@@ -79,12 +78,11 @@ def compilatore(source: str) -> str:
                //return
                CCASTA: "ccàsta"
                TERMINATOR: ";"
-               
-               
+
+
                %ignore /\s+/
                %ignore /\/\/[^\n]*/
                %ignore /\/\*[\s\S]*\*\//        
                start: /\s\S/     
            """
-    )
-
+               )
