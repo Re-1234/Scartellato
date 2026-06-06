@@ -9,7 +9,7 @@ def compilatore(source: str) -> str:
                //tipo di dati
 
                LOTA : /"sasicchj"|"friariell"/
-               BOOLEAN1: "boolean"
+               BOOLEAN1: "lota"
                NUMR: /\d+?(.\d+) /
                NUMR1: "numer
                STRINGA: "??"/\w+/"??"
