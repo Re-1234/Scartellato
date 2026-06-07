@@ -1,7 +1,7 @@
 //tipo di dati
         BOOLEAN : /sasicchj|friariell/
         LOTA_TK: "lota"
-        NUMERO: /\d+(\.\d+)?/
+        NUMERO: /\d+(\.\d+)?e/
         NUMR_TK: "numr"
         STRINGA: /\?\?[^?]+\?\?/
         NBRUOGGLIO_TK: "nbruogglio"
@@ -52,7 +52,6 @@
         MARONN: "maronn"
         MESTIER: "mestier"
         MAIN: "maradona"
-        VIRGULET: "\\?"
         NUNCSTANIENT: "NULL"
         SCCASCIA: "sccascià"
         CCASTA: "ccàsta"
