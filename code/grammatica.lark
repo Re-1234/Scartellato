@@ -67,125 +67,119 @@
         %ignore /\/\*[\s\S]*\*\//
 
 
-        start: funzioni MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA funzioni
+        start: dichiarazioni_globali VOID MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA dichiarazioni_globali
+     | MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
 
-        blocco: istruzione blocco
-              |
+dichiarazioni_globali: elemento_globale dichiarazioni_globali
+                     |
 
-        istruzione: dichiarazione
-                  | classe
-                  | assegnazione
-                  | if_stmt
-                  | while_stmt
-                  | for_stmt
-                  | return_stmt
-                  | break_stmt
+elemento_globale: funzione
+                | classe
 
-        break_stmt: SCCASCIA TERMINATOR
+blocco: istruzione blocco
+      |
 
-        return_stmt: CCASTA ID TERMINATOR
-                   | CCASTA TERMINATOR
+istruzione: dichiarazione
+          | for_stmt
+          | while_stmt
+          | if_stmt
+          | return_stmt
 
-        dichiarazione: GEN_TYPE decl_resto
-                     | LOTA_TK decl_resto
-                     | NUMR_TK decl_resto
-                     | NBRUOGGLIO_TK decl_resto
-                     | LETTER_TK decl_resto
+return_stmt: SCCASCIA TERMINATOR
+           | CCASTA ID TERMINATOR
+           | CCASTA TERMINATOR
 
+dichiarazione: tipo decl_resto ASSIGN expr TERMINATOR
+             | tipo decl_resto TERMINATOR
 
-        decl_resto: ID
-                  | QUADRATASINISTRA QUADRATADESTRA ID
+tipo: GEN_TYPE
+    | LOTA_TK
+    | NUMR_TK
+    | NBRUOGGLIO_TK
+    | LETTER_TK
 
-        classe: ROBA ID GRAFFASINISTRA funzioni GRAFFADESTRA
+decl_resto: ID
+          | QUADRATASINISTRA QUADRATADESTRA ID
 
-        funzioni: funzione funzioni
-                |
+classe: ROBA ID GRAFFASINISTRA membri_e_funzioni GRAFFADESTRA
 
-        funzione: tipo_ritorno MESTIER TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-
-        tipo_ritorno: GEN_TYPE
-                    | LOTA_TK
-                    | NUMR_TK
-                    | NBRUOGGLIO_TK
-                    | LETTER_TK
-                    | VOID
-
-        tipo_ritorno_array: tipo_ritorno QUADRATASINISTRA QUADRATADESTRA
-                          | tipo_ritorno
-
-        parametri: parametri "," dichiarazione
-                 | dichiarazione
+membri_e_funzioni: membro membri_e_funzioni
                  |
 
-        assegnazione: ID ASSIGN expr TERMINATOR
-                    | ID DIVISIONEUGUALE expr TERMINATOR
-                    | ID MOLTIPLICAUGUALE expr TERMINATOR
-                    | ID ADDIZIONEUGUALE expr TERMINATOR
-                    | ID MENOUGUALE expr TERMINATOR
+membro: dichiarazione
+      | funzione
 
-        if_stmt: METTIMCA TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA else_stmt
-               | METTIMCA TONDASINISTRA expr TONDADESTRA istruzione ALLORFAACCUSSI istruzione
+funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+        | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+        | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
 
-        else_stmt: ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA
-                 |
+parametri: parametri "," dichiarazione
+         | dichiarazione
+         |
 
-        while_stmt: ASPE TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                  | ASPE TONDASINISTRA expr TONDADESTRA istruzione
+if_stmt: METTIMCA TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA else_stmt
+       | METTIMCA TONDASINISTRA expr TONDADESTRA istruzione ALLORFAACCUSSI istruzione
 
-        for_stmt: MARONN TONDASINISTRA TERMINATOR expr TERMINATOR TONDADESTRA for_corpo
-                | MARONN TONDASINISTRA GEN_TYPE ID ASSIGN valore TERMINATOR expr TERMINATOR incremento TONDADESTRA for_corpo
-                | MARONN TONDASINISTRA ID ASSIGN valore TERMINATOR expr TERMINATOR incremento TONDADESTRA for_corpo
+else_stmt: ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA
+         |
 
-        incremento: ID PLUSPLUS
-                  | PLUSPLUS ID
-                  | MENMEN ID
-                  | ID MENMEN
-                  |
+while_stmt: ASPE TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+          | ASPE TONDASINISTRA expr TONDADESTRA istruzione
 
-        for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
-                 | istruzione
+for_stmt: MARONN TONDASINISTRA TERMINATOR expr TERMINATOR TONDADESTRA for_corpo
+        | MARONN TONDASINISTRA tipo_for ID ASSIGN expr TERMINATOR expr TERMINATOR incremento TONDADESTRA for_corpo
 
-        valore: BOOLEAN
-              | NUMERO
-              | STRINGA
-              | CARATTERE
-              | ID
+tipo_for: NUMR_TK
+        | LOTA_TK
+        | NBRUOGGLIO_TK
+        | LETTER_TK
+        | GEN_TYPE
+        |
 
-        expr: expr OR expr_and
-            | expr_and
+incremento: ID PLUSPLUS
+          | PLUSPLUS ID
+          | MENMEN ID
+          | ID MENMEN
+          |
 
-        expr_and: expr_and AND expr_eq
-                | expr_eq
+for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
+         | istruzione
 
-        expr_eq: expr_eq EQUALS expr_rel
-               | expr_eq DIVERSO expr_rel
-               | expr_rel
+expr: expr OR expr_and
+    | expr_and
 
-        expr_rel: expr_rel MAGGIORE expr_add
-                | expr_rel MAGGIOREUGUALE expr_add
-                | expr_rel MINORE expr_add
-                | expr_rel MINOREUGUALE expr_add
-                | expr_add
+expr_and: expr_and AND expr_eq
+        | expr_eq
 
-        expr_add: expr_add ADDIZIONE expr_mul
-                | expr_add MENO expr_mul
-                | expr_mul
+expr_eq: expr_eq EQUALS expr_rel
+       | expr_eq DIVERSO expr_rel
+       | expr_rel
 
-        expr_mul: expr_mul MOLTIPLICA expr_unary
-                | expr_mul DIVISIONE expr_unary
-                | expr_mul RESTO expr_unary
-                | expr_unary
+expr_rel: expr_rel MAGGIORE expr_add
+        | expr_rel MAGGIOREUGUALE expr_add
+        | expr_rel MINORE expr_add
+        | expr_rel MINOREUGUALE expr_add
+        | expr_add
 
-        expr_unary: NOT expr_unary
-                  | PLUSPLUS expr_primary
-                  | MENMEN expr_primary
-                  | expr_primary PLUSPLUS
-                  | expr_primary MENMEN
-                  | expr_primary
+expr_add: expr_add ADDIZIONE expr_mul
+        | expr_add MENO expr_mul
+        | expr_mul
 
-        expr_primary: TONDASINISTRA expr TONDADESTRA
-                    | NUMERO
-                    | BOOLEAN
-                    | STRINGA
-                    | CARATTERE
-                    | ID
+expr_mul: expr_mul MOLTIPLICA expr_unary
+        | expr_mul DIVISIONE expr_unary
+        | expr_mul RESTO expr_unary
+        | expr_unary
+
+expr_unary: NOT expr_unary
+          | PLUSPLUS expr_primary
+          | MENMEN expr_primary
+          | expr_primary PLUSPLUS
+          | expr_primary MENMEN
+          | expr_primary
+
+expr_primary: TONDASINISTRA expr TONDADESTRA
+            | NUMERO
+            | BOOLEAN
+            | STRINGA
+            | CARATTERE
+            | ID

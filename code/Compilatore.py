@@ -12,5 +12,9 @@ def compilatore(source: str) -> str:
 
 compilatore("""maradona ) nbruogglio ] [ args ( }
         nbruogglio a = ??sifasf23??!
+        nbruogglio v = ??sapposto??!
+        
+        var c = a+v !
+        
     {
 """)
