@@ -8,5 +8,4 @@ def compilatore(source: str) -> str:
     for token in parser.lex(source):
         print(token)
 
-
 compilatore("nbruogglio a = ??sifasf23??!")

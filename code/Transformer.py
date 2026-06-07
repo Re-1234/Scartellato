@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from lark import Lark, Transformer, Tree, Token
+from typing import Any
 
 @dataclass(frozen=True)
 class Numr:
@@ -16,4 +17,17 @@ class Boolean:
     value: bool
 
 @dataclass(frozen=True)
-class
+class String:
+    value: str
+
+@dataclass(frozen=True)
+class Carattr:
+    value: str
+    def __post_init__(self):
+        if len(self.value) != 1:
+            raise ValueError("value deve contenere un solo carattere")
+
+@dataclass(frozen=True)
+class GenericVar:
+    value: Any
+
