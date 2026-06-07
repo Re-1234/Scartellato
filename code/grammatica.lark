@@ -92,6 +92,7 @@
                      | NBRUOGGLIO_TK decl_resto
                      | LETTER_TK decl_resto
 
+
         decl_resto: ID
                   | QUADRATASINISTRA QUADRATADESTRA ID
 
