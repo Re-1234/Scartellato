@@ -31,3 +31,14 @@ class Carattr:
 class GenericVar:
     value: Any
 
+@dataclass(frozen=True)
+class Assegnazione:
+    op: str
+    leftpos=object
+    rightpos=object
+
+@dataclass(frozen=True)
+class Condizione:
+    op: OpBin
+    allora: object
+    altrimenti: object

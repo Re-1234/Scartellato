@@ -9,7 +9,7 @@
         CARATTERE:  /\?[^?]\?/
         LETTER_TK: "lettr"
         VOID: "vacant"
-        GEN_TYPE: "var"
+        GEN_TYPE: "burdell"    //variabile generica
 
         //operazioni
         DIVISIONEUGUALE: "*="
@@ -45,22 +45,17 @@
         QUADRATADESTRA: "["
 
         //Keyword
-        METTIMCA: "mettimcà"
-        ALLORFAACCUSSI: "allor_fa_accussi"
-        ROBA: "roba"
-        ASPE: "aspe"
-        MARONN: "maronn"
-        MESTIER: "mestier"
+        METTIMCA: "mettimcà"  //if
+        ALLORFAACCUSSI: "allor_fa_accussi" //else
+        ROBA: "robba"                     //classe
+        ASPE: "aspe"                     //while
+        AMBRESS_AMBRESS: "ambressAmbress"  //for
+        MESTIER: "mestier"      //funzione
         MAIN: "maradona"
-        NUNCSTANIENT: "NULL"
-        SCCASCIA: "sccascià"
-        CCASTA: "ccàsta"
-        TERMINATOR: "!"
-
-        PUBLIC:    "public"
-        PRIVATE:   "private"
-        PROTECTED: "protected"
-
+        NULL: "Nuncsta_nient"  //null
+        SCCASCIA: "sccascia"  //break
+        CCASTA: "ccàsta"     //return
+        TERMINATORE: "!"    //fine istruzione
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
@@ -68,118 +63,118 @@
 
 
         start: dichiarazioni_globali VOID MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA dichiarazioni_globali
-     | MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+        | MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
 
-dichiarazioni_globali: elemento_globale dichiarazioni_globali
-                     |
-
-elemento_globale: funzione
-                | classe
-
-blocco: istruzione blocco
-      |
-
-istruzione: dichiarazione
-          | for_stmt
-          | while_stmt
-          | if_stmt
-          | return_stmt
-
-return_stmt: SCCASCIA TERMINATOR
-           | CCASTA ID TERMINATOR
-           | CCASTA TERMINATOR
-
-dichiarazione: tipo decl_resto ASSIGN expr TERMINATOR
-             | tipo decl_resto TERMINATOR
-
-tipo: GEN_TYPE
-    | LOTA_TK
-    | NUMR_TK
-    | NBRUOGGLIO_TK
-    | LETTER_TK
-
-decl_resto: ID
-          | QUADRATASINISTRA QUADRATADESTRA ID
-
-classe: ROBA ID GRAFFASINISTRA membri_e_funzioni GRAFFADESTRA
-
-membri_e_funzioni: membro membri_e_funzioni
+        dichiarazioni_globali: elemento_globale dichiarazioni_globali
+                             |
+        
+        elemento_globale: funzione
+                        | classe
+        
+        blocco: istruzione blocco
+              |
+        
+        istruzione: dichiarazione
+                  | for_stmt
+                  | while_stmt
+                  | if_stmt
+                  | return_stmt
+        
+        return_stmt: SCCASCIA TERMINATORE
+                   | CCASTA ID TERMINATORE
+                   | CCASTA TERMINATORE
+        
+        dichiarazione: tipo decl_resto ASSIGN expr TERMINATORE
+                     | tipo decl_resto TERMINATORE
+        
+        tipo: GEN_TYPE
+            | LOTA_TK
+            | NUMR_TK
+            | NBRUOGGLIO_TK
+            | LETTER_TK
+        
+        decl_resto: ID
+                  | QUADRATASINISTRA QUADRATADESTRA ID
+        
+        classe: ROBA ID GRAFFASINISTRA membri_e_funzioni GRAFFADESTRA
+        
+        membri_e_funzioni: membro membri_e_funzioni
+                         |
+        
+        membro: dichiarazione
+              | funzione
+        
+        funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+                | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+        
+        parametri: parametri "," dichiarazione
+                 | dichiarazione
                  |
-
-membro: dichiarazione
-      | funzione
-
-funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-        | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-        | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-
-parametri: parametri "," dichiarazione
-         | dichiarazione
-         |
-
-if_stmt: METTIMCA TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA else_stmt
-       | METTIMCA TONDASINISTRA expr TONDADESTRA istruzione ALLORFAACCUSSI istruzione
-
-else_stmt: ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA
-         |
-
-while_stmt: ASPE TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-          | ASPE TONDASINISTRA expr TONDADESTRA istruzione
-
-for_stmt: MARONN TONDASINISTRA TERMINATOR expr TERMINATOR TONDADESTRA for_corpo
-        | MARONN TONDASINISTRA tipo_for ID ASSIGN expr TERMINATOR expr TERMINATOR incremento TONDADESTRA for_corpo
-
-tipo_for: NUMR_TK
-        | LOTA_TK
-        | NBRUOGGLIO_TK
-        | LETTER_TK
-        | GEN_TYPE
-        |
-
-incremento: ID PLUSPLUS
-          | PLUSPLUS ID
-          | MENMEN ID
-          | ID MENMEN
-          |
-
-for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
-         | istruzione
-
-expr: expr OR expr_and
-    | expr_and
-
-expr_and: expr_and AND expr_eq
-        | expr_eq
-
-expr_eq: expr_eq EQUALS expr_rel
-       | expr_eq DIVERSO expr_rel
-       | expr_rel
-
-expr_rel: expr_rel MAGGIORE expr_add
-        | expr_rel MAGGIOREUGUALE expr_add
-        | expr_rel MINORE expr_add
-        | expr_rel MINOREUGUALE expr_add
-        | expr_add
-
-expr_add: expr_add ADDIZIONE expr_mul
-        | expr_add MENO expr_mul
-        | expr_mul
-
-expr_mul: expr_mul MOLTIPLICA expr_unary
-        | expr_mul DIVISIONE expr_unary
-        | expr_mul RESTO expr_unary
-        | expr_unary
-
-expr_unary: NOT expr_unary
-          | PLUSPLUS expr_primary
-          | MENMEN expr_primary
-          | expr_primary PLUSPLUS
-          | expr_primary MENMEN
-          | expr_primary
-
-expr_primary: TONDASINISTRA expr TONDADESTRA
-            | NUMERO
-            | BOOLEAN
-            | STRINGA
-            | CARATTERE
-            | ID
+        
+        if_stmt: METTIMCA TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA else_stmt
+               | METTIMCA TONDASINISTRA expr TONDADESTRA istruzione ALLORFAACCUSSI istruzione
+        
+        else_stmt: ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA
+                 |
+        
+        while_stmt: ASPE TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+                  | ASPE TONDASINISTRA expr TONDADESTRA istruzione
+        
+        for_stmt: ambressAmbress TONDASINISTRA TERMINATORE expr TERMINATORE TONDADESTRA for_corpo
+                | ambressAmbress TONDASINISTRA tipo_for ID ASSIGN expr TERMINATORE expr TERMINATORE incremento TONDADESTRA for_corpo
+        
+        tipo_for: NUMR_TK
+                | LOTA_TK
+                | NBRUOGGLIO_TK
+                | LETTER_TK
+                | GEN_TYPE
+                |
+        
+        incremento: ID PLUSPLUS
+                  | PLUSPLUS ID
+                  | MENMEN ID
+                  | ID MENMEN
+                  |
+        
+        for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
+                 | istruzione
+        
+        expr: expr OR expr_and
+            | expr_and
+        
+        expr_and: expr_and AND expr_eq
+                | expr_eq
+        
+        expr_eq: expr_eq EQUALS expr_rel
+               | expr_eq DIVERSO expr_rel
+               | expr_rel
+        
+        expr_rel: expr_rel MAGGIORE expr_add
+                | expr_rel MAGGIOREUGUALE expr_add
+                | expr_rel MINORE expr_add
+                | expr_rel MINOREUGUALE expr_add
+                | expr_add
+        
+        expr_add: expr_add ADDIZIONE expr_mul
+                | expr_add MENO expr_mul
+                | expr_mul
+        
+        expr_mul: expr_mul MOLTIPLICA expr_unary
+                | expr_mul DIVISIONE expr_unary
+                | expr_mul RESTO expr_unary
+                | expr_unary
+        
+        expr_unary: NOT expr_unary
+                  | PLUSPLUS expr_primary
+                  | MENMEN expr_primary
+                  | expr_primary PLUSPLUS
+                  | expr_primary MENMEN
+                  | expr_primary
+        
+        expr_primary: TONDASINISTRA expr TONDADESTRA
+                    | NUMERO
+                    | BOOLEAN
+                    | STRINGA
+                    | CARATTERE
+                    | ID

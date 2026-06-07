@@ -4,7 +4,8 @@ from lark import Lark, UnexpectedToken, UnexpectedCharacters
 def compilatore(source: str) -> str:
 
     
-    parser = Lark.open("grammatica.lark",parser="lalr")
+    parser = Lark.open("grammatica.lark",parser="lalr",propagate_positions=True)
+    tree = parser.parse(source)
     for token in parser.lex(source):
         print(token)
 
@@ -25,6 +26,11 @@ def compilatore(source: str) -> str:
 compilatore("""maradona ) nbruogglio ] [ args ( }
         nbruogglio a = ??sifasf23??!
         nbruogglio v = ??sapposto??!
+        mettimcà )v!=a( }
+            numr s = 5 !
+        { allor_fa_accussi}
+            var z=9!
+        {
         
         var c = a+v !
         
