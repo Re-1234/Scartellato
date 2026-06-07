@@ -11,7 +11,7 @@ def compilatore(source: str) -> str:
                LOTA : /"sasicchj"|"friariell"/
                BOOLEAN1: "boolean"
                NUMR: /\d+?(.\d+) /
-               NUMR1: "numer
+               NUMR1: "numer"
                STRINGA: "??"/\w+/"??"
                NBRUOGGLIO: "nbruogglio"
                ID: /[a-zA-Z_]\w*/ 
@@ -70,7 +70,6 @@ def compilatore(source: str) -> str:
                //main
                MAIN: "maradona"
                //utilizzi generali
-               VIRGULET: "\\?"
                //il null
                NUNCSTANIENT: "NULL"
                //break
@@ -85,4 +84,4 @@ def compilatore(source: str) -> str:
                %ignore /\/\*[\s\S]*\*\//        
                start: /\s\S/     
            """
-               )
+)
