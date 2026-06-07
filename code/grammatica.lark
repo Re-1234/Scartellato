@@ -1,9 +1,9 @@
 //tipo di dati
         BOOLEAN : /sasicchj|friariell/
         LOTA_TK: "lota"
-        NUMERO: /\d+(\.\d+)?e/
+        NUMERO: /\d+(\.\d+)?e?/
         NUMR_TK: "numr"
-        STRINGA: /\?\?[^?]+\?\?/
+        STRINGA: /\?\?[^?]*\?\?/
         NBRUOGGLIO_TK: "nbruogglio"
         ID: /[a-zA-Z_]\w*/
         CARATTERE:  /\?[^?]\?/
@@ -28,7 +28,7 @@
         //operazioni logiche
         OR: "or" | "||"
         AND: "and" | "&&"
-        NOT: "not" | "!"
+        NOT: "not" | "!!"
         EQUALS: "=="
         DIVERSO: "!="
         MAGGIORE: ">"
@@ -61,124 +61,4 @@
         %ignore /\/\/[^\n]*/
         %ignore /\/\*[\s\S]*\*\//
 
-        start: funzioni MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA funzioni
-
-        blocco: istruzione blocco
-              |
-
-        istruzione: dichiarazione
-                  | classe
-                  | assegnazione
-                  | if_stmt
-                  | while_stmt
-                  | for_stmt
-                  | return_stmt
-                  | break_stmt
-
-        break_stmt: SCCASCIA TERMINATOR
-
-        return_stmt: CCASTA ID TERMINATOR
-                   | CCASTA TERMINATOR
-
-        dichiarazione: GEN_TYPE decl_resto
-                     | LOTA_TK decl_resto
-                     | NUMR_TK decl_resto
-                     | NBRUOGGLIO_TK decl_resto
-                     | LETTER_TK decl_resto
-
-        decl_resto: ID
-                  | QUADRATASINISTRA QUADRATADESTRA ID
-
-        classe: ROBA ID GRAFFASINISTRA funzioni GRAFFADESTRA
-
-        funzioni: funzione funzioni
-                |
-
-        funzione: tipo_ritorno MESTIER TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-
-        tipo_ritorno: GEN_TYPE
-                    | LOTA_TK
-                    | NUMR_TK
-                    | NBRUOGGLIO_TK
-                    | LETTER_TK
-                    | VOID
-
-        tipo_ritorno_array: tipo_ritorno QUADRATASINISTRA QUADRATADESTRA
-                          | tipo_ritorno
-
-        parametri: parametri VIRGULET dichiarazione
-                 | dichiarazione
-                 |
-
-        assegnazione: ID ASSIGN expr TERMINATOR
-                    | ID DIVISIONEUGUALE expr TERMINATOR
-                    | ID MOLTIPLICAUGUALE expr TERMINATOR
-                    | ID ADDIZIONEUGUALE expr TERMINATOR
-                    | ID MENOUGUALE expr TERMINATOR
-
-        if_stmt: METTIMCA TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA else_stmt
-               | METTIMCA TONDASINISTRA expr TONDADESTRA istruzione ALLORFAACCUSSI istruzione
-
-        else_stmt: ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA
-                 |
-
-        while_stmt: ASPE TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                  | ASPE TONDASINISTRA expr TONDADESTRA istruzione
-
-        for_stmt: MARONN TONDASINISTRA TERMINATOR expr TERMINATOR TONDADESTRA for_corpo
-                | MARONN TONDASINISTRA GEN_TYPE ID ASSIGN valore TERMINATOR expr TERMINATOR incremento TONDADESTRA for_corpo
-                | MARONN TONDASINISTRA ID ASSIGN valore TERMINATOR expr TERMINATOR incremento TONDADESTRA for_corpo
-
-        incremento: ID PLUSPLUS
-                  | PLUSPLUS ID
-                  | MENMEN ID
-                  | ID MENMEN
-                  |
-
-        for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
-                 | istruzione
-
-        valore: BOOLEAN
-              | NUMERO
-              | STRINGA
-              | CARATTERE
-              | ID
-
-        expr: expr OR expr_and
-            | expr_and
-
-        expr_and: expr_and AND expr_eq
-                | expr_eq
-
-        expr_eq: expr_eq EQUALS expr_rel
-               | expr_eq DIVERSO expr_rel
-               | expr_rel
-
-        expr_rel: expr_rel MAGGIORE expr_add
-                | expr_rel MAGGIOREUGUALE expr_add
-                | expr_rel MINORE expr_add
-                | expr_rel MINOREUGUALE expr_add
-                | expr_add
-
-        expr_add: expr_add ADDIZIONE expr_mul
-                | expr_add MENO expr_mul
-                | expr_mul
-
-        expr_mul: expr_mul MOLTIPLICA expr_unary
-                | expr_mul DIVISIONE expr_unary
-                | expr_mul RESTO expr_unary
-                | expr_unary
-
-        expr_unary: NOT expr_unary
-                  | PLUSPLUS expr_primary
-                  | MENMEN expr_primary
-                  | expr_primary PLUSPLUS
-                  | expr_primary MENMEN
-                  | expr_primary
-
-        expr_primary: TONDASINISTRA expr TONDADESTRA
-                    | NUMERO
-                    | BOOLEAN
-                    | STRINGA
-                    | CARATTERE
-                    | ID
+        start: funzioni MAIN TONDASINISTRA 
