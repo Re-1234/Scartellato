@@ -23,16 +23,29 @@ def compilatore(source: str) -> str:
 
 
 
-compilatore("""maradona ) nbruogglio ] [ args ( }
-        nbruogglio a = ??sifasf23??!
-        nbruogglio v = ??sapposto??!
-        mettimcà )v!=a( }
-            numr s = 5 !
-        { allor_fa_accussi}
-            var z=9!
+compilatore(""" 
+
+         vacant mestier pippo ) numr a , numr b ( } 
+           nbruogglio r = a + b !
         {
+             
+         robba mimmo}
+            nbruogglio r = ??sdfdaf?? !
+            vacant mestier mimmo) ( }
+                burdell a = r !
+            {
         
-        var c = a+v !
-        
-    {
+        {
+
+        Uè ) nbruogglio ] [ args ( }
+            nbruogglio a = ??sifasf23?? !
+            nbruogglio v = ??sapposto?? !
+            mettimcà ) v != a ( }
+                numr s = 5 !
+            { allor_fa_accussi }
+                burdell z = 9 !
+            {
+            burdell c = a + v !
+        {
+    
 """)
