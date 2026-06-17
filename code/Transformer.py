@@ -42,3 +42,19 @@ class Condizione:
     op: OpBin
     allora: object
     altrimenti: object
+
+@dataclass(frozen=True)
+class Parentessi:
+    parentessi: str
+
+@dataclass(frozen=True)
+class Funzione:
+    funzione: str
+    parentessi: Parentessi
+    parametri: list[object]
+    tipi: list[str]
+
+@dataclass(frozen=True)
+class Classe:
+    classe: str
+

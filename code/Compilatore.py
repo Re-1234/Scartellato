@@ -5,7 +5,6 @@ def compilatore(source: str) -> str:
 
     
     parser = Lark.open("grammatica.lark",parser="lalr",propagate_positions=True)
-    tree = parser.parse(source)
     for token in parser.lex(source):
         print(token)
 
@@ -25,7 +24,7 @@ def compilatore(source: str) -> str:
 
 compilatore(""" 
 
-         vacant mestier pippo ) numr a , numr b ( } 
+        vacant mestier pippo ) numr a , numr b ( } 
            nbruogglio r = a + b !
         {
              
