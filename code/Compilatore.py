@@ -30,13 +30,13 @@ compilatore("""
              
          robba mimmo}
             nbruogglio r = ??sdfdaf?? !
-            vacant mestier mimmo) ( }
+            vacant mestier classeFunzioneMimmo) ( }
                 burdell a = r !
             {
         
         {
 
-        Uè ) nbruogglio ] [ args ( }
+         vacant Uè ) nbruogglio ] [ args ( }
             nbruogglio a = ??sifasf23?? !
             nbruogglio v = ??sapposto?? !
             mettimcà ) v != a ( }
@@ -44,7 +44,7 @@ compilatore("""
             { allor_fa_accussi }
                 burdell z = 9 !
             {
-            burdell c = a + v !
+            burdell c = a - v !
         {
     
 """)

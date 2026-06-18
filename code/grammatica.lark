@@ -1,6 +1,6 @@
 //tipo di dati
         BOOLEAN : /sasicchj|friariell/
-        LOTA_TK: "lota"
+        LOTA_TK: "lota"                 // token per boolean
         NUMERO: /\d+(\.\d+)?e?/
         NUMR_TK: "numr"
         STRINGA: /\?\?[^?]*\?\?/
@@ -64,25 +64,24 @@
 
 
 
-        ?start:  top_level VOID MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA  top_level ->void_main
-             |  top_level MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA  top_level -> main
-             |  top_level
+        start:  _top_level* main_opzione MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA  _top_level*
+             |  _top_level+
+
+        ?main_opzione: VOID |
 
 
-        ?top_level: (funzione | classe)*
-                    |
+        _top_level: funzione
+                  | classe
 
-        //BLOCCO E ISTRUZIONI
+        //  BLOCCO E ISTRUZIONI
 
-        ?blocco: istruzione
-              | blocco istruzione
-              |
+        blocco: _istruzione*
 
-        ?istruzione: dichiarazione
-                  | for_stmt
-                  | while_stmt
-                  | if_stmt
-                  | return_stmt
+        _istruzione: dichiarazione
+                   | for_stmt
+                   | while_stmt
+                   | if_stmt
+                   | return_stmt
 
         // RETURN E BREAK
 
@@ -90,73 +89,69 @@
                    | CCASTA ID TERMINATORE
                    | CCASTA TERMINATORE
 
-        //DICHIARAZIONI DI VARIABILI
+        // DICHIARAZIONI DI VARIABILI
 
-        ?dichiarazione: tipo nome_var ASSIGN assegnamento_composto TERMINATORE
+        dichiarazione: tipo nome_var ASSIGN assegnamento_composto TERMINATORE
                      | tipo nome_var TERMINATORE
 
-        tipo: GEN_TYPE
+        ?tipo: GEN_TYPE
             | LOTA_TK
             | NUMR_TK
             | NBRUOGGLIO_TK
             | LETTER_TK
 
-        nome_var: ID
+        ?nome_var: ID
                 | QUADRATASINISTRA QUADRATADESTRA ID
 
-        // ASSEGNAMENTO COMPOSTO
-
-        ?assegnamento_composto: expr
-                             | expr DIVISIONEUGUALE  assegnamento_composto
-                             | expr MOLTIPLICAUGUALE assegnamento_composto
-                             | expr ADDIZIONEUGUALE  assegnamento_composto
-                             | expr MENOUGUALE       assegnamento_composto
 
         //CLASSI
 
-        ?classe: ROBA ID GRAFFASINISTRA campi metodi campi GRAFFADESTRA
+        classe:   ROBA ID GRAFFASINISTRA campi metodi  GRAFFADESTRA
+                | ROBA ID GRAFFASINISTRA metodi campi  GRAFFADESTRA
+                | ROBA ID GRAFFASINISTRA campi metodi campi  GRAFFADESTRA
+                | ROBA ID GRAFFASINISTRA metodi  GRAFFADESTRA
 
         ?campi: dichiarazione
              | campi dichiarazione
-             |
+
 
         ?metodi: funzione
               | metodi funzione
-              |
+
 
         // FUNZIONI
 
-        ?funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+        funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
                 | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
                 | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
                 | VOID QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
 
-        ?parametri: parametro
+        parametri: parametro
                  | parametri VIRGOLA parametro
                  |
 
-        ?parametro: tipo nome_var
+        parametro: tipo nome_var
 
         // IF
 
-        if_stmt: METTIMCA TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-               | METTIMCA TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA
-               | METTIMCA TONDASINISTRA expr TONDADESTRA istruzione_singola ALLORFAACCUSSI istruzione_singola
+        if_stmt: METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA
+               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA istruzione_singola ALLORFAACCUSSI istruzione_singola
 
-        ?istruzione_singola: dichiarazione
+        istruzione_singola: dichiarazione
                           | for_stmt
                           | while_stmt
                           | return_stmt
 
         // WHILE
 
-        ?while_stmt: ASPE TONDASINISTRA expr TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                  | ASPE TONDASINISTRA expr TONDADESTRA istruzione_singola
+        while_stmt: ASPE TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+                  | ASPE TONDASINISTRA assegnamento_composto TONDADESTRA istruzione_singola
 
         // FOR
 
-        ?for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE expr TERMINATORE TONDADESTRA for_corpo
-                | AMBRESS_AMBRESS TONDASINISTRA tipo_init ID ASSIGN valore_init TERMINATORE expr TERMINATORE incremento TONDADESTRA for_corpo
+        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo
+                | AMBRESS_AMBRESS TONDASINISTRA tipo_init ID ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE incremento TONDADESTRA for_corpo
 
         tipo_init: NUMR_TK
                  | LOTA_TK
@@ -180,41 +175,50 @@
         for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
                  | istruzione_singola
 
+
+
+
         // ESPRESSIONI
 
-        ?expr: expr OR expr_and
+        ?assegnamento_composto: expr_or
+                             | expr_or DIVISIONEUGUALE  expr_or
+                             | expr_or MOLTIPLICAUGUALE expr_or
+                             | expr_or ADDIZIONEUGUALE  expr_or
+                             | expr_or MENOUGUALE       expr_or
+
+        ?expr_or: expr_or OR expr_and
             | expr_and
 
         ?expr_and: expr_and AND expr_eq
                 | expr_eq
 
-        ?expr_eq: expr_eq EQUALS expr_rel
-               | expr_eq DIVERSO expr_rel
+        ?expr_eq: expr_eq EQUALS expr_rel  -> uguale
+               | expr_eq DIVERSO expr_rel  -> diverso
                | expr_rel
 
-        ?expr_rel: expr_rel MAGGIORE       expr_add
-                | expr_rel MAGGIOREUGUALE expr_add
-                | expr_rel MINORE         expr_add
-                | expr_rel MINOREUGUALE   expr_add
+        ?expr_rel: expr_rel MAGGIORE      expr_add  -> maggiore
+                | expr_rel MAGGIOREUGUALE expr_add  -> maggioreuguale
+                | expr_rel MINORE         expr_add  -> minore
+                | expr_rel MINOREUGUALE   expr_add  -> minoreuguale
                 | expr_add
 
-        ?expr_add: expr_add ADDIZIONE expr_mul
-                | expr_add MENO      expr_mul
+        ?expr_add: expr_add ADDIZIONE expr_mul -> somma
+                | expr_add MENO      expr_mul -> sottrazione
                 | expr_mul
 
-        ?expr_mul: expr_mul MOLTIPLICA expr_unary
-                | expr_mul DIVISIONE  expr_unary
-                | expr_mul RESTO      expr_unary
+        ?expr_mul: expr_mul MOLTIPLICA expr_unary  -> moltiplicazione
+                | expr_mul DIVISIONE  expr_unary  -> divisione
+                | expr_mul RESTO      expr_unary  -> resto
                 | expr_unary
 
         ?expr_unary: NOT expr_unary
-                  | PLUSPLUS   expr_primary
-                  | MENMEN     expr_primary
-                  | expr_primary PLUSPLUS
-                  | expr_primary MENMEN
+                  | PLUSPLUS   expr_primary  -> incremento
+                  | MENMEN     expr_primary -> decremento
+                  | expr_primary PLUSPLUS -> incremento_destro
+                  | expr_primary MENMEN   -> decremento_destro
                   | expr_primary
 
-        ?expr_primary: TONDASINISTRA expr TONDADESTRA
+        ?expr_primary: TONDASINISTRA assegnamento_composto TONDADESTRA
                     | NUMERO
                     | BOOLEAN
                     | STRINGA
