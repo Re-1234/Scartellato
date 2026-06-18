@@ -44,9 +44,13 @@ class metimca:
     altrimenti: object
 
 @dataclass(frozen=True)
+class Parametro:
+        tipo: str
+        nome: str
+@dataclass(frozen=True)
 class Mestier:
         nome: str
-        parametri: list[object]
+        parametri: list[Parametro]
         ritorno: object
 
 
