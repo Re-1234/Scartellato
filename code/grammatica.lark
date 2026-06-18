@@ -64,8 +64,8 @@
 
 
 
-        start:  _top_level* main_opzione MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA  _top_level*
-             |  _top_level+
+        start:  top_level* main_opzione MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA  top_level*
+             |  top_level+
 
         ?main_opzione: VOID |
 
@@ -75,9 +75,9 @@
 
         //  BLOCCO E ISTRUZIONI
 
-        blocco: _istruzione*
+        ?blocco: istruzione*
 
-        _istruzione: dichiarazione
+        ?istruzione: dichiarazione
                    | for_stmt
                    | while_stmt
                    | if_stmt

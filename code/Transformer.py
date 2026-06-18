@@ -43,6 +43,7 @@ class metimca:
     allora: object
     altrimenti: object
 
+@dataclass(frozen=True)
 class Mestier:
         nome: str
         parametri: list[object]
@@ -50,24 +51,28 @@ class Mestier:
 
 
 @dataclass(frozen=True)
-class Roba:
+class Robba:
       nome: str
       variabili: list[object]
       funzioni: list[Mestier]
 
+@dataclass(frozen=True)
 class Aspe:
       Condizione: Boolean
       Corpo: list[object]
 
-class Ambress_ambress:
+@dataclass(frozen=True)
+class Ambress_Ambress:
       Condizione: Boolean
       dichiarazione: Assegnazione
       VarOp: str
       Corpo: list[object]
 
-class Assegnazi:
+@dataclass(frozen=True)
+class Assegnazione:
       tipo: str
       id: str
 
-class return1:
+@dataclass(frozen=True)
+class ReturnStatement:
       valor: object
