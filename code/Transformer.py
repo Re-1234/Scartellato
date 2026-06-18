@@ -38,23 +38,36 @@ class Assegnazione:
     rightpos=object
 
 @dataclass(frozen=True)
-class Condizione:
+class metimca:
     op: OpBin
     allora: object
     altrimenti: object
 
-@dataclass(frozen=True)
-class Parentessi:
-    parentessi: str
+class Mestier:
+        nome: str
+        parametri: list[object]
+        ritorno: object
+
 
 @dataclass(frozen=True)
-class Funzione:
-    funzione: str
-    parentessi: Parentessi
-    parametri: list[object]
-    tipi: list[str]
+class Roba:
+      nome: str
+      variabili: list[object]
+      funzioni: list[Mestier]
 
-@dataclass(frozen=True)
-class Classe:
-    classe: str
+class Aspe:
+      Condizione: Boolean
+      Corpo: list[object]
 
+class Ambress_ambress:
+      Condizione: Boolean
+      dichiarazione: Assegnazione
+      VarOp: str
+      Corpo: list[object]
+
+class Assegnazi:
+      tipo: str
+      id: str
+
+class return1:
+      valor: object

@@ -70,7 +70,7 @@
         ?main_opzione: VOID |
 
 
-        _top_level: funzione
+        top_level: funzione
                   | classe
 
         //  BLOCCO E ISTRUZIONI
@@ -126,7 +126,7 @@
                 | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
                 | VOID QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
 
-        parametri: parametro
+        ?parametri: parametro
                  | parametri VIRGOLA parametro
                  |
 
