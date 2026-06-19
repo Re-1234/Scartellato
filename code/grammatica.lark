@@ -152,19 +152,19 @@
 
         for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo
                 | AMBRESS_AMBRESS TONDASINISTRA tipo_init ID ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE incremento TONDADESTRA for_corpo
-
-        tipo_init: NUMR_TK
-                 | LOTA_TK
-                 | NBRUOGGLIO_TK
-                 | LETTER_TK
-                 | GEN_TYPE
+                |
+        tipo_init: NUMR_TK ->
+                 | LOTA_TK -> tipo_Lota
+                 | NBRUOGGLIO_TK -> tipo_Nbruogglio
+                 | LETTER_TK -> tipo_Letter
+                 | GEN_TYPE -> tipo_Generico
                  |
 
         valore_init: LOTA_TK
-                   | NUMERO
-                   | STRINGA
-                   | CARATTERE
-                   | ID
+                   | NUMERO -> numero
+                   | STRINGA -> stringa
+                   | CARATTERE -> carattr
+                   | ID -> identificatore
 
         incremento: ID PLUSPLUS
                   | PLUSPLUS ID
