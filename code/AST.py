@@ -3,6 +3,7 @@ from tkinter import Variable
 from Transformer import *
 
 class AST_Transformer(Transformer):
+    # TIPI PRIMITIVI
     def numero (self,figli):
         token = figli[0]
         return Numr(value=float(token))
@@ -13,11 +14,28 @@ class AST_Transformer(Transformer):
 
     def stringa (self,figli):
         token =figli[0]
-        return Stringa(value=token)
+        return Stringa(value=str(token[2:-2]))
 
     def boolean (self,figli):
         token = figli[0]
         return Boolean(value=token)
+
+    def carattere (self,figli):
+        token = figli[0]
+        return Carattr(value=str(token[1:-1]))
+    def genType (self,figli):
+        token = figli[0]
+        return  GenericVar(value=token)
+
+    #OPERAZIONI BINARIE
+    def somma (self,figli):
+        var1 = figli[0]
+        operatore = figli[1]
+        var3 = figli[2]
+        return OpBin(operatore, var1, var3)
+
+
+
 
 
 

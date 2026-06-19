@@ -166,11 +166,11 @@
                    | CARATTERE -> carattr
                    | ID -> identificatore
 
-        incremento: ID PLUSPLUS
-                  | PLUSPLUS ID
-                  | MENMEN ID
-                  | ID MENMEN
-                  |
+        valutazione : ID PLUSPLUS
+                    | PLUSPLUS ID
+                    | MENMEN ID
+                    | ID MENMEN
+                    |
 
         for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
                  | istruzione_singola
