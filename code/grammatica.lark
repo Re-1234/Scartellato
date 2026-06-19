@@ -1,5 +1,5 @@
 //tipo di dati
-        BOOLEAN : /sasicchj|friariell/
+        BOOLEAN.2 : "sasicchj"|"friariell"
         LOTA_TK: "lota"                 // token per boolean
         NUMERO: /\d+(\.\d+)?e?/
         NUMR_TK: "numr"
@@ -219,8 +219,8 @@
                   | expr_primary
 
         ?expr_primary: TONDASINISTRA assegnamento_composto TONDADESTRA
-                    | NUMERO
-                    | BOOLEAN
-                    | STRINGA
-                    | CARATTERE
-                    | ID
+                    | NUMERO  -> numero
+                    | BOOLEAN -> boolean
+                    | STRINGA -> stringa
+                    | CARATTERE -> carattere
+                    | ID       -> variabile

@@ -17,7 +17,7 @@ class Boolean:
     value: bool
 
 @dataclass(frozen=True)
-class String:
+class Stringa:
     value: str
 
 @dataclass(frozen=True)
@@ -32,13 +32,18 @@ class GenericVar:
     value: Any
 
 @dataclass(frozen=True)
-class Assegnazione:
-    op: str
-    leftpos=object
-    rightpos=object
+class Variabile:
+    value : str
 
 @dataclass(frozen=True)
-class metimca:
+class Dichiarazione :
+    tipo: object
+    op: OpBin
+    nome: str
+    valore : object
+
+@dataclass(frozen=True)
+class Mettimmca:
     op: OpBin
     allora: object
     altrimenti: object
@@ -68,7 +73,7 @@ class Aspe:
 @dataclass(frozen=True)
 class Ambress_Ambress:
       Condizione: Boolean
-      dichiarazione: Assegnazione
+      dichiarazione: Dichiarazione
       VarOp: str
       Corpo: list[object]
 
