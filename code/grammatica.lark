@@ -150,8 +150,9 @@
 
         // FOR
 
-        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo
-                | AMBRESS_AMBRESS TONDASINISTRA tipo_init ID ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE incremento TONDADESTRA for_corpo
+        for_stmt: 
+                | AMBRESS_AMBRESS TONDASINISTRA ID TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo
+
 
         tipo_init: NUMR_TK
                  | LOTA_TK
@@ -166,11 +167,11 @@
                    | CARATTERE
                    | ID
 
-        incremento: ID PLUSPLUS
-                  | PLUSPLUS ID
-                  | MENMEN ID
-                  | ID MENMEN
-                  |
+        valutazione : ID PLUSPLUS
+                    | PLUSPLUS ID
+                    | MENMEN ID
+                    | ID MENMEN
+                    |
 
         for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
                  | istruzione_singola
