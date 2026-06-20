@@ -35,9 +35,11 @@ class AST_Transformer(Transformer):
         return OpBin(operatore, var1, var3)
 
 
-
-
-
+    def sottrazione (self,figli):
+        var1 = figli[0]
+        operatore = figli[1]
+        var3 = figli[2]
+        return OpBin(operatore, var1, var3)
 
     def dichiarazione(self, figli):
         if len(figli) == 5: # tipo nome_var ASSIGN valore TERMINATORE
