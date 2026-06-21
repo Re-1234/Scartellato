@@ -84,11 +84,6 @@ class Ambress_Ambress:
       Corpo: list[object]
 
 @dataclass(frozen=True)
-class Assegnazione:
-      tipo: str
-      id: str
-
-@dataclass(frozen=True)
 class ReturnStatement:
       valor: object
 

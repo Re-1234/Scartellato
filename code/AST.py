@@ -1,4 +1,4 @@
-
+from asyncio.windows_events import NULL
 
 from Transformer import *
 
@@ -11,8 +11,8 @@ class AST_Transformer(Transformer):
 
 
 
-    def filtra(self, children): #funzione per filtrare i token non necessari
-        return [c for c in children
+    def filtra(self, figli): #funzione per filtrare i token non necessari
+        return [c for c in figli
                 if not (hasattr(c, 'type') and c.type in self.TOKEN_DA_SCARTARE)]
 
 
@@ -20,10 +20,6 @@ class AST_Transformer(Transformer):
     def numero (self,figli):
         token = figli[0]
         return Numr(value=float(token))
-
-    def variabile (self,figli):
-        token = figli[0]
-        return Variabile(value=str(token))
 
     def stringa (self,figli):
         token =figli[0]
@@ -41,12 +37,12 @@ class AST_Transformer(Transformer):
         return  GenericVar(value=token)
 
 
-    def nome_semplice(self, children):
-        id_token = self.filtra(children)[0]
+    def variabile_semplice(self, figli):
+        id_token = self.filtra(figli)[0]
         return str(id_token), False
 
-    def nome_array(self, children):
-        id_token = self.filtra(children)[0]
+    def variabile_array(self, figli):
+        id_token = self.filtra(figli)[0]
         return str(id_token), True
 
     #OPERAZIONI BINARIE
@@ -56,24 +52,47 @@ class AST_Transformer(Transformer):
         var3 = figli[2]
         return OpBin(operatore, var1, var3)
 
+    def plusplus(self,figli):
+        variabile = self.filtra(figli)[0]
+        operatore = self.filtra(figli)[1]
+        return OpBin(operatore, variabile,None)
+
+    def menmen(self,figli):
+        variabile = self.filtra(figli)[0]
+        operatore = self.filtra(figli)[1]
+        return OpBin(operatore,variabile,None)
+
+    def uguale(self,figli):
+        variabile1 = self.filtra(figli)[0]
+        operatore = self.filtra(figli)[1]
+        variabile2 = self.filtra(figli)[2]
+
 
     def sottrazione (self,figli):
         var1 = figli[0]
-        operatore = figli[1]
-        var3 = figli[2]
+        operatore = self.filtra(figli)[1]
+        var3 = self.filtra(figli)[2]
         return OpBin(operatore, var1, var3)
 
     def moltiplicazione(self, figli):
-        var1 = figli[0]
-        operatore = figli[1]
-        var3 = figli[2]
+        var1 = self.filtra(figli)[0]
+        operatore = self.filtra(figli)[1]
+        var3 = self.filtra(figli)[2]
         return OpBin(operatore, var1, var3)
 
     def divisione(self, figli):
-        var1 = figli[0]
-        operatore = figli[1]
-        var3 = figli[2]
+        var1 = self.filtra(figli)[0]
+        operatore = self.filtra(figli)[1]
+        var3 = self.filtra(figli)[2]
         return OpBin(operatore, var1, var3)
+
+
+    def resto(self,figli):
+        variabile1 = self.filtra(figli)[0]
+        operatore = self.filtra(figli)[1]
+        variabile2 = self.filtra(figli)[2]
+        return OpBin(operatore,variabile1,variabile2)
+
 
 
     def dichiarazione(self, figli):
@@ -87,17 +106,38 @@ class AST_Transformer(Transformer):
             nome = str(figli[1])
             return Dichiarazione(tipo, nome=nome, valore=None)
 
-    def parametri(self, children):
-        return list(children)
+    def parametri(self, figli):
+        return list(figli)
 
-    def funzione_semplice(self, children):
-        tipo, nome, parametri, blocco = self.filtra(children)
+    def aspe(self,figli):
+        condition , corpo = self.filtra(figli)
+        return Aspe(condition, corpo)
+
+    def mettimca(self,figli):
+        op , allora , altrimenti = self.filtra(figli)
+        return Mettimmca(op,allora,altrimenti)
+
+    def mettimca_senzaElse(self,figli):
+        op , allora ,altrimenti = self.filtra(figli)
+        return Mettimmca(op,allora,altrimenti)
+
+
+    def ritornaStatem(self,figli):
+        valor = self.filtra(figli)
+        return ReturnStatement(valor)
+
+    def funzione_semplice(self, figli):
+        tipo, nome, parametri, blocco = self.filtra(figli)
         return Mestier(tipo, nome,parametri,blocco,is_array=False)
 
-    def funzione_array(self, children):
-        tipo, nome, parametri, blocco = self.filtra(children)
+    def funzione_array(self, figli):
+        tipo, nome, parametri, blocco = self.filtra(figli)
         return Mestier(tipo, nome,parametri,blocco, is_array=True)
 
-    def funzione_void(self, children):
-        tipo, nome, parametri, blocco = self.filtra(children)
+    def funzione_void(self, figli):
+        tipo, nome, parametri, blocco = self.filtra(figli)
         return Mestier (tipo, nome,parametri,blocco)
+
+    def robba(self , figli):
+        nome , variabili , funzioni = self.filtra(figli)
+        return Robba(nome, variabili, funzioni)
