@@ -82,11 +82,12 @@
                    | while_stmt
                    | if_stmt
                    | return_stmt
+                   | nome_var ASSIGN assegnamento_composto TERMINATORE
 
         // RETURN E BREAK
 
         return_stmt: SCCASCIA TERMINATORE
-                   | CCASTA ID TERMINATORE
+                   | CCASTA  nomevar TERMINATORE
                    | CCASTA TERMINATORE
 
         // DICHIARAZIONI DI VARIABILI
@@ -106,10 +107,10 @@
 
         //CLASSI
 
-        classe:   ROBA ID GRAFFASINISTRA campi metodi  GRAFFADESTRA
-                | ROBA ID GRAFFASINISTRA metodi campi  GRAFFADESTRA
-                | ROBA ID GRAFFASINISTRA campi metodi campi  GRAFFADESTRA
-                | ROBA ID GRAFFASINISTRA metodi  GRAFFADESTRA
+        classe:   ROBA  nomevar GRAFFASINISTRA campi metodi  GRAFFADESTRA
+                | ROBA  nomevar GRAFFASINISTRA metodi campi  GRAFFADESTRA
+                | ROBA  nomevar GRAFFASINISTRA campi metodi campi  GRAFFADESTRA
+                | ROBA  nomevar GRAFFASINISTRA metodi  GRAFFADESTRA
 
         ?campi: dichiarazione
              | campi dichiarazione
@@ -121,10 +122,10 @@
 
         // FUNZIONI
 
-        funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                | VOID QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+        funzione: tipo MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+                | VOID MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+                | VOID QUADRATASINISTRA QUADRATADESTRA MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
 
         ?parametri: parametro
                  | parametri VIRGOLA parametro
@@ -150,27 +151,31 @@
 
         // FOR
 
-        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo
-                | AMBRESS_AMBRESS TONDASINISTRA tipo_init ID ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo
-                | AMBRESS_AMBRESS TONDASINISTRA ID valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo
+        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo  -> for_condizione
+                | AMBRESS_AMBRESS TONDASINISTRA tipo_keyword  nomevar ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_completo
+                | AMBRESS_AMBRESS TONDASINISTRA  nomevar ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_assegnazione
+                | AMBRESS_AMBRESS TONDASINISTRA  nomevar TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_soloid
 
-        tipo_init: NUMR_TK
+         nomevar: ID -> variabile
+
+
+        tipo_keyword: NUMR_TK -> tipo_numero
                  | LOTA_TK -> tipo_lota
                  | NBRUOGGLIO_TK -> tipo_nbruogglio
                  | LETTER_TK -> tipo_letter
                  | GEN_TYPE -> tipo_generico
                  |
 
-        valore_init: LOTA_TK
+        valore_init: BOOLEAN -> boolean
                    | NUMERO -> numero
                    | STRINGA -> stringa
                    | CARATTERE -> carattr
-                   | ID -> identificatore
+                   | nomevar -> variabile
 
-        valutazione : ID PLUSPLUS -> incremento_destro
-                    | PLUSPLUS ID -> incremento_sinistra
-                    | MENMEN ID -> decremento_sinistro
-                    | ID MENMEN -> decremento_destro
+        valutazione :  nomevar PLUSPLUS -> incremento_destro
+                    |  PLUSPLUS  nomevar -> incremento_sinistra
+                    |  MENMEN  nomevar -> decremento_sinistro
+                    |  nomevar MENMEN -> decremento_destro
                     |
 
         for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA

@@ -6,6 +6,7 @@ class AST_Transformer(Transformer):
     TOKEN_DA_SCARTARE = {
         'TONDASINISTRA', 'TONDADESTRA',
         'GRAFFASINISTRA', 'GRAFFADESTRA',
+        'QUADRATADESTRA','QUADARATASINISTRA'
          'VIRGOLA', 'ASSIGN', 'TERMINATORE',
      }
 
@@ -101,3 +102,7 @@ class AST_Transformer(Transformer):
     def funzione_void(self, children):
         tipo, nome, parametri, blocco = self.filtra(children)
         return Mestier (tipo, nome,parametri,blocco)
+
+    def ambress_ambress(self,figli):
+        tipo, corpo,dichiarazione ,operatore = self.filtra(figli)
+        return Ambress_Ambress(tipo, dichiarazione, operatore,corpo )

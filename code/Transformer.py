@@ -40,8 +40,8 @@ class Variabile:
 @dataclass(frozen=True)
 class Dichiarazione :
     tipo: object
-    op: OpBin
     nome: str
+    op: OpBin
     valore : object
 
 @dataclass(frozen=True)
@@ -78,15 +78,10 @@ class Aspe:
 
 @dataclass(frozen=True)
 class Ambress_Ambress:
-      Condizione: Boolean
+      Condizione: OpBin
       dichiarazione: Dichiarazione
-      VarOp: str
+      VarOp: object
       Corpo: list[object]
-
-@dataclass(frozen=True)
-class Assegnazione:
-      tipo: str
-      id: str
 
 @dataclass(frozen=True)
 class ReturnStatement:
