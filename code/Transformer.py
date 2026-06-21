@@ -1,7 +1,5 @@
 from dataclasses import dataclass
-from time import struct_time
 
-from lark import Lark, Transformer, Tree, Token
 from typing import Any
 
 @dataclass(frozen=True)
@@ -40,9 +38,8 @@ class Variabile:
 @dataclass(frozen=True)
 class Dichiarazione :
     tipo: object
-    nome: str
     op: OpBin
-    valore : object
+
 
 @dataclass(frozen=True)
 class Mettimmca:
@@ -73,7 +70,7 @@ class Robba:
 
 @dataclass(frozen=True)
 class Aspe:
-      Condizione: Boolean
+      Condizione: object
       Corpo: list[object]
 
 @dataclass(frozen=True)

@@ -1,4 +1,4 @@
-
+from lark import Transformer
 
 from Transformer import *
 
@@ -6,8 +6,8 @@ class AST_Transformer(Transformer):
     TOKEN_DA_SCARTARE = {
         'TONDASINISTRA', 'TONDADESTRA',
         'GRAFFASINISTRA', 'GRAFFADESTRA',
-        'QUADRATADESTRA','QUADARATASINISTRA'
-         'VIRGOLA', 'ASSIGN', 'TERMINATORE',
+        'QUADRATADESTRA','QUADARATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI'
+         ,'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE',
      }
 
 
@@ -67,6 +67,7 @@ class AST_Transformer(Transformer):
         variabile1 = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         variabile2 = self.filtra(figli)[2]
+        return OpBin(operatore,variabile1,variabile2)
 
 
     def sottrazione (self,figli):
@@ -98,13 +99,15 @@ class AST_Transformer(Transformer):
         if len(figli) == 5: # tipo nome_var ASSIGN valore TERMINATORE
             tipo = str(figli[0])
             nome = str(figli[1])
+            assign = str(figli[2])
             valore = figli[3]
-            return Dichiarazione(tipo=tipo, nome=nome, valore=valore)
+            opBin = OpBin(assign, tipo, valore)
+            return Dichiarazione(tipo=tipo, op=opBin)
         else:  # tipo nome_var TERMINATORE
             tipo = str(figli[0])
             nome = str(figli[1])
-            return Dichiarazione(tipo, nome=nome, valore=None)
-
+            opBin = OpBin("", nome , None)
+            return Dichiarazione(tipo, opBin)
     def parametri(self, figli):
         return list(figli)
 
@@ -112,7 +115,8 @@ class AST_Transformer(Transformer):
         condition , corpo = self.filtra(figli)
         return Aspe(condition, corpo)
 
-    def mettimca(self,figli):
+    def mettimca_completo(self,figli):
+        print("FIGLI FILTRATI:", self.filtra(figli)) #debug
         op , allora , altrimenti = self.filtra(figli)
         return Mettimmca(op,allora,altrimenti)
 
@@ -144,3 +148,7 @@ class AST_Transformer(Transformer):
     def ambress_ambress(self,figli):
         tipo, corpo,dichiarazione ,operatore = self.filtra(figli)
         return Ambress_Ambress(tipo, dichiarazione, operatore,corpo )
+
+    def start(self, figli):
+        """La regola 'start' ha un solo figlio: l'espressione intera."""
+        return figli[0]

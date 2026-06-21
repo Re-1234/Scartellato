@@ -107,7 +107,7 @@
 
         //CLASSI
 
-        classe:   ROBA  nomevar GRAFFASINISTRA campi metodi  GRAFFADESTRA -> robba
+        ?classe:   ROBA  nomevar GRAFFASINISTRA campi metodi  GRAFFADESTRA -> robba
                 | ROBA  nomevar GRAFFASINISTRA metodi campi  GRAFFADESTRA -> robba
                 | ROBA  nomevar GRAFFASINISTRA campi metodi campi  GRAFFADESTRA -> robba
                 | ROBA  nomevar GRAFFASINISTRA metodi  GRAFFADESTRA -> robba
@@ -136,8 +136,8 @@
         // IF
 
         if_stmt: METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_senzaelse
-               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca
-               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA istruzione_singola ALLORFAACCUSSI istruzione_singola -> mettimca
+               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_completo
+               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA istruzione_singola ALLORFAACCUSSI istruzione_singola -> mettimca_completo
 
         istruzione_singola: dichiarazione
                           | for_stmt
@@ -153,7 +153,7 @@
 
         for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo -> for_condizione
                 | AMBRESS_AMBRESS TONDASINISTRA tipo_keyword nomevar ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_completo
-                | AMBRESS_AMBRESS TONDASINISTRA nomevar valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo > for_assegnazione
+                | AMBRESS_AMBRESS TONDASINISTRA nomevar valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_assegnazione
                 | AMBRESS_AMBRESS TONDASINISTRA  nomevar TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_soloid
 
         nomevar: ID -> variabile
