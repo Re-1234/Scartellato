@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from time import struct_time
+
 from lark import Lark, Transformer, Tree, Token
 from typing import Any
 
@@ -52,11 +54,15 @@ class Mettimmca:
 class Parametro:
         tipo: str
         nome: str
+        is_array: bool = False
+
 @dataclass(frozen=True)
 class Mestier:
         nome: str
         parametri: list[Parametro]
         ritorno: object
+        corpo : list[object]
+        is_array: bool = False
 
 
 @dataclass(frozen=True)
@@ -85,3 +91,4 @@ class Assegnazione:
 @dataclass(frozen=True)
 class ReturnStatement:
       valor: object
+

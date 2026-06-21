@@ -100,8 +100,8 @@
             | NBRUOGGLIO_TK
             | LETTER_TK
 
-        ?nome_var: ID
-                | QUADRATASINISTRA QUADRATADESTRA ID
+        ?nome_var: ID -> variabile
+                | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
 
 
         //CLASSI
@@ -121,10 +121,10 @@
 
         // FUNZIONI
 
-        funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
-                | VOID QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA
+        funzione: tipo MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA  -> funzione_semplice
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
+                | VOID MESTIER ID TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA    -> funzione_void
+
 
         ?parametri: parametro
                  | parametri VIRGOLA parametro
