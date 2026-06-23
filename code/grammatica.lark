@@ -57,6 +57,7 @@
         CCASTA: "ccàsta"     //return
         TERMINATORE: "!"    //fine istruzione
         VIRGOLA:","     //separatore parametri
+        FRAVCATOR: "fravcator" //
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
@@ -107,10 +108,17 @@
 
         //CLASSI
 
-        ?classe:   ROBA  nomevar GRAFFASINISTRA campi metodi  GRAFFADESTRA -> robba
-                | ROBA  nomevar GRAFFASINISTRA metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nomevar GRAFFASINISTRA campi metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nomevar GRAFFASINISTRA metodi  GRAFFADESTRA -> robba
+        ?classe:  ROBA  nomevar GRAFFASINISTRA campi costruttore metodi  GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA costruttore campi metodi GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA campi metodi costruttore GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA costruttore metodi campi  GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA metodi costruttore campi GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA metodi campi costruttore GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA campi costruttore metodi campi  GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA campi metodi costruttore campi  GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA campi metodi campi costruttore GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA metodi costruttore  GRAFFADESTRA -> robba
+                | ROBA  nomevar GRAFFASINISTRA costruttore metodi GRAFFADESTRA -> robba
 
         ?campi: dichiarazione
              | campi dichiarazione
@@ -119,13 +127,15 @@
         ?metodi: funzione
               | metodi funzione
 
+        // COSTRUTTORE
+
+        costruttore:  TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore_semplice
 
         // FUNZIONI
 
         funzione: tipo MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
                 | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
                 | VOID MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
-
 
         ?parametri: parametro
                  | parametri VIRGOLA parametro
