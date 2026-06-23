@@ -68,6 +68,19 @@ class Mettimmca:
     altrimenti:  Optional[Block] = None
 
 @dataclass(frozen=True)
+class Aspe:
+    Condizione: object
+    Corpo: Block
+
+@dataclass(frozen=True)
+class Ambress_Ambress:
+    condizione: OpBin
+    dichiarazione: Dichiarazione | Variabile
+    VarOperation: object
+    Corpo: Block
+
+
+@dataclass(frozen=True)
 class Parametro:
         tipo: str
         nome: str
@@ -87,18 +100,6 @@ class Robba:
       nome: str
       variabili: list[object]
       funzioni: list[Mestier]
-
-@dataclass(frozen=True)
-class Aspe:
-      Condizione: object
-      Corpo: Block
-
-@dataclass(frozen=True)
-class Ambress_Ambress:
-      Condizione: OpBin
-      dichiarazione: Dichiarazione
-      VarOperation: object
-      Corpo: Block
 
 @dataclass(frozen=True)
 class ReturnStatement:

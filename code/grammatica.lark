@@ -48,19 +48,19 @@
         METTIMCA: "mettimcà"                    //if
         ALLORFAACCUSSI: "allor_fa_accussi"     //else
         ROBA: "robba"                         //classe
-        FRAVCATOR: "fravcator"               //oggetto
+        FRAVCATOR: "fravcator"               //costruttore
         ASPE: "aspe"                        //while
         AMBRESS_AMBRESS: "ambressAmbress"  //for
-        MESTIER: "mestier"       //funzione
-        MAIN: "Uè"              //main
-        NULL: "Nuncsta_nient"  //null
-        SCCASCIA: "sccascia"  //break
-        CCASTA: "ccàsta"     //return
-        TERMINATORE: "!"    //fine istruzione
-        VIRGOLA:","        //separatore parametri
-        SWAP: "<->"       //swap dei valori
-        VIRGOLA:","      //separatore parametri
-
+        MESTIER: "mestier"           //funzione
+        MAIN: "Uè"                  //main
+        NULL: "Nuncsta_nient"      //null
+        SCCASCIA: "sccascia"      //break
+        CCASTA: "ccàsta"         //return
+        TERMINATORE: "!"        //fine istruzione
+        VIRGOLA:","            //separatore parametri
+        SWAP: "<->"           //swap dei valori
+        CHIAMATA: "jamm_ja"     // keyword per chiamata a funzione
+        PARAMETRI_TK: "guagliuni" // elenco di parametri
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
@@ -90,6 +90,13 @@
                    | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> append_array
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
                    | nome_var SWAP nome_var TERMINATORE  -> swap
+                   | CHIAMATA ":" nome_var TONDASINISTRA sezione_chiamata TONDADESTRA TERMINATORE -> call_stmt
+
+        ?lista_argomenti: expr_primary
+                | lista_argomenti VIRGOLA expr_primary
+
+        ?sezione_chiamata: PARAMETRI_TK ":" lista_argomenti
+
 
         // RETURN E BREAK
 
@@ -135,18 +142,20 @@
 
         // COSTRUTTORE
 
-        costruttore:  TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore_semplice
+        costruttore: FRAVCATOR TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore_semplice
 
         // FUNZIONI
 
-        funzione: tipo MESTIER  nome_var TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
-                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
-                | VOID MESTIER  nome_var TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
+        funzione: tipo MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
+                | VOID MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
 
 
-        ?parametri: parametro
-                 | parametri VIRGOLA parametro
-                 |
+        ?lista_parametri: parametro
+                | lista_parametri VIRGOLA parametro
+
+        ?sezione_parametri: PARAMETRI_TK ":" lista_parametri
+                            |
 
         parametro: tipo nome_var
 
