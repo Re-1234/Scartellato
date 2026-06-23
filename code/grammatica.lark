@@ -45,9 +45,10 @@
         QUADRATADESTRA: "["
 
         //Keyword
-        METTIMCA: "mettimcà"  //if
-        ALLORFAACCUSSI: "allor_fa_accussi"    //else
-        ROBA: "robba"                        //classe
+        METTIMCA: "mettimcà"                    //if
+        ALLORFAACCUSSI: "allor_fa_accussi"     //else
+        ROBA: "robba"                         //classe
+        FRAVCATOR: "fravcator"               //oggetto
         ASPE: "aspe"                        //while
         AMBRESS_AMBRESS: "ambressAmbress"  //for
         MESTIER: "mestier"       //funzione
@@ -58,8 +59,8 @@
         TERMINATORE: "!"    //fine istruzione
         VIRGOLA:","        //separatore parametri
         SWAP: "<->"       //swap dei valori
-        VIRGOLA:","     //separatore parametri
-        FRAVCATOR: "fravcator" //oggetto
+        VIRGOLA:","      //separatore parametri
+
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
