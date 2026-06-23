@@ -58,6 +58,8 @@
         TERMINATORE: "!"    //fine istruzione
         VIRGOLA:","        //separatore parametri
         SWAP: "<->"       //swap dei valori
+        VIRGOLA:","     //separatore parametri
+        FRAVCATOR: "fravcator" //oggetto
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
@@ -111,10 +113,17 @@
 
         //CLASSI
 
-        ?classe:  ROBA  nome_var GRAFFASINISTRA campi metodi  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA campi metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA metodi  GRAFFADESTRA -> robba
+        ?classe:  ROBA  nome_var GRAFFASINISTRA campi costruttore metodi  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA costruttore campi metodi GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA campi metodi costruttore GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA costruttore metodi campi  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA metodi costruttore campi GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA metodi campi costruttore GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA campi costruttore metodi campi  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA campi metodi costruttore campi  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA campi metodi campi costruttore GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA metodi costruttore  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA costruttore metodi GRAFFADESTRA -> robba
 
         ?campi: dichiarazione
              | campi dichiarazione
@@ -123,6 +132,9 @@
         ?metodi: funzione
               | metodi funzione
 
+        // COSTRUTTORE
+
+        costruttore:  TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore_semplice
 
         // FUNZIONI
 

@@ -101,6 +101,8 @@ class AST_Transformer(Transformer):
         return OpBin(operatore,variabile1,variabile2)
 
 
+    
+
 
     def dichiarazione(self, figli):
         if len(figli) == 5: # tipo nome_var ASSIGN valore TERMINATORE
