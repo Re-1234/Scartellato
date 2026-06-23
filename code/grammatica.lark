@@ -46,17 +46,18 @@
 
         //Keyword
         METTIMCA: "mettimcà"  //if
-        ALLORFAACCUSSI: "allor_fa_accussi" //else
-        ROBA: "robba"                     //classe
-        ASPE: "aspe"                     //while
+        ALLORFAACCUSSI: "allor_fa_accussi"    //else
+        ROBA: "robba"                        //classe
+        ASPE: "aspe"                        //while
         AMBRESS_AMBRESS: "ambressAmbress"  //for
-        MESTIER: "mestier"      //funzione
-        MAIN: "Uè"
+        MESTIER: "mestier"       //funzione
+        MAIN: "Uè"              //main
         NULL: "Nuncsta_nient"  //null
         SCCASCIA: "sccascia"  //break
         CCASTA: "ccàsta"     //return
         TERMINATORE: "!"    //fine istruzione
-        VIRGOLA:","     //separatore parametri
+        VIRGOLA:","        //separatore parametri
+        SWAP: "<->"       //swap dei valori
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
@@ -75,19 +76,22 @@
 
         //  BLOCCO E ISTRUZIONI
 
-        ?blocco: istruzione*
+        blocco: istruzione*
 
         ?istruzione: dichiarazione
-                   | for_stmt
-                   | while_stmt
-                   | if_stmt
-                   | return_stmt
-                   | nome_var ASSIGN assegnamento_composto TERMINATORE
+                   | for_stmt      -> for_stmt
+                   | while_stmt    -> while_stmt
+                   | if_stmt       -> if_stmt
+                   | return_stmt   -> return
+                   | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnamento
+                   | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> append_array
+                   | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
+                   | nome_var SWAP nome_var TERMINATORE  -> swap
 
         // RETURN E BREAK
 
         return_stmt: SCCASCIA TERMINATORE
-                   | CCASTA  nomevar TERMINATORE ->return
+                   | CCASTA  nome_var TERMINATORE ->return
                    | CCASTA TERMINATORE   ->return
 
         // DICHIARAZIONI DI VARIABILI
@@ -107,10 +111,10 @@
 
         //CLASSI
 
-        ?classe:   ROBA  nomevar GRAFFASINISTRA campi metodi  GRAFFADESTRA -> robba
-                | ROBA  nomevar GRAFFASINISTRA metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nomevar GRAFFASINISTRA campi metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nomevar GRAFFASINISTRA metodi  GRAFFADESTRA -> robba
+        ?classe:  ROBA  nome_var GRAFFASINISTRA campi metodi  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA metodi campi  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA campi metodi campi  GRAFFADESTRA -> robba
+                | ROBA  nome_var GRAFFASINISTRA metodi  GRAFFADESTRA -> robba
 
         ?campi: dichiarazione
              | campi dichiarazione
@@ -122,9 +126,9 @@
 
         // FUNZIONI
 
-        funzione: tipo MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
-                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
-                | VOID MESTIER  nomevar TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
+        funzione: tipo MESTIER  nome_var TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
+                | VOID MESTIER  nome_var TONDASINISTRA parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
 
 
         ?parametri: parametro
@@ -152,11 +156,11 @@
         // FOR
 
         for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo -> for_condizione
-                | AMBRESS_AMBRESS TONDASINISTRA tipo_keyword nomevar ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_completo
-                | AMBRESS_AMBRESS TONDASINISTRA nomevar valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_assegnazione
-                | AMBRESS_AMBRESS TONDASINISTRA  nomevar TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_soloid
+                | AMBRESS_AMBRESS TONDASINISTRA tipo_keyword nome_var ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_completo
+                | AMBRESS_AMBRESS TONDASINISTRA nome_var valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_assegnazione
+                | AMBRESS_AMBRESS TONDASINISTRA  nome_var TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_soloid
 
-        nomevar: ID -> variabile
+
 
         tipo_keyword: NUMR_TK -> tipo_numero
                  | LOTA_TK -> tipo_lota
@@ -169,12 +173,12 @@
                    | NUMERO -> numero
                    | STRINGA -> stringa
                    | CARATTERE -> carattere
-                   | nomevar -> variabile
+                   | nome_var
 
-        valutazione :  nomevar PLUSPLUS -> incremento_destro
-                    |  PLUSPLUS  nomevar -> incremento_sinistra
-                    |  MENMEN  nomevar -> decremento_sinistro
-                    |  nomevar MENMEN -> decremento_destro
+        valutazione :  nome_var PLUSPLUS -> incremento_destro
+                    |  PLUSPLUS  nome_var -> incremento_sinistra
+                    |  MENMEN  nome_var -> decremento_sinistro
+                    |  nome_var MENMEN -> decremento_destro
                     |
 
         for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
@@ -228,4 +232,4 @@
                     | BOOLEAN -> boolean
                     | STRINGA -> stringa
                     | CARATTERE -> carattere
-                    | ID       -> variabile
+                    | ID       -> variabile_semplice

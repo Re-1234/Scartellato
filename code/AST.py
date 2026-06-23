@@ -17,6 +17,10 @@ class AST_Transformer(Transformer):
                 if not (hasattr(c, 'type') and c.type in self.TOKEN_DA_SCARTARE)]
 
 
+    #RADICE DELL ALBERO
+    def start(self,figli):
+        return Start(program=figli)
+
     # TIPI PRIMITIVI
     def numero (self,figli):
         token = figli[0]
@@ -37,6 +41,9 @@ class AST_Transformer(Transformer):
         token = figli[0]
         return  GenericVar(value=token)
 
+    def swap_stmt(self, items):
+        left, right = items
+        return SwapStmt(left=str(left), right=str(right))
 
     def variabile_semplice(self, figli):
         id_token = self.filtra(figli)[0]

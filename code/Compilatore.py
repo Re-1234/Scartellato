@@ -125,6 +125,9 @@ compilatore("""
               ambressAmbress ) numr c= 5 ! c<8 ! c++( }
                 mettimcà ) 3<4( }
                     s = 4+2 !
+                    c <-> b !
+                    
+                    
                 { 
               {
             {

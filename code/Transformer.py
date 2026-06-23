@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 
-from typing import Any
+from typing import Any, List, Optional
+
+
+@dataclass
+class Start:
+    program: List[Any]
 
 @dataclass(frozen=True)
 class Numr:
@@ -38,14 +43,29 @@ class Variabile:
 @dataclass(frozen=True)
 class Dichiarazione :
     tipo: object
-    op: OpBin
+    nome : object
+    valore : object
+    is_array: bool
 
+@dataclass(frozen=True)
+class Block:
+    statements: List[Any]
+
+@dataclass(frozen=True)
+class Assegnamento:
+       name: str
+       value: Any
+
+@dataclass
+class SwapStmt:
+    left: str
+    right: str
 
 @dataclass(frozen=True)
 class Mettimmca:
-    op: OpBin
-    allora: object
-    altrimenti: object
+    condizione : Any
+    allora: Block
+    altrimenti:  Optional[Block] = None
 
 @dataclass(frozen=True)
 class Parametro:
@@ -58,7 +78,7 @@ class Mestier:
         nome: str
         parametri: list[Parametro]
         ritorno: object
-        corpo : list[object]
+        corpo : object
         is_array: bool = False
 
 
@@ -71,14 +91,14 @@ class Robba:
 @dataclass(frozen=True)
 class Aspe:
       Condizione: object
-      Corpo: list[object]
+      Corpo: Block
 
 @dataclass(frozen=True)
 class Ambress_Ambress:
       Condizione: OpBin
       dichiarazione: Dichiarazione
-      VarOp: object
-      Corpo: list[object]
+      VarOperation: object
+      Corpo: Block
 
 @dataclass(frozen=True)
 class ReturnStatement:
