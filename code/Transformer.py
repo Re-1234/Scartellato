@@ -56,10 +56,15 @@ class Assegnamento:
        name: str
        value: Any
 
-@dataclass
+@dataclass(frozen=True)
 class SwapStmt:
     left: str
     right: str
+
+@dataclass(frozen=True)
+class CallStmt:
+    func: str
+    args: List[Any]
 
 @dataclass(frozen=True)
 class Mettimmca:

@@ -101,13 +101,14 @@ def compilatore(source: str) -> str:
 compilatore(""" 
 
             vacant mestier pippo ) guagliuni :  numr a , numr b ( } 
-               nbruogglio r = a + b !
+               nbruogglio r = ??a + b??  !
             {
 
-             robba mimmo}
+             robba ciro }
                 fravcator )  ( }
                     a = c !
                 {
+                
                 nbruogglio r = ??sdfdaf?? !
                 vacant mestier classeFunzioneMimmo )  ( }
                     burdell a = r !
@@ -127,10 +128,11 @@ compilatore("""
                 {
                 burdell c = a - v !
                 lota d = sasicchj!
+                
               ambressAmbress ) numr c= 5 ! c<8 ! c++( }
                 mettimcà ) 3<4( }
                     s = 4+2 !
-                    c <-> b !               
+                    c <-> b !              
                 { 
               {
             {
