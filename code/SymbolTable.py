@@ -1,6 +1,3 @@
-from operator import truediv
-from xmlrpc.client import boolean
-
 class SymbolTable:
 
     def __init__(self):
@@ -16,13 +13,15 @@ class SymbolTable:
 
 
     def addId(self, symbol,name):
-        self.table[name] = symbol
+        self.table[symbol] = name
 
     def lookup(self, symbol):
         if symbol in self.table:
             return self.table[symbol]
-        else:
-            return None
+        for scope in reversed(self.stack):
+            if symbol in scope:
+                return scope[symbol]
+        return None
 
     def probe(self, symbol):
         if symbol in self.table:

@@ -93,7 +93,7 @@ class Mestier:
         nome: str
         parametri: list[Parametro]
         ritorno: object
-        corpo : object
+        corpo : list[object]
         is_array: bool = False
 
 
