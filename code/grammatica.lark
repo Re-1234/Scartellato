@@ -74,7 +74,7 @@
         ?main_opzione: VOID |
 
 
-        top_level: funzione
+        ?top_level: funzione
                   | classe
 
         //  BLOCCO E ISTRUZIONI
@@ -82,11 +82,11 @@
         blocco: istruzione*
 
         ?istruzione: dichiarazione
-                   | for_stmt      -> for_stmt
+                   | for_stmt
                    | while_stmt    -> while_stmt
-                   | if_stmt       -> if_stmt
+                   | if_stmt
                    | return_stmt   -> return
-                   | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnamento
+                   | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
                    | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> append_array
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
                    | nome_var SWAP nome_var TERMINATORE  -> swap
@@ -133,6 +133,9 @@
                 | ROBA  nome_var GRAFFASINISTRA metodi costruttore  GRAFFADESTRA -> robba
                 | ROBA  nome_var GRAFFASINISTRA costruttore metodi GRAFFADESTRA -> robba
 
+        // COSTRUTTORE
+        costruttore: FRAVCATOR TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore
+
         ?campi: dichiarazione
              | campi dichiarazione
 
@@ -140,9 +143,7 @@
         ?metodi: funzione
               | metodi funzione
 
-        // COSTRUTTORE
 
-        costruttore: FRAVCATOR TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore_semplice
 
         // FUNZIONI
 
@@ -161,7 +162,7 @@
 
         // IF
 
-        if_stmt: METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_senzaelse
+        ?if_stmt: METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_senzaelse
                | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_completo
                | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA istruzione_singola ALLORFAACCUSSI istruzione_singola -> mettimca_completo
 

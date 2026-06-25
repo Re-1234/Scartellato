@@ -2,77 +2,90 @@ from lark import Lark, UnexpectedToken, UnexpectedCharacters
 
 from AST import *
 
+from dataclasses import fields, is_dataclass
+from lark import Token, Tree
+
 def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
     if e_radice:
         ramo = ""
-        estensione = ""
+        ext  = ""
     else:
         ramo = "└─ " if e_ultimo else "├─ "
-        estensione = "   " if e_ultimo else "│  "
+        ext  = "   " if e_ultimo else "│  "
 
+    # Token grezzo — ignora
+    if isinstance(nodo, Token):
+        return
+
+    # Tree non trasformato
+    if isinstance(nodo, Tree):
+        print(f"{prefisso}{ramo}[Tree non trasformato: {nodo.data}]")
+        return
+
+    # None
     if nodo is None:
         print(f"{prefisso}{ramo}None")
         return
 
+    # Primitivi
     if isinstance(nodo, (int, float, str, bool)):
         print(f"{prefisso}{ramo}{repr(nodo)}")
         return
 
+    # Lista
     if isinstance(nodo, list):
+        if not nodo:
+            print(f"{prefisso}{ramo}[]")
+            return
         print(f"{prefisso}{ramo}[lista]")
-        for i, elemento in enumerate(nodo):
-            ultimo = i == len(nodo) - 1
-            stampa_ast(elemento, prefisso + estensione, ultimo, False)
+        for i, el in enumerate(nodo):
+            stampa_ast(el, prefisso + ext, i == len(nodo) - 1, False)
         return
 
-    if isinstance(nodo, Numr):
-        print(f"{prefisso}{ramo}Numr({nodo.value})")
+    # Dataclass — caso generale
+    if is_dataclass(nodo):
+        # etichetta compatta per i nodi foglia (un solo campo primitivo)
+        campi = fields(nodo)
 
-    elif isinstance(nodo, Boolean):
-        print(f"{prefisso}{ramo}Boolean({nodo.value})")
+        # nodi con rappresentazione inline
+        if isinstance(nodo, Numr):
+            print(f"{prefisso}{ramo}Numr({nodo.value})")
+            return
+        if isinstance(nodo, Boolean):
+            print(f"{prefisso}{ramo}Boolean({nodo.value})")
+            return
+        if isinstance(nodo, Stringa):
+            print(f"{prefisso}{ramo}Stringa({repr(nodo.value)})")
+            return
+        if isinstance(nodo, Carattr):
+            print(f"{prefisso}{ramo}Carattr({repr(nodo.value)})")
+            return
+        if isinstance(nodo, GenericVar):
+            print(f"{prefisso}{ramo}GenericVar({repr(nodo.value)})")
+            return
+        if isinstance(nodo, Variabile):
+            arr = "[]" if nodo.is_array else ""
+            print(f"{prefisso}{ramo}Variabile({arr}{repr(str(nodo.nome))})")
+            return
 
-    elif isinstance(nodo, Stringa):
-        print(f"{prefisso}{ramo}Stringa({repr(nodo.value)})")
+        # nodi composti — stampa nome classe poi ogni campo
+        print(f"{prefisso}{ramo}{type(nodo).__name__}")
+        for i, campo in enumerate(campi):
+            valore = getattr(nodo, campo.name)
+            ultimo_campo = i == len(campi) - 1
+            ramo_c = "└─ " if ultimo_campo else "├─ "
+            ext_c  = "   " if ultimo_campo else "│  "
+            print(f"{prefisso}{ext}{ramo_c}{campo.name}:")
+            stampa_ast(
+                valore,
+                prefisso + ext + ext_c,
+                True,
+                False
+            )
+        return
 
-    elif isinstance(nodo, Variabile):
-        print(f"{prefisso}{ramo}Variabile({repr(nodo.value)})")
-
-    elif isinstance(nodo, OpBin):
-        print(f"{prefisso}{ramo}OpBin({repr(str(nodo.op))})")
-        stampa_ast(nodo.left,  prefisso + estensione, False, False)
-        stampa_ast(nodo.right, prefisso + estensione, True,  False)
-
-    elif isinstance(nodo, Dichiarazione):
-        print(f"{prefisso}{ramo}Dichiarazione(tipo={repr(nodo.tipo)})")
-        stampa_ast(nodo.op, prefisso + estensione, True, False)
-
-    elif isinstance(nodo, Mettimmca):
-        print(f"{prefisso}{ramo}Mettimmca")
-        stampa_ast(nodo.op,     prefisso + estensione, False, False)
-        stampa_ast(nodo.allora, prefisso + estensione, nodo.altrimenti is None, False)
-        if nodo.altrimenti is not None:
-            stampa_ast(nodo.altrimenti, prefisso + estensione, True, False)
-
-    elif isinstance(nodo, Mestier):
-        print(f"{prefisso}{ramo}Mestier({repr(nodo.nome)})")
-
-    elif isinstance(nodo, Robba):
-        print(f"{prefisso}{ramo}Robba({repr(nodo.nome)})")
-
-    elif isinstance(nodo, Aspe):
-        print(f"{prefisso}{ramo}Aspe")
-        stampa_ast(nodo.Condizione, prefisso + estensione, False, False)
-
-    elif isinstance(nodo, Ambress_Ambress):
-        print(f"{prefisso}{ramo}Ambress_Ambress")
-
-    elif isinstance(nodo, ReturnStatement):
-        print(f"{prefisso}{ramo}ReturnStatement")
-        stampa_ast(nodo.valor, prefisso + estensione, True, False)
-
-    else:
-        print(f"{prefisso}{ramo}??? {type(nodo).__name__}")
-
+    # Fallback
+    print(f"{prefisso}{ramo}??? {type(nodo).__name__}  {nodo!r}")
 
 
 

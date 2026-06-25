@@ -38,14 +38,16 @@ class GenericVar:
 
 @dataclass(frozen=True)
 class Variabile:
-    value : str
+    nome : str
+    is_array: bool= False
+
+
 
 @dataclass(frozen=True)
 class Dichiarazione :
     tipo: object
-    nome : object
-    valore : object
-    is_array: bool
+    nome : Variabile
+    valore: object
 
 @dataclass(frozen=True)
 class Block:
@@ -56,10 +58,6 @@ class Assegnamento:
        name: str
        value: Any
 
-@dataclass(frozen=True)
-class SwapStmt:
-    left: str
-    right: str
 
 @dataclass(frozen=True)
 class CallStmt:
@@ -88,8 +86,7 @@ class Ambress_Ambress:
 @dataclass(frozen=True)
 class Parametro:
         tipo: str
-        nome: str
-        is_array: bool = False
+        nome: Variabile
 
 @dataclass(frozen=True)
 class Mestier:
@@ -101,8 +98,14 @@ class Mestier:
 
 
 @dataclass(frozen=True)
+class Costruttore:
+    params: list
+    corpo: Block
+
+@dataclass(frozen=True)
 class Robba:
       nome: str
+      costruttore: Costruttore
       variabili: list[object]
       funzioni: list[Mestier]
 

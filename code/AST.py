@@ -6,9 +6,9 @@ class AST_Transformer(Transformer):
     TOKEN_DA_SCARTARE = {
         'TONDASINISTRA', 'TONDADESTRA',
         'GRAFFASINISTRA', 'GRAFFADESTRA',
-        'QUADRATADESTRA','QUADARATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI'
-         ,'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE',
-     }
+        'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
+        'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'FRAVCATOR', 'ASSIGN'
+    }
 
 
 
@@ -41,102 +41,111 @@ class AST_Transformer(Transformer):
         token = figli[0]
         return  GenericVar(value=token)
 
-    def swap_stmt(self, items):
-        left, right = items
-        return SwapStmt(left=str(left), right=str(right))
-
-    def variabile_semplice(self, figli):
-        id_token = self.filtra(figli)[0]
-        return str(id_token), False
-
-    def variabile_array(self, figli):
-        id_token = self.filtra(figli)[0]
-        return str(id_token), True
+    def swap(self, figli):
+        swap,left, right = self.filtra(figli)
+        return OpBin(op=str(swap),left=left ,right=right)
 
     #OPERAZIONI BINARIE
     def somma (self,figli):
         var1 = figli[0]
         operatore = figli[1]
-        var3 = figli[2]
-        return OpBin(operatore, var1, var3)
+        var2 = figli[2]
+        return OpBin(op=str(operatore), left=var1, right=var2)
 
     def plusplus(self,figli):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
-        return OpBin(operatore, variabile,None)
+        return OpBin(op=str(operatore), left=variabile, right=None)
 
     def menmen(self,figli):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
-        return OpBin(operatore,variabile,None)
+        return OpBin(op=str(operatore), left=variabile, right=None)
+
+    def minore(self, figli):
+        return OpBin(op="<", left=figli[0], right=figli[2])
 
     def uguale(self,figli):
         variabile1 = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         variabile2 = self.filtra(figli)[2]
-        return OpBin(operatore,variabile1,variabile2)
+        print("FIGLI equals:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        return OpBin(op= str(operatore),left=variabile1,right=variabile2)
 
 
     def sottrazione (self,figli):
         var1 = figli[0]
         operatore = self.filtra(figli)[1]
         var3 = self.filtra(figli)[2]
-        return OpBin(operatore, var1, var3)
+        return OpBin(op=operatore, left=var1, right=var3)
 
     def moltiplicazione(self, figli):
         var1 = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         var3 = self.filtra(figli)[2]
-        return OpBin(operatore, var1, var3)
+        return OpBin(op=operatore, left=var1, right=var3)
 
     def divisione(self, figli):
        var1,operatore, var3 = self.filtra(figli)
-       return OpBin(operatore, var1, var3)
+       return OpBin(op=operatore, left=var1, right=var3)
 
 
     def resto(self,figli):
-        variabile1 = self.filtra(figli)[0]
+        var1 = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
-        variabile2 = self.filtra(figli)[2]
-        return OpBin(operatore,variabile1,variabile2)
+        var3 = self.filtra(figli)[2]
+        return OpBin(op=operatore, left=var1, right=var3)
 
+    def variabile_semplice(self, figli):
+        id_token = self.filtra(figli)[0]
+        return Variabile(nome=id_token, is_array=False)
 
-    
-
+    def variabile_array(self, figli):
+        id_token = self.filtra(figli)[0]
+        return Variabile(nome=id_token, is_array=True)
 
     def dichiarazione(self, figli):
-        if len(figli) == 5: # tipo nome_var ASSIGN valore TERMINATORE
-            tipo = str(figli[0])
-            nome = str(figli[1])
-            assign = str(figli[2])
-            valore = figli[3]
-            opBin = OpBin(assign, tipo, valore)
-            return Dichiarazione(tipo=tipo, op=opBin)
-        else:  # tipo nome_var TERMINATORE
-            tipo = str(figli[0])
-            nome = str(figli[1])
-            opBin = OpBin("", nome , None)
-            return Dichiarazione(tipo, opBin)
-    def parametri(self, figli):
-        return list(figli)
+        nodi = self.filtra(figli)
+        tipo = str(nodi[0])
+        nome = nodi[1]
+        valore = nodi[2] if len(nodi) > 2 else None
+        return Dichiarazione(tipo=tipo, nome=nome, valore=valore)
+
+    def assegnazione(self,figli):
+        var1 = self.filtra(figli)[0]
+        var2 = self.filtra(figli)[1]
+        return OpBin(op='=', left=var1, right=var2)
 
     def aspe(self,figli):
         condition , corpo = self.filtra(figli)
         return Aspe(condition, corpo)
 
     def mettimca_completo(self,figli):
-        print("FIGLI FILTRATI:", self.filtra(figli)) #debug
-        op , allora , altrimenti = self.filtra(figli)
+        print("METTIMCA figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        op, allora, altrimenti = self.filtra(figli)
         return Mettimmca(op,allora,altrimenti)
 
-    def mettimca_senzaElse(self,figli):
-        op , allora ,altrimenti = self.filtra(figli)
-        return Mettimmca(op,allora,altrimenti)
+    def mettimca_senzaelse(self,figli):
+        op , allora = self.filtra(figli)
+        return Mettimmca(op,allora,altrimenti=None)
 
+    def sezione_parametri(self, figli):
+        return [f for f in figli if isinstance(f, Parametro)]
 
     def ritornaStatem(self,figli):
         valor = self.filtra(figli)
         return ReturnStatement(valor)
+
+    def blocco(self, figli):
+        return Block(statements=figli)
+
+    def parametri(self, figli):
+        type, value = self.filtra(figli)
+        return Parametro(nome=type, value= value)
 
     def funzione_semplice(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
@@ -150,9 +159,16 @@ class AST_Transformer(Transformer):
         tipo, nome, parametri, blocco = self.filtra(figli)
         return Mestier (tipo, nome,parametri,blocco)
 
+    def costruttore(self, figli):
+        parametri , corpo = self.filtra(figli)
+        print("FIGLI COSTRUTTORE:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        return Costruttore(parametri, corpo)
+
     def robba(self , figli):
-        nome , variabili , funzioni = self.filtra(figli)
-        return Robba(nome, variabili, funzioni)
+        nome , costruttore, variabili , funzioni = self.filtra(figli)
+        return Robba(nome, costruttore, variabili, funzioni)
 
     def ambress_ambress(self,figli):
         tipo, corpo,dichiarazione ,operatore = self.filtra(figli)
@@ -160,4 +176,4 @@ class AST_Transformer(Transformer):
 
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""
-        return figli[0]
+        return Start(program=figli)
