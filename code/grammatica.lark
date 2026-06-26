@@ -57,9 +57,8 @@
         SCCASCIA: "sccascia"      //break
         CCASTA: "ccàsta"         //return
         TERMINATORE: "!"        //fine istruzione
-        VIRGOLA:","            //separatore parametri
+        CHIAMATA: "jamm_ja"    // keyword per chiamata a funzione
         SWAP: "<->"           //swap dei valori
-        CHIAMATA: "jamm_ja"     // keyword per chiamata a funzione
         PARAMETRI_TK: "guagliuni" // elenco di parametri
 
         %ignore /\s+/
@@ -90,12 +89,8 @@
                    | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> append_array
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
                    | nome_var SWAP nome_var TERMINATORE  -> swap
-                   | CHIAMATA ":" nome_var TONDASINISTRA sezione_chiamata TONDADESTRA TERMINATORE -> call_stmt
+                   | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
 
-        ?lista_argomenti: expr_primary
-                | lista_argomenti VIRGOLA expr_primary
-
-        ?sezione_chiamata: PARAMETRI_TK ":" lista_argomenti
 
 
         // RETURN E BREAK
@@ -153,7 +148,7 @@
 
 
         ?lista_parametri: parametro
-                | lista_parametri VIRGOLA parametro
+                | lista_parametri "," parametro
 
         ?sezione_parametri: PARAMETRI_TK ":" lista_parametri
                             |
@@ -178,25 +173,13 @@
 
         // FOR
 
-        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo -> for_condizione
-                | AMBRESS_AMBRESS TONDASINISTRA tipo_keyword nome_var ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_completo
-                | AMBRESS_AMBRESS TONDASINISTRA nome_var valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_assegnazione
-                | AMBRESS_AMBRESS TONDASINISTRA  nome_var TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_soloid
+        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo -> ambress_ambress
+                | AMBRESS_AMBRESS TONDASINISTRA dichiarazione_for assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> ambress_ambress
+                | AMBRESS_AMBRESS TONDASINISTRA nome_var TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> ambress_ambress
 
 
+        dichiarazione_for: tipo nome_var ASSIGN assegnamento_composto TERMINATORE ->dichiarazione
 
-        tipo_keyword: NUMR_TK -> tipo_numero
-                 | LOTA_TK -> tipo_lota
-                 | NBRUOGGLIO_TK -> tipo_nbruogglio
-                 | LETTER_TK -> tipo_letter
-                 | GEN_TYPE -> tipo_generico
-                 |
-
-        valore_init: BOOLEAN -> boolean
-                   | NUMERO -> numero
-                   | STRINGA -> stringa
-                   | CARATTERE -> carattere
-                   | nome_var
 
         valutazione :  nome_var PLUSPLUS -> incremento_destro
                     |  PLUSPLUS  nome_var -> incremento_sinistra
@@ -204,7 +187,7 @@
                     |  nome_var MENMEN -> decremento_destro
                     |
 
-        for_corpo: GRAFFASINISTRA blocco GRAFFADESTRA
+        ?for_corpo: "}" blocco "{"
                  | istruzione_singola
 
 

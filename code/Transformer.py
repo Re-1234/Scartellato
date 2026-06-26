@@ -61,7 +61,7 @@ class Assegnamento:
 
 @dataclass(frozen=True)
 class CallStmt:
-    func: str
+    nome_func: object
     args: List[Any]
 
 @dataclass(frozen=True)
@@ -77,8 +77,8 @@ class Aspe:
 
 @dataclass(frozen=True)
 class Ambress_Ambress:
-    condizione: OpBin
     dichiarazione: Dichiarazione | Variabile
+    condizione: OpBin
     VarOperation: object
     Corpo: Block
 

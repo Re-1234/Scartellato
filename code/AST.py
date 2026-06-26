@@ -7,7 +7,8 @@ class AST_Transformer(Transformer):
         'TONDASINISTRA', 'TONDADESTRA',
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
-        'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'FRAVCATOR', 'ASSIGN'
+        'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'FRAVCATOR', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
+        'PARAMETRI_TK'
     }
 
 
@@ -52,7 +53,7 @@ class AST_Transformer(Transformer):
         var2 = figli[2]
         return OpBin(op=str(operatore), left=var1, right=var2)
 
-    def plusplus(self,figli):
+    def incremento_destro(self,figli):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         return OpBin(op=str(operatore), left=variabile, right=None)
@@ -171,8 +172,14 @@ class AST_Transformer(Transformer):
         return Robba(nome, costruttore, variabili, funzioni)
 
     def ambress_ambress(self,figli):
-        tipo, corpo,dichiarazione ,operatore = self.filtra(figli)
-        return Ambress_Ambress(tipo, dichiarazione, operatore,corpo )
+        declaration, condizione , varOp, corpo = self.filtra(figli)
+        return Ambress_Ambress(declaration, condizione, varOp,corpo )
+
+    def call_stmt(self, figli):
+        nodi = self.filtra(figli)
+        nomefunc = nodi[0]  # Variabile con il nome della funzione
+        args = nodi[1:]  # lista di tutti gli argomenti dopo il nome
+        return CallStmt(nome_func=nomefunc , args=args)
 
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""
