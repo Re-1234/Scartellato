@@ -7,6 +7,13 @@ from typing import Any, List, Optional
 class Start:
     program: List[Any]
 
+@dataclass
+class TipoDato:
+    nome: str
+    linea: int
+    colonna: int
+
+
 @dataclass(frozen=True)
 class Numr:
     value: float
@@ -45,7 +52,7 @@ class Variabile:
 
 @dataclass(frozen=True)
 class Dichiarazione :
-    tipo: object
+    tipo: TipoDato
     nome : Variabile
     valore: object
 
@@ -90,7 +97,7 @@ class Parametro:
 
 @dataclass(frozen=True)
 class Mestier:
-        nome: str
+        nome: Variabile
         parametri: list[Parametro]
         ritorno: object
         corpo : list[object]

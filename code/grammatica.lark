@@ -48,13 +48,13 @@
         METTIMCA: "mettimcà"                    //if
         ALLORFAACCUSSI: "allor_fa_accussi"     //else
         ROBA: "robba"                         //classe
-        FRAVCATOR: "fravcator"               //costruttore
+        O_MAST: "o_mast"               //costruttore
         ASPE: "aspe"                        //while
         AMBRESS_AMBRESS: "ambressAmbress"  //for
         MESTIER: "mestier"           //funzione
         MAIN: "Uè"                  //main
         NULL: "Nuncsta_nient"      //null
-        SCCASCIA: "sccascia"      //break
+        BREAK: "stut_tutt"      //break
         CCASTA: "ccàsta"         //return
         TERMINATORE: "!"        //fine istruzione
         CHIAMATA: "jamm_ja"    // keyword per chiamata a funzione
@@ -95,7 +95,7 @@
 
         // RETURN E BREAK
 
-        return_stmt: SCCASCIA TERMINATORE
+        return_stmt: BREAK TERMINATORE
                    | CCASTA  nome_var TERMINATORE ->return
                    | CCASTA TERMINATORE   ->return
 
@@ -104,11 +104,11 @@
         dichiarazione: tipo nome_var ASSIGN assegnamento_composto TERMINATORE
                      | tipo nome_var TERMINATORE
 
-        ?tipo: GEN_TYPE
-            | LOTA_TK
-            | NUMR_TK
-            | NBRUOGGLIO_TK
-            | LETTER_TK
+        ?tipo: GEN_TYPE -> tipo
+            | LOTA_TK -> tipo
+            | NUMR_TK -> tipo
+            | NBRUOGGLIO_TK -> tipo
+            | LETTER_TK -> tipo
 
         ?nome_var: ID -> variabile_semplice
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
@@ -129,7 +129,7 @@
                 | ROBA  nome_var GRAFFASINISTRA costruttore metodi GRAFFADESTRA -> robba
 
         // COSTRUTTORE
-        costruttore: FRAVCATOR TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore
+        costruttore: O_MAST TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore
 
         ?campi: dichiarazione
              | campi dichiarazione
@@ -147,11 +147,8 @@
                 | VOID MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
 
 
-        ?lista_parametri: parametro
-                | lista_parametri "," parametro
-
-        ?sezione_parametri: PARAMETRI_TK ":" lista_parametri
-                            |
+        ?sezione_parametri: "guagliuni" ":" parametro ("," parametro)*
+                 |
 
         parametro: tipo nome_var
 

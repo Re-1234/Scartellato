@@ -7,7 +7,7 @@ class AST_Transformer(Transformer):
         'TONDASINISTRA', 'TONDADESTRA',
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
-        'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'FRAVCATOR', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
+        'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'O_MAST', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
         'PARAMETRI_TK'
     }
 
@@ -45,6 +45,14 @@ class AST_Transformer(Transformer):
     def swap(self, figli):
         swap,left, right = self.filtra(figli)
         return OpBin(op=str(swap),left=left ,right=right)
+
+    def tipo(self, figli):
+        token = figli[0]  # Il token grezzo (es. Token('NUMR_TK', 'numr'))
+        return TipoDato(
+            nome=token.value,
+            linea=token.line,
+            colonna=token.column
+        )
 
     #OPERAZIONI BINARIE
     def somma (self,figli):
@@ -109,7 +117,7 @@ class AST_Transformer(Transformer):
 
     def dichiarazione(self, figli):
         nodi = self.filtra(figli)
-        tipo = str(nodi[0])
+        tipo = nodi[0]
         nome = nodi[1]
         valore = nodi[2] if len(nodi) > 2 else None
         return Dichiarazione(tipo=tipo, nome=nome, valore=valore)
@@ -144,21 +152,28 @@ class AST_Transformer(Transformer):
     def blocco(self, figli):
         return Block(statements=figli)
 
-    def parametri(self, figli):
-        type, value = self.filtra(figli)
-        return Parametro(nome=type, value= value)
+    def parametro(self, figli):
+        tipo, value = self.filtra(figli)
+        print("parametri figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        return Parametro(tipo=tipo, nome = value)
 
     def funzione_semplice(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier(tipo, nome,parametri,blocco,is_array=False)
+        return Mestier(ritorno=tipo, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
 
     def funzione_array(self, figli):
+
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier(tipo, nome,parametri,blocco, is_array=True)
+        print("FIGLI func array")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        return Mestier(ritorno=str(tipo), nome=nome,parametri=parametri,corpo=blocco, is_array=True)
 
     def funzione_void(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier (tipo, nome,parametri,blocco)
+        return Mestier (ritorno=tipo, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
 
     def costruttore(self, figli):
         parametri , corpo = self.filtra(figli)
