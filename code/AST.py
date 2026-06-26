@@ -7,7 +7,8 @@ class AST_Transformer(Transformer):
         'TONDASINISTRA', 'TONDADESTRA',
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
-        'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'FRAVCATOR', 'ASSIGN'
+        'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'O_MAST', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
+        'PARAMETRI_TK'
     }
 
 
@@ -45,6 +46,14 @@ class AST_Transformer(Transformer):
         swap,left, right = self.filtra(figli)
         return OpBin(op=str(swap),left=left ,right=right)
 
+    def tipo(self, figli):
+        token = figli[0]  # Il token grezzo (es. Token('NUMR_TK', 'numr'))
+        return TipoDato(
+            nome=token.value,
+            linea=token.line,
+            colonna=token.column
+        )
+
     #OPERAZIONI BINARIE
     def somma (self,figli):
         var1 = figli[0]
@@ -52,7 +61,7 @@ class AST_Transformer(Transformer):
         var2 = figli[2]
         return OpBin(op=str(operatore), left=var1, right=var2)
 
-    def plusplus(self,figli):
+    def incremento_destro(self,figli):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         return OpBin(op=str(operatore), left=variabile, right=None)
@@ -108,7 +117,7 @@ class AST_Transformer(Transformer):
 
     def dichiarazione(self, figli):
         nodi = self.filtra(figli)
-        tipo = str(nodi[0])
+        tipo = nodi[0]
         nome = nodi[1]
         valore = nodi[2] if len(nodi) > 2 else None
         return Dichiarazione(tipo=tipo, nome=nome, valore=valore)
@@ -143,21 +152,28 @@ class AST_Transformer(Transformer):
     def blocco(self, figli):
         return Block(statements=figli)
 
-    def parametri(self, figli):
-        type, value = self.filtra(figli)
-        return Parametro(nome=type, value= value)
+    def parametro(self, figli):
+        tipo, value = self.filtra(figli)
+        print("parametri figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        return Parametro(tipo=tipo, nome = value)
 
     def funzione_semplice(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier(tipo, nome,parametri,blocco,is_array=False)
+        return Mestier(ritorno=tipo, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
 
     def funzione_array(self, figli):
+
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier(tipo, nome,parametri,blocco, is_array=True)
+        print("FIGLI func array")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        return Mestier(ritorno=str(tipo), nome=nome,parametri=parametri,corpo=blocco, is_array=True)
 
     def funzione_void(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier (tipo, nome,parametri,blocco)
+        return Mestier (ritorno=tipo, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
 
     def costruttore(self, figli):
         parametri , corpo = self.filtra(figli)
@@ -171,8 +187,14 @@ class AST_Transformer(Transformer):
         return Robba(nome, costruttore, variabili, funzioni)
 
     def ambress_ambress(self,figli):
-        tipo, corpo,dichiarazione ,operatore = self.filtra(figli)
-        return Ambress_Ambress(tipo, dichiarazione, operatore,corpo )
+        declaration, condizione , varOp, corpo = self.filtra(figli)
+        return Ambress_Ambress(declaration, condizione, varOp,corpo )
+
+    def call_stmt(self, figli):
+        nodi = self.filtra(figli)
+        nomefunc = nodi[0]  # Variabile con il nome della funzione
+        args = nodi[1:]  # lista di tutti gli argomenti dopo il nome
+        return CallStmt(nome_func=nomefunc , args=args)
 
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""

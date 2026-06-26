@@ -113,12 +113,12 @@ def compilatore(source: str) -> str:
 
 compilatore(""" 
 
-            vacant mestier pippo ) guagliuni :  numr a , numr b ( } 
+            numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio r = ??a + b??  !
             {
 
              robba ciro }
-                fravcator )  ( }
+                o_mast )  ( }
                     a = c !
                 {
                 
