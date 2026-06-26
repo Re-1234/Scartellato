@@ -178,10 +178,10 @@
 
         // FOR
 
-        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo -> for_condizione
-                | AMBRESS_AMBRESS TONDASINISTRA tipo_keyword nome_var ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_completo
-                | AMBRESS_AMBRESS TONDASINISTRA nome_var valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_assegnazione
-                | AMBRESS_AMBRESS TONDASINISTRA  nome_var TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for_soloid
+        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo -> for
+                | AMBRESS_AMBRESS TONDASINISTRA tipo_keyword nome_var ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for
+                | AMBRESS_AMBRESS TONDASINISTRA nome_var ASSIGN valore_init TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for
+                | AMBRESS_AMBRESS TONDASINISTRA  nome_var TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> for
 
 
 

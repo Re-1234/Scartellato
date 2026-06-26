@@ -48,19 +48,4 @@ class TypeEnviroment:
             self.visit(kid)
 
         self.symbolTable.exitScope()
-
-
-    def visit_Parametro(self,node):
-        node.tipo = self.visit(node)
-
-
-
-    def 
-
-
-
-
-
-
-
-
+    
