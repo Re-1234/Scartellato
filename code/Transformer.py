@@ -100,13 +100,13 @@ class Mestier:
         nome: Variabile
         parametri: list[Parametro]
         ritorno: object
-        corpo : list[object]
+        corpo : Block
         is_array: bool = False
 
 
 @dataclass(frozen=True)
 class Costruttore:
-    params: list
+    params: list[Parametro]
     corpo: Block
 
 @dataclass(frozen=True)
