@@ -3,7 +3,7 @@ from Transformer import Robba, Mestier, Block, ReturnStatement
 from Transformer import Parametro
 from SemanticError import SemanticError
 from Transformer import Costruttore
-from code.Transformer import Variabile
+
 
 
 class TypeEnviroment:
@@ -83,8 +83,7 @@ class TypeEnviroment:
 
     #da continuare a modificare questo metodo
     def visit_ReturnStatement(self,node : ReturnStatement):
-        if
+        if not isinstance(node.valor ,  ):
 
-        if isinstance(node.valor,Variabile):
-            if self.symbolTable.lookup(node.valor) is None:
+        elif self.symbolTable.lookup(node.valor) is None:
                 raise SemanticError(f"Errore: Non è stata dichiarata la variabile '{node}'")

@@ -11,7 +11,6 @@ class SymbolTable:
     def exitScope(self):
        self.table = self.stack.pop()
 
-
     def addId(self, symbol,name):
         self.table[symbol] = name
 
