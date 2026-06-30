@@ -9,6 +9,7 @@ from SemanticError import SemanticError
 from Transformer import Costruttore
 from Transformer import Variabile, Numr, Boolean, Stringa, Carattr
 from Transformer import Dichiarazione, TipoDato
+from code.Transformer import Assegnamento
 
 
 class AnalisiSemantica:
@@ -152,9 +153,6 @@ class AnalisiSemantica:
             if node.op == "+":
                 return "Stringa"
 
-
-
-
         raise SemanticError(
             f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: i tipi delle variabili sono diversi: "
             f"a sinistra è {co} e a destra è {ci}"
@@ -162,11 +160,15 @@ class AnalisiSemantica:
 
 
     def visit_Dichiarazione(self,node : Dichiarazione):
+
         tipo_dichiarato = node.tipo.nome  # es. "Numr", "Boolean", "Stringa"
         nome_variabile = node.nome.nome
 
         if node.valore is not None:
             tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
+
+        if self.symbolTable.probe(node.nome):
+            raise SemanticError(f"Errore ")
 
          if not self._compatibili(tipo_dichiarato, tipo_valore):
              raise SemanticError(
@@ -175,6 +177,12 @@ class AnalisiSemantica:
                  f"ma le viene assegnato un valore di tipo '{tipo_valore}'")
 
          return None
+
+
+    def visit_Assegnamento(self,node : Assegnamento):
+        if(self.symbolTable.lookup(node.name) == None):
+            raise SemanticError(f"NNNNNNOOOOOOOOOOOO che stai Facen: variabile {node.name}")
+
 
     def control_Ope_Bool(self,oper : str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":
