@@ -66,6 +66,7 @@ class AnalisiSemantica:
         #visita i nodi figli riguardo alla funzione
         for kid in node.parametri:
             self.visit(kid)
+            self.tipi_risolti[id(kid.nome)] = str(kid.tipo)
 
         self.visit(node.corpo)
 
@@ -91,7 +92,6 @@ class AnalisiSemantica:
         return tipo_atteso == tipo_trovato
 
 
-
     def visit_Parametro(self, node: Parametro):
         # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
         nome_var = node.nome.nome
@@ -110,6 +110,7 @@ class AnalisiSemantica:
 
          for par in node.parametri:
              self.visit(par)
+             self.tipi_risolti[id(par.nome)] = str(par.tipo)
 
          self.visit(node.corpo)
          self.symbolTable.exitScope()
@@ -151,14 +152,10 @@ class AnalisiSemantica:
             if node.op == "+":
                 return "Stringa"
 
-
-
-
         raise SemanticError(
             f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: i tipi delle variabili sono diversi: "
             f"a sinistra è {co} e a destra è {ci}"
         )
-
 
 
 
