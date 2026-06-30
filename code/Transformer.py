@@ -73,7 +73,7 @@ class CallStmt:
 
 @dataclass(frozen=True)
 class Mettimmca:
-    condizione : Any
+    condizione : OpBin
     allora: Block
     altrimenti:  Optional[Block] = None
 
