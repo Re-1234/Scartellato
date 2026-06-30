@@ -79,7 +79,7 @@ class Mettimmca:
 
 @dataclass(frozen=True)
 class Aspe:
-    Condizione: object
+    Condizione: OpBin
     Corpo: Block
 
 @dataclass(frozen=True)

@@ -1,7 +1,9 @@
+from curses.ascii import controlnames
+
 from lark import visitors
 
 from SymbolTable import SymbolTable
-from Transformer import Robba, Mestier, Block, ReturnStatement, GenericVar, Ambress_Ambress
+from Transformer import Robba, Mestier, Block, ReturnStatement, GenericVar, Ambress_Ambress, OpBin
 from Transformer import Parametro
 from SemanticError import SemanticError
 from Transformer import Costruttore
@@ -121,7 +123,46 @@ class AnalisiSemantica:
 
         if not isinstance(node.condizione,bool):
             raise SemanticError(f"Ma ch stai facen!!!!!: non puoi inserire una espressione che ha come risultato un valore diverso da boolean")
-
-        if isinstance(node.VarOperation):
-
         self.symbolTable.exitScope()
+
+    def visit_OpBin(self,node:OpBin):
+        co = self.visit(node.left)
+        ci = self.visit(node.right)
+
+        if isinstance(co, bool) and isinstance(ci, bool):
+            if self.control_Ope_Bool(node.op):
+                return "Bool"
+
+        if isinstance(co , Numr) and isinstance(ci , Numr):
+            if self.control_Ope_Aritmetic(node.op):
+                return "Numr"
+
+        if isinstance(co ,str) and isinstance(ci ,str):
+            if node.op == "+":
+                return "Stringa"
+
+
+
+
+        raise SemanticError(
+            f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: i tipi delle variabili sono diversi: "
+            f"a sinistra è {co} e a destra è {ci}"
+        )
+
+
+
+
+    def control_Ope_Bool(self,oper : str):
+        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":
+            return True
+        else:
+            return False
+
+    def control_Ope_Aritmetic(self,oper : str):
+        if oper == "+" or oper == "-" or oper == "*" or oper == "/" or oper == "%":
+            return True
+        else:
+            return False
+
+
+
