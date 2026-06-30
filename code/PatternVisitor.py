@@ -8,6 +8,8 @@ from Transformer import Parametro
 from SemanticError import SemanticError
 from Transformer import Costruttore
 from Transformer import Variabile, Numr, Boolean, Stringa, Carattr
+from Transformer import Dichiarazione, TipoDato
+from code.Transformer import Assegnamento
 
 
 class AnalisiSemantica:
@@ -140,15 +142,15 @@ class AnalisiSemantica:
         co = self.visit(node.left)
         ci = self.visit(node.right)
 
-        if isinstance(co, bool) and isinstance(ci, bool):
+        if co == Boolean and ci == Boolean:
             if self.control_Ope_Bool(node.op):
                 return "Bool"
 
-        if isinstance(co , Numr) and isinstance(ci , Numr):
+        if co == "Numr" and ci == "Numr":
             if self.control_Ope_Aritmetic(node.op):
                 return "Numr"
 
-        if isinstance(co ,str) and isinstance(ci ,str):
+        if co == "Stringa" and ci == "Stringa":
             if node.op == "+":
                 return "Stringa"
 
@@ -158,6 +160,29 @@ class AnalisiSemantica:
         )
 
 
+    def visit_Dichiarazione(self,node : Dichiarazione):
+
+        tipo_dichiarato = node.tipo.nome  # es. "Numr", "Boolean", "Stringa"
+        nome_variabile = node.nome.nome
+
+        if node.valore is not None:
+            tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
+
+        if self.symbolTable.probe(node.nome):
+            raise SemanticError(f"Errore ")
+
+         if not self._compatibili(tipo_dichiarato, tipo_valore):
+             raise SemanticError(
+                 f"Errore di tipo (riga {node.tipo.linea}, colonna {node.tipo.colonna}): "
+                 f"la variabile '{nome_variabile}' è dichiarata come '{tipo_dichiarato}' "
+                 f"ma le viene assegnato un valore di tipo '{tipo_valore}'")
+
+         return None
+
+
+    def visit_Assegnamento(self,node : Assegnamento):
+        if(self.symbolTable.lookup(node.name) == None):
+            raise SemanticError(f"NNNNNNOOOOOOOOOOOO che stai Facen: variabile {node.name}")
 
     def control_Ope_Bool(self,oper : str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":
