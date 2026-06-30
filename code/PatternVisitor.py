@@ -9,16 +9,27 @@ from Transformer import Variabile, Numr, Boolean, Stringa, Carattr
 
 
 class AnalisiSemantica:
-    symbolTable : SymbolTable
+    def __init__(self):
+        self.errori = []
+        symbolTable : SymbolTable
+        self.tipi_risolti = {}
 
     def visit(self, node):
         class_name = node.__class__.__name__
         method_name = f'visit_{class_name}'
         method = getattr(self, method_name, self.generic_visit)
-        return method(node)
+
+        risultato =method(node)
+        if risultato is not None and isinstance(risultato, str):
+            self.tipi_risolti[id(node)] = risultato
+
+        return risultato
 
     def generic_visit(self, node):
         raise Exception(f"Nessun metodo visit_{node.__class__.__name__}")
+
+    def errore(self, msg):
+        self.errori.append(msg)
 
     def visit_start(self,node):
         self.symbolTable = SymbolTable()
@@ -67,18 +78,17 @@ class AnalisiSemantica:
     def visit_Stringa(self , node: Stringa):
         return "Stringa"
 
-    def visit_GenericVar(self , node: GenericVar):
-        #controllo del tipo del valore assegnato alla variabile generica
-        if isinstance(node.value , float | int):
-            return "Numr"
-        elif isinstance(node.value , bool):
-            return "Boolean"
-        elif isinstance(node.value , str):
-            return "Stringa"
-        elif isinstance(node.value , Carattr):
-            return "Carattr"
-        else:
-            raise SemanticError(f"Uglio ma che cazz hai miss!!!!!:Una variabile generica non puo avere valori diversi da Numr , Boolean ,Stringa , Carattr")
+    def visit_GenericVar(self, nodo):
+        return "burdell"
+
+    def _compatibili(self, tipo_atteso, tipo_trovato):
+        tipo_atteso = str(tipo_atteso)
+        tipo_trovato = str(tipo_trovato)
+        if tipo_atteso == "burdell":  # burdell = tipo generico, accetta tutto
+            return True
+        return tipo_atteso == tipo_trovato
+
+
 
     def visit_Parametro(self, node: Parametro):
         # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
