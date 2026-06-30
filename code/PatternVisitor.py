@@ -3,13 +3,8 @@ from curses.ascii import controlnames
 from lark import visitors
 
 from SymbolTable import SymbolTable
-from Transformer import Robba, Mestier, Block, ReturnStatement, GenericVar, Ambress_Ambress, OpBin
-from Transformer import Parametro
 from SemanticError import SemanticError
-from Transformer import Costruttore
-from Transformer import Variabile, Numr, Boolean, Stringa, Carattr
-from Transformer import Dichiarazione, TipoDato
-from code.Transformer import Assegnamento
+from Transformer import *
 
 
 class AnalisiSemantica:
