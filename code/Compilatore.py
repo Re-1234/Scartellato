@@ -123,8 +123,9 @@ compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio r = ??a + b??  !
             {
-
+            
              robba ciro }
+                numr c!
                 o_mast )  ( }
                     numr a !
                     a = c !

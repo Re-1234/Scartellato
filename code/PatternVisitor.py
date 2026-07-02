@@ -238,7 +238,8 @@ class AnalisiSemantica:
 
         tipo_dichiarato = node.tipo.nome  # es. "Numr", "Boolean", "Stringa"
         nome_variabile = node.nome.nome
-        tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
+        if node.valore is not None:
+           tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
 
         if self.symbolTable.probe(node.nome):
             raise SemanticError(f"Errore ")

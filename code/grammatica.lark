@@ -75,6 +75,7 @@
 
         ?top_level: funzione
                   | classe
+                  | dichiarazione
 
         //  BLOCCO E ISTRUZIONI
 
@@ -116,17 +117,11 @@
 
         //CLASSI
 
-        ?classe:  ROBA  nome_var GRAFFASINISTRA campi costruttore metodi  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA costruttore campi metodi GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA campi metodi costruttore GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA costruttore metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA metodi costruttore campi GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA metodi campi costruttore GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA campi costruttore metodi campi  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA campi metodi costruttore campi  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA campi metodi campi costruttore GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA metodi costruttore  GRAFFADESTRA -> robba
-                | ROBA  nome_var GRAFFASINISTRA costruttore metodi GRAFFADESTRA -> robba
+        ?classe: ROBA nome_var GRAFFASINISTRA membro* GRAFFADESTRA -> robba
+
+        ?membro: dichiarazione
+               | funzione
+               | costruttore
 
         // COSTRUTTORE
         costruttore: O_MAST TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore
