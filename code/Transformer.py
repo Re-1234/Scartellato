@@ -26,7 +26,7 @@ class OpBin:
 
 @dataclass(frozen=True)
 class Boolean:
-    value: bool
+    value: object
 
 @dataclass(frozen=True)
 class Stringa:
@@ -118,4 +118,4 @@ class Robba:
 
 @dataclass(frozen=True)
 class ReturnStatement:
-      valor: object
+      valore: object

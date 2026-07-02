@@ -141,6 +141,7 @@ compilatore("""
                 {
                 burdell c = a - v !
                 lota d = sasicchj!
+                d=friariell!
                 
               ambressAmbress ) numr c= 5 ! c<8 ! c++( }
                 mettimcà ) 3<4( }
@@ -148,6 +149,8 @@ compilatore("""
                     c <-> b !              
                 { 
               {
+              
+              ccàsta ! 
             {
 
     """)

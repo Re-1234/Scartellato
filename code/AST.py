@@ -43,7 +43,7 @@ class AST_Transformer(Transformer):
         return  GenericVar(value=token)
 
     def swap(self, figli):
-        swap,left, right = self.filtra(figli)
+        left,swap, right = self.filtra(figli)
         return OpBin(op=str(swap),left=left ,right=right)
 
     def tipo(self, figli):
@@ -195,6 +195,11 @@ class AST_Transformer(Transformer):
         nomefunc = nodi[0]  # Variabile con il nome della funzione
         args = nodi[1:]  # lista di tutti gli argomenti dopo il nome
         return CallStmt(nome_func=nomefunc , args=args)
+
+    def returnstatement(self, figli):
+        nodi = self.filtra(figli)
+        valore = nodi[0] if len(nodi) > 0 else None
+        return ReturnStatement(valore)
 
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""

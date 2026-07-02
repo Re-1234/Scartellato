@@ -84,7 +84,7 @@
                    | for_stmt
                    | while_stmt    -> while_stmt
                    | if_stmt
-                   | return_stmt   -> return
+                   | return_stmt
                    | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
                    | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> append_array
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
@@ -96,8 +96,8 @@
         // RETURN E BREAK
 
         return_stmt: BREAK TERMINATORE
-                   | CCASTA  nome_var TERMINATORE ->return
-                   | CCASTA TERMINATORE   ->return
+                   | CCASTA  nome_var TERMINATORE ->returnstatement
+                   | CCASTA TERMINATORE   ->returnstatement
 
         // DICHIARAZIONI DI VARIABILI
 
