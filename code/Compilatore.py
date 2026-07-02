@@ -5,6 +5,10 @@ from AST import *
 from dataclasses import fields, is_dataclass
 from lark import Token, Tree
 
+from PatternVisitor import AnalisiSemantica
+from PatternVisitor import AnalisiSemantica
+
+
 def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
     if e_radice:
         ramo = ""
@@ -99,6 +103,10 @@ def compilatore(source: str) -> str:
     try:
         tree = parser.parse(source)
         print(tree.pretty())
+        ast = AST_Transformer().transform(tree)
+        analisiSemantica = AnalisiSemantica()
+        analisiSemantica.visit(ast)
+
     except UnexpectedToken as e:
         print(f"Errore sintattico alla riga {e.line}, col {e.column}")
         print(f"Token inatteso: {e.token!r}")
@@ -108,17 +116,17 @@ def compilatore(source: str) -> str:
         print(f"Errore lessicale: {e.char!r}")
 
 
-    ast =  AST_Transformer().transform(tree)
-    stampa_ast(ast)
 
-compilatore(""" 
 
+
+compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio r = ??a + b??  !
             {
 
              robba ciro }
                 o_mast )  ( }
+                    numr a !
                     a = c !
                 {
                 

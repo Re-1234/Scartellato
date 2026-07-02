@@ -1,3 +1,5 @@
+from lark import Tree
+
 from SymbolTable import SymbolTable
 from SemanticError import SemanticError
 from Transformer import *
@@ -10,10 +12,14 @@ class AnalisiSemantica:
         self.tipi_risolti = {}
 
     def visit(self, node):
-        class_name = node.__class__.__name__
-        method_name = f'visit_{class_name}'
-        method = getattr(self, method_name, self.generic_visit)
+        if isinstance(node , Tree):
+            method_name = f'visit_{node.data}'
+        else:
+            class_name = node.__class__.__name__
+            method_name = f'visit_{class_name}'
 
+        method = getattr(self, method_name, self.generic_visit)
+        print("ciao")
         risultato = method(node)
         if risultato is not None and isinstance(risultato, str):
             self.tipi_risolti[id(node)] = risultato
@@ -36,7 +42,6 @@ class AnalisiSemantica:
             self.visit(kid)
 
         self.symbolTable.exitScope()
-
 
 
     #   ---CLASSE---
@@ -74,7 +79,7 @@ class AnalisiSemantica:
         return "Boolean"
 
     def visit_Stringa(self, node: Stringa):
-        return "Stringa"
+        return "nbruogglio"
 
     def visit_Carattr(self, node: Carattr):
         return "Carattr"
@@ -126,7 +131,6 @@ class AnalisiSemantica:
         self.symbolTable.addId(nome_var, tipo_var)
 
 
-        # da continuare a modificare questo metodo
     def visit_ReturnStatement(self, node: ReturnStatement):
             if not isinstance(node.valor, Variabile):
                 return self.visit(node.valor)
@@ -226,18 +230,17 @@ class AnalisiSemantica:
 
         tipo_dichiarato = node.tipo.nome  # es. "Numr", "Boolean", "Stringa"
         nome_variabile = node.nome.nome
-
-        if node.valore is not None:
-            tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
+        tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
 
         if self.symbolTable.probe(node.nome):
             raise SemanticError(f"Errore ")
-
-        if not self._compatibili(tipo_dichiarato, tipo_valore):
-            raise SemanticError(
-                f"Errore di tipo (riga {node.tipo.linea}, colonna {node.tipo.colonna}): "
-                f"la variabile '{nome_variabile}' è dichiarata come '{tipo_dichiarato}' "
-                f"ma le viene assegnato un valore di tipo '{tipo_valore}'")
+        if node.valore is not None:
+            tipo_valore = self.visit(node.valore)
+            if not self._compatibili(tipo_dichiarato, tipo_valore):
+                raise SemanticError(
+                    f"Errore di tipo (riga {node.tipo.linea}, colonna {node.tipo.colonna}): "
+                    f"la variabile '{nome_variabile}' è dichiarata come '{tipo_dichiarato}' "
+                    f"ma le viene assegnato un valore di tipo '{tipo_valore}'")
 
         self.symbolTable.addId(nome_variabile, tipo_dichiarato)
 
@@ -258,6 +261,7 @@ class AnalisiSemantica:
                 f"assegnato '{tipo_valore}'"
             )
         return tipo_var
+
 
     def control_Ope_Bool(self, oper: str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":

@@ -68,7 +68,7 @@ class Assegnamento:
 
 @dataclass(frozen=True)
 class CallStmt:
-    nome_func: object
+    nome_func: str
     args: List[Any]
 
 @dataclass(frozen=True)
@@ -106,7 +106,7 @@ class Mestier:
 
 @dataclass(frozen=True)
 class Costruttore:
-    params: list[Parametro]
+    parametri: list[Parametro]
     corpo: Block
 
 @dataclass(frozen=True)
