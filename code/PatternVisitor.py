@@ -1,5 +1,3 @@
-from lark import Tree
-
 from SymbolTable import SymbolTable
 from SemanticError import SemanticError
 from Transformer import *
@@ -10,14 +8,11 @@ class AnalisiSemantica:
         self.errori = []
         symbolTable: SymbolTable
         self.tipi_risolti = {}
+        self.funzione_corrente = None
 
     def visit(self, node):
-        if isinstance(node , Tree):
-            method_name = f'visit_{node.data}'
-        else:
-            class_name = node.__class__.__name__
-            method_name = f'visit_{class_name}'
-
+        class_name = node.__class__.__name__
+        method_name = f'visit_{class_name}'
         method = getattr(self, method_name, self.generic_visit)
         print("ciao")
         risultato = method(node)
@@ -108,6 +103,8 @@ class AnalisiSemantica:
         # ne crea uno nuovo per lo scope della funzione
         self.symbolTable.addId(node.nome, node)
         self.symbolTable.enterScope()
+        #salvataggio del nodo con la funzione corrente
+        self.funzione_corrente = node
 
         #visita i nodi figli riguardo alla funzione
         for kid in node.parametri:
@@ -115,8 +112,11 @@ class AnalisiSemantica:
             self.tipi_risolti[id(kid.nome)] = str(kid.tipo)
 
         self.visit(node.corpo)
-
+        # reset del valore cosi non sarà alterato in chiamate future
+        self.funzione_corrente = None
         self.symbolTable.exitScope()
+
+
 
     def visit_Parametro(self, node: Parametro):
         # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
@@ -131,12 +131,20 @@ class AnalisiSemantica:
         self.symbolTable.addId(nome_var, tipo_var)
 
 
+        # da continuare a modificare questo metodo
     def visit_ReturnStatement(self, node: ReturnStatement):
-            if not isinstance(node.valor, Variabile):
-                return self.visit(node.valor)
-            elif self.symbolTable.lookup(node.valor) is None:
-                raise SemanticError(f"Stat accort: Non è stata dichiarata la variabile '{node}'")
-            return None
+        # nodo.valore contiene un nodo qualsiasi
+        tipo_valore = self.visit(node.valore) if node.valore is not None else "vacant"
+
+        if self.funzione_corrente is not None:
+            tipo_atteso = str(self.funzione_corrente.ritorno)
+            if not self._compatibili(tipo_atteso, tipo_valore):
+                raise SemanticError(
+                    f"Return di tipo '{tipo_valore}' ma la funzione "
+                    f"'{self.funzione_corrente.nome.nome}' ritorna '{tipo_atteso}'"
+                )
+
+        return tipo_valore
 
 
     def visit_Block(self, node: Block):
