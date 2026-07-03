@@ -4,7 +4,6 @@ from Transformer import *
 
 
 class AnalisiSemantica:
-
     def __init__(self):
         self.errori = []
         symbolTable: SymbolTable
@@ -70,7 +69,7 @@ class AnalisiSemantica:
 
     #   ----TIPI-----
     def visit_Numr(self, node: Numr):
-        return "Numr"
+        return "numr"
 
     def visit_Boolean(self, node: Boolean):
         return "lota"
@@ -79,7 +78,7 @@ class AnalisiSemantica:
         return "nbruogglio"
 
     def visit_Carattr(self, node: Carattr):
-        return "Carattr"
+        return "lettr"
 
     def visit_GenericVar(self, nodo):
         return "burdell"
@@ -180,7 +179,7 @@ class AnalisiSemantica:
 
         tipo_cond = self.visit(node.condizione)
         if tipo_cond != "lota":
-            raise SemanticError( f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da lota")
+            raise SemanticError( f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da boolean")
 
         self.visit(node.VarOperation)
         self.visit(node.Corpo)
@@ -190,7 +189,7 @@ class AnalisiSemantica:
     def visit_Aspe(self, node: Aspe):
         tipo_cond = self.visit(node.Condizione)
         if tipo_cond != "lota":
-            raise SemanticError(f"La condizione del while deve essere lota, trovato '{tipo_cond}'")
+            raise SemanticError(f"La condizione del while deve essere booleana, trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
         self.visit(node.Corpo)
@@ -201,7 +200,7 @@ class AnalisiSemantica:
     def visit_Mettimmca(self, node: Mettimmca):
         tipo_cond = self.visit(node.condizione)
         if tipo_cond != "lota":
-            raise SemanticError(f"La condizione dell'if deve essere lota, trovato '{tipo_cond}'")
+            raise SemanticError(f"La condizione dell'if deve essere booleana, trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
         self.visit(node.allora)
@@ -221,15 +220,15 @@ class AnalisiSemantica:
             if self.control_Ope_Bool(node.op):
                 return "lota"
 
-        if co == "Numr" and ci == "Numr":
+        if co == "numr" and ci == "numr":
             if self.control_Ope_Aritmetic(node.op):
-                return "Numr"
+                return "numr"
             if self.control_Ope_Bool(node.op):  # produzioni numeriche boolean
                 return "lota"
 
-        if co == "Stringa" and ci == "Stringa":
+        if co == "nbruogglio" and ci == "nbruogglio":
             if node.op == "+":
-                return "Stringa"
+                return "nbruogglio"
 
         raise SemanticError(
             f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: i tipi delle variabili sono diversi: "
@@ -237,9 +236,9 @@ class AnalisiSemantica:
         )
 
     def visit_Dichiarazione(self, node: Dichiarazione):
+
         tipo_dichiarato = node.tipo.nome  # es. "Numr", "Boolean", "Stringa"
         nome_variabile = node.nome.nome
-        print(self.symbolTable)
         if node.valore is not None:
            tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
 
@@ -255,6 +254,8 @@ class AnalisiSemantica:
 
         self.symbolTable.addId(nome_variabile, tipo_dichiarato)
         self.tipi_risolti[id(node.nome)] = tipo_dichiarato
+
+        return None
 
 
     def visit_Assegnamento(self, node: Assegnamento):

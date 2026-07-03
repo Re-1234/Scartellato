@@ -6,7 +6,7 @@ from dataclasses import fields, is_dataclass
 from lark import Token, Tree
 
 from PatternVisitor import AnalisiSemantica
-from PatternVisitor import AnalisiSemantica
+from TranspilerC import *
 
 
 def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
@@ -93,7 +93,7 @@ def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
 
 
 
-def compilatore(source: str) -> str:
+def compilatore(source: str, output_path: str = "output.c") :
     global tree
     parser = Lark.open("grammatica.lark", parser="lalr", propagate_positions=True)
     for token in parser.lex(source):
@@ -105,8 +105,6 @@ def compilatore(source: str) -> str:
         print(tree.pretty())
         ast = AST_Transformer().transform(tree)
         stampa_ast(ast)
-        analisiSemantica = AnalisiSemantica()
-        analisiSemantica.visit(ast)
 
     except UnexpectedToken as e:
         print(f"Errore sintattico alla riga {e.line}, col {e.column}")
@@ -116,6 +114,31 @@ def compilatore(source: str) -> str:
     except UnexpectedCharacters as e:
         print(f"Errore lessicale: {e.char!r}")
 
+        analisiSemantica = AnalisiSemantica()
+        analisiSemantica.visit(ast)
+
+        if analisiSemantica.errori:
+            print("Errori semantici:")
+            for e in analisiSemantica.errori:
+                print(f"  - {e}")
+            return
+
+        transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+        transpiler.visit(ast)
+        codice_c = transpiler.get_output()
+
+        with open(output_path, "w") as f:
+            f.write(codice_c)
+
+        print(codice_c)
+
+        import subprocess
+        risultato = subprocess.run(["gcc", output_path, "-o", "output.exe"], capture_output=True, text=True)
+        if risultato.returncode != 0:
+            print("ERRORI DI COMPILAZIONE C:")
+            print(risultato.stderr)
+        else:
+            print("Compilazione riuscita!")
 
 compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
