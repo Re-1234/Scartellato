@@ -184,13 +184,16 @@ class AST_Transformer(Transformer):
 
     def robba(self , figli):
         nodi= self.filtra(figli)
-
+        print("CLASSE FIGLI")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
         nome =nodi[0]
+        costruttore = None
+        variabili = []
+        funzioni = []
+
         for nodo in nodi[1:]:
-            tipo_nodo = type(nodo).__name__
-            costruttore=None
-            variabili=[]
-            funzioni=[]
+            tipo_nodo = type(nodo).__name__   #uso reflection per vedere il tipo del nodo
 
             if tipo_nodo == "Costruttore":
                 costruttore = nodo
