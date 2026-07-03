@@ -6,7 +6,6 @@ from dataclasses import fields, is_dataclass
 from lark import Token, Tree
 
 from PatternVisitor import AnalisiSemantica
-from PatternVisitor import AnalisiSemantica
 from TranspilerC import *
 
 
