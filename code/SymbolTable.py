@@ -33,3 +33,7 @@ class SymbolTable:
 
     def getStack(self):
         return self.stack
+
+
+    def __str__(self):
+        return f"SymbolicTable" + f"[table = {self.table}, stack = {self.stack}]"

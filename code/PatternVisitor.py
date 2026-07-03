@@ -4,6 +4,7 @@ from Transformer import *
 
 
 class AnalisiSemantica:
+
     def __init__(self):
         self.errori = []
         symbolTable: SymbolTable
@@ -44,7 +45,8 @@ class AnalisiSemantica:
         self.symbolTable.addId(node.nome, node)
         self.symbolTable.enterScope()
 
-        self.visit(node.costruttore)
+        if node.costruttore is not None:
+            self.visit(node.costruttore)
 
         for kid in node.variabili:
             self.visit(kid)
@@ -71,7 +73,7 @@ class AnalisiSemantica:
         return "Numr"
 
     def visit_Boolean(self, node: Boolean):
-        return "Boolean"
+        return "lota"
 
     def visit_Stringa(self, node: Stringa):
         return "nbruogglio"
@@ -177,8 +179,8 @@ class AnalisiSemantica:
         self.visit(node.dichiarazione)
 
         tipo_cond = self.visit(node.condizione)
-        if tipo_cond != "Boolean":
-            raise SemanticError( f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da boolean")
+        if tipo_cond != "lota":
+            raise SemanticError( f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da lota")
 
         self.visit(node.VarOperation)
         self.visit(node.Corpo)
@@ -187,8 +189,8 @@ class AnalisiSemantica:
 
     def visit_Aspe(self, node: Aspe):
         tipo_cond = self.visit(node.Condizione)
-        if tipo_cond != "Boolean":
-            raise SemanticError(f"La condizione del while deve essere booleana, trovato '{tipo_cond}'")
+        if tipo_cond != "lota":
+            raise SemanticError(f"La condizione del while deve essere lota, trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
         self.visit(node.Corpo)
@@ -198,8 +200,8 @@ class AnalisiSemantica:
     #   ---IF---
     def visit_Mettimmca(self, node: Mettimmca):
         tipo_cond = self.visit(node.condizione)
-        if tipo_cond != "Boolean":
-            raise SemanticError(f"La condizione dell'if deve essere booleana, trovato '{tipo_cond}'")
+        if tipo_cond != "lota":
+            raise SemanticError(f"La condizione dell'if deve essere lota, trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
         self.visit(node.allora)
@@ -215,15 +217,15 @@ class AnalisiSemantica:
         co = self.visit(node.left)
         ci = self.visit(node.right)
 
-        if co == "Boolean" and ci == "Boolean":
+        if co == "lota" and ci == "lota":
             if self.control_Ope_Bool(node.op):
-                return "Bool"
+                return "lota"
 
         if co == "Numr" and ci == "Numr":
             if self.control_Ope_Aritmetic(node.op):
                 return "Numr"
             if self.control_Ope_Bool(node.op):  # produzioni numeriche boolean
-                return "Boolean"
+                return "lota"
 
         if co == "Stringa" and ci == "Stringa":
             if node.op == "+":
@@ -235,9 +237,9 @@ class AnalisiSemantica:
         )
 
     def visit_Dichiarazione(self, node: Dichiarazione):
-
         tipo_dichiarato = node.tipo.nome  # es. "Numr", "Boolean", "Stringa"
         nome_variabile = node.nome.nome
+        print(self.symbolTable)
         if node.valore is not None:
            tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
 
@@ -252,10 +254,7 @@ class AnalisiSemantica:
                     f"ma le viene assegnato un valore di tipo '{tipo_valore}'")
 
         self.symbolTable.addId(nome_variabile, tipo_dichiarato)
-
         self.tipi_risolti[id(node.nome)] = tipo_dichiarato
-
-        return None
 
 
     def visit_Assegnamento(self, node: Assegnamento):

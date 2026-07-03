@@ -130,7 +130,7 @@ compilatore("""
                     a = c !
                 {
                 
-                nbruogglio r = ??sdfdaf?? !
+                nbruogglio r = ??sdfdaf??!
                 
                 vacant mestier classeFunzioneMimmo )  ( }
                     burdell a = r !
