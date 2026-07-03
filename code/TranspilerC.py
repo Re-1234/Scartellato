@@ -142,23 +142,6 @@ class TranspilerC:
         else:
             self.indentazione(f"{tipo_c} {nome};")
 
-    # ── assegnamento ──────────────────────────────────────────────
-    def visit_Assegnamento(self, node: Assegnamento):
-        valore = self.visita_espr(node.value)
-        self.indentazione(f"{node.name} = {valore};")
-
-    # ── swap (usa tipo_di!) ──────────────────────────────────────
-    def visit_swap(self, node):
-        # assumendo un nodo dedicato per lo swap con left/right come oggetti Variabile
-        tipo = self.tipo_di(node.left)
-        tipo_c = self.tipo_c(tipo)
-        tmp = self.nuova_temp()
-        sx = node.left.nome
-        dx = node.right.nome
-        self.indentazione(f"{tipo_c} {tmp} = {sx};")
-        self.indentazione(f"{sx} = {dx};")
-        self.indentazione(f"{dx} = {tmp};")
-
     # ── if ────────────────────────────────────────────────────────
     def visit_Mettimmca(self, node: Mettimmca):
         cond = self.visita_espr(node.condizione)
@@ -224,6 +207,26 @@ class TranspilerC:
         args = ", ".join(self.visita_espr(a) for a in node.args)
         self.indentazione(f"{nome}({args});")
 
+    def visit_OpBin(self, node: OpBin):
+        if node.op == "=":
+            nome = node.left.nome  # node.left è una Variabile
+            valore = self.visita_espr(node.right)
+            self.indentazione(f"{nome} = {valore};")
+            return
+
+        if node.op == "<->":
+            tipo = self.tipo_di(node.left)
+            tipo_c = self.tipo_c(tipo)
+            tmp = self.nuova_temp()
+            sx = node.left.nome
+            dx = node.right.nome
+            self.indentazione(f"{tipo_c} {tmp} = {sx};")
+            self.indentazione(f"{sx} = {dx};")
+            self.indentazione(f"{dx} = {tmp};")
+            return
+
+        raise Exception(f"OpBin con operatore '{node.op}' non gestito come istruzione")
+
     # ══════════════════════════════════════════════════════════════
     #  ESPRESSIONI — ritornano stringhe
     # ══════════════════════════════════════════════════════════════
@@ -244,6 +247,9 @@ class TranspilerC:
         return str(node.nome)
 
     def visita_espr_OpBin(self, node):
+        if node.op in ("=", "<->"):
+            raise Exception(f"DEBUG: '{node.op}' non può comparire dentro un'espressione")
+
         op_c = {"and": "&&", "or": "||", "not": "!"}.get(node.op, node.op)
         sx = self.visita_espr(node.left)
         if node.right is None:

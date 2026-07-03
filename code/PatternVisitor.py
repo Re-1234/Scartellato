@@ -250,7 +250,7 @@ class AnalisiSemantica:
         if node.valore is not None:
            tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
 
-        if self.symbolTable.probe(node.nome.nome):
+        if self.symbolTable.probe(node.nome):
             raise SemanticError(f"Errore ")
         if node.valore is not None:
             tipo_valore = self.visit(node.valore)

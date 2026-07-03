@@ -60,6 +60,7 @@ class Dichiarazione :
 class Block:
     statements: List[Any]
 
+
 @dataclass(frozen=True)
 class CallStmt:
     nome_func: str
