@@ -258,20 +258,6 @@ class AnalisiSemantica:
         return None
 
 
-    def visit_Assegnamento(self, node: Assegnamento):
-        tipo_var = self.symbolTable.lookup(node.name)
-        if tipo_var is None:
-            raise SemanticError(f"Variabile '{node.name}' non dichiarata")
-
-        tipo_valore = self.visit(node.value)
-        if not self._compatibili(tipo_var, tipo_valore):
-            raise SemanticError(
-                f"Assegnamento incompatibile: '{node.name}' è '{tipo_var}', "
-                f"assegnato '{tipo_valore}'"
-            )
-        return tipo_var
-
-
     def control_Ope_Bool(self, oper: str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":
             return True

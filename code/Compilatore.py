@@ -114,31 +114,31 @@ def compilatore(source: str, output_path: str = "output.c") :
     except UnexpectedCharacters as e:
         print(f"Errore lessicale: {e.char!r}")
 
-        analisiSemantica = AnalisiSemantica()
-        analisiSemantica.visit(ast)
+    analisiSemantica = AnalisiSemantica()
+    analisiSemantica.visit(ast)
 
-        if analisiSemantica.errori:
-            print("Errori semantici:")
-            for e in analisiSemantica.errori:
-                print(f"  - {e}")
-            return
+    if analisiSemantica.errori:
+        print("Errori semantici:")
+        for e in analisiSemantica.errori:
+            print(f"  - {e}")
+        return
 
-        transpiler = TranspilerC(analisiSemantica.tipi_risolti)
-        transpiler.visit(ast)
-        codice_c = transpiler.get_output()
+    transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+    transpiler.visit(ast)
+    codice_c = transpiler.get_output()
 
-        with open(output_path, "w") as f:
-            f.write(codice_c)
+    with open(output_path, "w") as f:
+        f.write(codice_c)
 
-        print(codice_c)
+    print(codice_c)
 
-        import subprocess
-        risultato = subprocess.run(["gcc", output_path, "-o", "output.exe"], capture_output=True, text=True)
-        if risultato.returncode != 0:
-            print("ERRORI DI COMPILAZIONE C:")
-            print(risultato.stderr)
-        else:
-            print("Compilazione riuscita!")
+    import subprocess
+    risultato = subprocess.run(["gcc", output_path, "-o", "output.exe"], capture_output=True, text=True)
+    if risultato.returncode != 0:
+        print("ERRORI DI COMPILAZIONE C:")
+        print(risultato.stderr)
+    else:
+        print("Compilazione riuscita!")
 
 compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
