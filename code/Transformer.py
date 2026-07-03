@@ -61,12 +61,6 @@ class Block:
     statements: List[Any]
 
 @dataclass(frozen=True)
-class Assegnamento:
-       name: str
-       value: Any
-
-
-@dataclass(frozen=True)
 class CallStmt:
     nome_func: str
     args: List[Any]

@@ -44,11 +44,11 @@ class AnalisiSemantica:
         self.symbolTable.addId(node.nome, node)
         self.symbolTable.enterScope()
 
-        if node.costruttore is not None:
-            self.visit(node.costruttore)
-
         for kid in node.variabili:
             self.visit(kid)
+
+        if node.costruttore is not None:
+            self.visit(node.costruttore)
 
         for kid in node.funzioni:
             self.visit(kid)
@@ -225,9 +225,17 @@ class AnalisiSemantica:
                 return "numr"
             if self.control_Ope_Bool(node.op):  # produzioni numeriche boolean
                 return "lota"
+            if self.control_Ope_Assign(node.op,"numr"):
+                return "numr"
+
+
 
         if co == "nbruogglio" and ci == "nbruogglio":
             if node.op == "+":
+                return "nbruogglio"
+            if self.control_ope_boolean(node.op):
+                return "lota"
+            if self.control_Ope_Assign(node.op,"str"):
                 return "nbruogglio"
 
         raise SemanticError(
@@ -242,7 +250,7 @@ class AnalisiSemantica:
         if node.valore is not None:
            tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
 
-        if self.symbolTable.probe(node.nome):
+        if self.symbolTable.probe(node.nome.nome):
             raise SemanticError(f"Errore ")
         if node.valore is not None:
             tipo_valore = self.visit(node.valore)
@@ -258,18 +266,6 @@ class AnalisiSemantica:
         return None
 
 
-    def visit_Assegnamento(self, node: Assegnamento):
-        tipo_var = self.symbolTable.lookup(node.name)
-        if tipo_var is None:
-            raise SemanticError(f"Variabile '{node.name}' non dichiarata")
-
-        tipo_valore = self.visit(node.value)
-        if not self._compatibili(tipo_var, tipo_valore):
-            raise SemanticError(
-                f"Assegnamento incompatibile: '{node.name}' è '{tipo_var}', "
-                f"assegnato '{tipo_valore}'"
-            )
-        return tipo_var
 
 
     def control_Ope_Bool(self, oper: str):
@@ -283,3 +279,16 @@ class AnalisiSemantica:
             return True
         else:
             return False
+
+    def control_Ope_Assign(self , oper: str,tipe:str):
+        if tipe == "numr":
+            if oper == "=" or oper == "+=" or oper == "-=" or oper == "%=" or oper == "*=" or oper == "/=":
+                return True
+            else:
+                return False
+        elif tipe == "str":
+            if oper == "=" or oper == "+=":
+                return True
+            else:
+                return False
+        return None
