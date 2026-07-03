@@ -68,16 +68,16 @@ class AnalisiSemantica:
 
     #   ----TIPI-----
     def visit_Numr(self, node: Numr):
-        return "Numr"
+        return "numr"
 
     def visit_Boolean(self, node: Boolean):
-        return "Boolean"
+        return "lota"
 
     def visit_Stringa(self, node: Stringa):
         return "nbruogglio"
 
     def visit_Carattr(self, node: Carattr):
-        return "Carattr"
+        return "lettr"
 
     def visit_GenericVar(self, nodo):
         return "burdell"
@@ -177,7 +177,7 @@ class AnalisiSemantica:
         self.visit(node.dichiarazione)
 
         tipo_cond = self.visit(node.condizione)
-        if tipo_cond != "Boolean":
+        if tipo_cond != "lota":
             raise SemanticError( f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da boolean")
 
         self.visit(node.VarOperation)
@@ -187,7 +187,7 @@ class AnalisiSemantica:
 
     def visit_Aspe(self, node: Aspe):
         tipo_cond = self.visit(node.Condizione)
-        if tipo_cond != "Boolean":
+        if tipo_cond != "lota":
             raise SemanticError(f"La condizione del while deve essere booleana, trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
@@ -198,7 +198,7 @@ class AnalisiSemantica:
     #   ---IF---
     def visit_Mettimmca(self, node: Mettimmca):
         tipo_cond = self.visit(node.condizione)
-        if tipo_cond != "Boolean":
+        if tipo_cond != "lota":
             raise SemanticError(f"La condizione dell'if deve essere booleana, trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
@@ -215,19 +215,19 @@ class AnalisiSemantica:
         co = self.visit(node.left)
         ci = self.visit(node.right)
 
-        if co == "Boolean" and ci == "Boolean":
+        if co == "lota" and ci == "lota":
             if self.control_Ope_Bool(node.op):
-                return "Bool"
+                return "lota"
 
-        if co == "Numr" and ci == "Numr":
+        if co == "numr" and ci == "numr":
             if self.control_Ope_Aritmetic(node.op):
-                return "Numr"
+                return "numr"
             if self.control_Ope_Bool(node.op):  # produzioni numeriche boolean
-                return "Boolean"
+                return "lota"
 
-        if co == "Stringa" and ci == "Stringa":
+        if co == "nbruogglio" and ci == "nbruogglio":
             if node.op == "+":
-                return "Stringa"
+                return "nbruogglio"
 
         raise SemanticError(
             f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: i tipi delle variabili sono diversi: "
