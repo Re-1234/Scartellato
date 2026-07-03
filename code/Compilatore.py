@@ -104,6 +104,7 @@ def compilatore(source: str) -> str:
         tree = parser.parse(source)
         print(tree.pretty())
         ast = AST_Transformer().transform(tree)
+        stampa_ast(ast)
         analisiSemantica = AnalisiSemantica()
         analisiSemantica.visit(ast)
 
@@ -116,9 +117,6 @@ def compilatore(source: str) -> str:
         print(f"Errore lessicale: {e.char!r}")
 
 
-
-
-
 compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio r = ??a + b??  !
@@ -126,12 +124,14 @@ compilatore("""
             
              robba ciro }
                 numr c!
-                o_mast )  ( }
+                
+                o_mast ) ( }
                     numr a !
                     a = c !
                 {
                 
                 nbruogglio r = ??sdfdaf?? !
+                
                 vacant mestier classeFunzioneMimmo )  ( }
                     burdell a = r !
                 {

@@ -117,11 +117,10 @@
 
         //CLASSI
 
-        ?classe: ROBA nome_var GRAFFASINISTRA membro* GRAFFADESTRA -> robba
+        ?classe: ROBA nome_var GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
 
-        ?membro: dichiarazione
-               | funzione
-               | costruttore
+        ?membro: campi
+               | metodi
 
         // COSTRUTTORE
         costruttore: O_MAST TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore

@@ -183,8 +183,23 @@ class AST_Transformer(Transformer):
         return Costruttore(parametri, corpo)
 
     def robba(self , figli):
-        nome , costruttore, variabili , funzioni = self.filtra(figli)
-        return Robba(nome, costruttore, variabili, funzioni)
+        nodi= self.filtra(figli)
+
+        nome =nodi[0]
+        for nodo in nodi[1:]:
+            tipo_nodo = type(nodo).__name__
+            costruttore=None
+            variabili=[]
+            funzioni=[]
+
+            if tipo_nodo == "Costruttore":
+                costruttore = nodo
+            elif tipo_nodo == 'Dichiarazione':
+                variabili.append(nodo)
+            elif tipo_nodo == 'Mestier':
+                funzioni.append(nodo)
+
+        return Robba(nome=nome, costruttore=costruttore, variabili=variabili, funzioni=funzioni)
 
     def ambress_ambress(self,figli):
         declaration, condizione , varOp, corpo = self.filtra(figli)
