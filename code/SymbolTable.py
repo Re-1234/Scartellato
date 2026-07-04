@@ -34,6 +34,13 @@ class SymbolTable:
     def getStack(self):
         return self.stack
 
+    def printTable(self):
+        print("[SYMBOL TABLE]")
+        # stampa tutti gli scope nello stack (dal più esterno al più interno)
+        for i, scope in enumerate(self.stack):
+            print(f"  scope {i} (esterno): {scope}")
+        # stampa lo scope corrente (il più interno)
+        print(f"  scope {len(self.stack)} (corrente): {self.table}")
 
     def __str__(self):
         return f"SymbolicTable" + f"[table = {self.table}, stack = {self.stack}]"

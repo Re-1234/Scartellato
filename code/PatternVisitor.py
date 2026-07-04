@@ -14,11 +14,13 @@ class AnalisiSemantica:
         class_name = node.__class__.__name__
         method_name = f'visit_{class_name}'
         method = getattr(self, method_name, self.generic_visit)
-        print("ciao")
+        # stampa di debug: controllo del VISIT chiamato
+        print(f"[VISIT] {class_name}")
         risultato = method(node)
+
         if risultato is not None and isinstance(risultato, str):
             self.tipi_risolti[id(node)] = risultato
-
+            print(f"  → tipo risolto: {risultato}")  # ← mostra il tipo restituito
         return risultato
 
     def generic_visit(self, node):
@@ -90,11 +92,11 @@ class AnalisiSemantica:
         return tipo
 
     def _compatibili(self, tipo_atteso, tipo_trovato):
-        tipo_atteso = str(tipo_atteso)
-        tipo_trovato = str(tipo_trovato)
-        if tipo_atteso == "burdell":  # burdell = tipo generico, accetta tutto
+        n1 = tipo_atteso.nome if isinstance(tipo_atteso, TipoDato) else tipo_atteso
+        n2 = tipo_trovato.nome if isinstance(tipo_trovato, TipoDato) else tipo_trovato
+        if n1 == "burdell":
             return True
-        return tipo_atteso == tipo_trovato
+        return n1 == n2
 
 
 
@@ -113,6 +115,8 @@ class AnalisiSemantica:
             self.tipi_risolti[id(kid.nome)] = str(kid.tipo)
 
         self.visit(node.corpo)
+        self.symbolTable.printTable()  # stampa dei parametri
+
         # reset del valore cosi non sarà alterato in chiamate future
         self.funzione_corrente = None
         self.symbolTable.exitScope()
@@ -121,8 +125,8 @@ class AnalisiSemantica:
 
     def visit_Parametro(self, node: Parametro):
         # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
-        nome_var = node.nome.nome
-        tipo_var = str(node.tipo)
+        nome_var = str(node.nome.nome)
+        tipo_var = node.tipo
 
         # Controlla se il parametro è già stato dichiarato nello scope corrente (duplicato)
         if self.symbolTable.probe(nome_var):
@@ -214,33 +218,42 @@ class AnalisiSemantica:
     #   ---VALUTAZIONE E ASSEGNAMENTO---
     def visit_OpBin(self, node: OpBin):
         co = self.visit(node.left)
+
+        if node.right is None:
+            if node.op in ('++', '--'):
+                nome = co.nome if isinstance(co, TipoDato) else co
+                if nome != 'numr':
+                    raise SemanticError(f"'{node.op}' applicabile solo a numr")
+                return co
+            raise SemanticError(f"Operatore '{node.op}' senza operando destro")
+
         ci = self.visit(node.right)
 
-        if co == "lota" and ci == "lota":
+        # estrai sempre il nome stringa per i confronti
+        nome_co = co.nome if isinstance(co, TipoDato) else co
+        nome_ci = ci.nome if isinstance(ci, TipoDato) else ci
+
+        if nome_co == "lota" and nome_ci == "lota":
             if self.control_Ope_Bool(node.op):
-                return "lota"
+                return TipoDato(nome='lota', linea=None, colonna=None)
 
-        if co == "numr" and ci == "numr":
+        if nome_co == "numr" and nome_ci == "numr":
             if self.control_Ope_Aritmetic(node.op):
-                return "numr"
-            if self.control_Ope_Bool(node.op):  # produzioni numeriche boolean
-                return "lota"
-            if self.control_Ope_Assign(node.op,"numr"):
-                return "numr"
+                return TipoDato(nome='numr', linea=None, colonna=None)
+            if self.control_Ope_Bool(node.op):
+                return TipoDato(nome='lota', linea=None, colonna=None)
+            if self.control_Ope_Assign(node.op, "numr"):
+                return TipoDato(nome='numr', linea=None, colonna=None)
 
-
-
-        if co == "nbruogglio" and ci == "nbruogglio":
+        if nome_co == "nbruogglio" and nome_ci == "nbruogglio":
             if node.op == "+":
-                return "nbruogglio"
-            if self.control_ope_boolean(node.op):
-                return "lota"
-            if self.control_Ope_Assign(node.op,"str"):
-                return "nbruogglio"
+                return TipoDato(nome='nbruogglio', linea=None, colonna=None)
+            if self.control_Ope_Bool(node.op):
+                return TipoDato(nome='lota', linea=None, colonna=None)
 
         raise SemanticError(
-            f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: i tipi delle variabili sono diversi: "
-            f"a sinistra è {co} e a destra è {ci}"
+            f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: "
+            f"i tipi sono diversi: sinistra '{nome_co}' destra '{nome_ci}'"
         )
 
     def visit_Dichiarazione(self, node: Dichiarazione):

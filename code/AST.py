@@ -88,7 +88,7 @@ class AST_Transformer(Transformer):
         var1 = figli[0]
         operatore = self.filtra(figli)[1]
         var3 = self.filtra(figli)[2]
-        return OpBin(op=operatore, left=var1, right=var3)
+        return OpBin(op= str(operatore), left=var1, right=var3)
 
     def moltiplicazione(self, figli):
         var1 = self.filtra(figli)[0]
@@ -109,11 +109,11 @@ class AST_Transformer(Transformer):
 
     def variabile_semplice(self, figli):
         id_token = self.filtra(figli)[0]
-        return Variabile(nome=id_token, is_array=False)
+        return Variabile(nome=str(id_token), is_array=False)
 
     def variabile_array(self, figli):
         id_token = self.filtra(figli)[0]
-        return Variabile(nome=id_token, is_array=True)
+        return Variabile(nome=str(id_token), is_array=True)
 
     def dichiarazione(self, figli):
         nodi = self.filtra(figli)
@@ -173,7 +173,7 @@ class AST_Transformer(Transformer):
 
     def funzione_void(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier (ritorno=tipo, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
+        return Mestier (ritorno=str(tipo), nome=nome,parametri=parametri,corpo=blocco,is_array=False)
 
     def costruttore(self, figli):
         parametri , corpo = self.filtra(figli)

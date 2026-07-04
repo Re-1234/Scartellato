@@ -95,6 +95,7 @@ def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
 
 def compilatore(source: str, output_path: str = "output.c") :
     global tree
+    global ast
     parser = Lark.open("grammatica.lark", parser="lalr", propagate_positions=True)
     for token in parser.lex(source):
         print(token,repr(token))
@@ -105,8 +106,6 @@ def compilatore(source: str, output_path: str = "output.c") :
         print(tree.pretty())
         ast = AST_Transformer().transform(tree)
         stampa_ast(ast)
-        a = AnalisiSemantica()
-        a.visit(ast)
 
     except UnexpectedToken as e:
         print(f"Errore sintattico alla riga {e.line}, col {e.column}")
@@ -126,9 +125,9 @@ def compilatore(source: str, output_path: str = "output.c") :
             print(f"  - {e}")
         return
 
-    transpiler = TranspilerC(analisiSemantica.tipi_risolti)
-    transpiler.visit(ast)
-    codice_c = transpiler.get_output()
+   # transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+   # transpiler.visit(ast)
+    """codice_c = transpiler.get_output()
 
     with open(output_path, "w") as f:
         f.write(codice_c)
@@ -142,50 +141,11 @@ def compilatore(source: str, output_path: str = "output.c") :
         print(risultato.stderr)
     else:
         print("Compilazione riuscita!")
-
+"""
 compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio r = ??a + b??  !
+               numr s!
+               s= a+b!
             {
-            
-             robba ciro }
-                numr c!
-                
-                o_mast ) ( }
-                    numr a !
-                    a = c !
-                {
-                
-                nbruogglio r = ??sdfdaf??!
-                
-                vacant mestier classeFunzioneMimmo )  ( }
-                    burdell a = r !
-                {
-            {
-
-             vacant Uè ) nbruogglio ] [ args ( }
-                nbruogglio a = ??sifasf23?? !
-                nbruogglio v = ??sapposto?? !
-                 
-                jamm_ja : pippo ) guagliuni :  4 , 5 (  !
-                
-                mettimcà ) v == a ( }
-                    numr s = 5 !
-                { allor_fa_accussi }
-                    burdell z = 9 !
-                {
-                burdell c = a - v !
-                lota d = sasicchj!
-                d=friariell!
-                
-              ambressAmbress ) numr c= 5 ! c<8 ! c++( }
-                mettimcà ) 3<4( }
-                    s = 4+2 !
-                    c <-> b !              
-                { 
-              {
-              
-              ccàsta ! 
-            {
-
     """)
