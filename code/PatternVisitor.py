@@ -44,11 +44,11 @@ class AnalisiSemantica:
         self.symbolTable.addId(node.nome, node)
         self.symbolTable.enterScope()
 
-        if node.costruttore is not None:
-            self.visit(node.costruttore)
-
         for kid in node.variabili:
             self.visit(kid)
+
+        if node.costruttore is not None:
+            self.visit(node.costruttore)
 
         for kid in node.funzioni:
             self.visit(kid)
@@ -225,9 +225,17 @@ class AnalisiSemantica:
                 return "numr"
             if self.control_Ope_Bool(node.op):  # produzioni numeriche boolean
                 return "lota"
+            if self.control_Ope_Assign(node.op,"numr"):
+                return "numr"
+
+
 
         if co == "nbruogglio" and ci == "nbruogglio":
             if node.op == "+":
+                return "nbruogglio"
+            if self.control_ope_boolean(node.op):
+                return "lota"
+            if self.control_Ope_Assign(node.op,"str"):
                 return "nbruogglio"
 
         raise SemanticError(
@@ -258,6 +266,8 @@ class AnalisiSemantica:
         return None
 
 
+
+
     def control_Ope_Bool(self, oper: str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":
             return True
@@ -269,3 +279,16 @@ class AnalisiSemantica:
             return True
         else:
             return False
+
+    def control_Ope_Assign(self , oper: str,tipe:str):
+        if tipe == "numr":
+            if oper == "=" or oper == "+=" or oper == "-=" or oper == "%=" or oper == "*=" or oper == "/=":
+                return True
+            else:
+                return False
+        elif tipe == "str":
+            if oper == "=" or oper == "+=":
+                return True
+            else:
+                return False
+        return None

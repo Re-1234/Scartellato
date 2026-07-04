@@ -105,6 +105,8 @@ def compilatore(source: str, output_path: str = "output.c") :
         print(tree.pretty())
         ast = AST_Transformer().transform(tree)
         stampa_ast(ast)
+        a = AnalisiSemantica()
+        a.visit(ast)
 
     except UnexpectedToken as e:
         print(f"Errore sintattico alla riga {e.line}, col {e.column}")
