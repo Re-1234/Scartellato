@@ -114,6 +114,7 @@ def compilatore(source: str, output_path: str = "output.c") :
     except UnexpectedCharacters as e:
         print(f"Errore lessicale: {e.char!r}")
 
+
     analisiSemantica = AnalisiSemantica()
     analisiSemantica.visit(ast)
 

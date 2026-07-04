@@ -49,7 +49,6 @@ class Variabile:
     is_array: bool= False
 
 
-
 @dataclass(frozen=True)
 class Dichiarazione :
     tipo: TipoDato

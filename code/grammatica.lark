@@ -186,11 +186,11 @@
 
         // ESPRESSIONI
 
-        ?assegnamento_composto: expr_or
-                             | expr_or DIVISIONEUGUALE  expr_or
-                             | expr_or MOLTIPLICAUGUALE expr_or
-                             | expr_or ADDIZIONEUGUALE  expr_or
-                             | expr_or MENOUGUALE       expr_or
+        ?assegnamento_composto: nome_var DIVISIONEUGUALE  expr_or
+                             | nome_var  MOLTIPLICAUGUALE expr_or
+                             | nome_var  ADDIZIONEUGUALE  expr_or
+                             | nome_var  MENOUGUALE       expr_or
+                             | expr_or
 
         ?expr_or: expr_or OR expr_and
             | expr_and
