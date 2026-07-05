@@ -67,8 +67,10 @@
 
 
 
-        start:  top_level* main_opzione MAIN TONDASINISTRA NBRUOGGLIO_TK QUADRATASINISTRA QUADRATADESTRA ID TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA  top_level*
+        start:  top_level* main_def top_level*
              |  top_level+
+
+        main_def: main_opzione MAIN TONDASINISTRA TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> main
 
         ?main_opzione: VOID |
 

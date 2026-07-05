@@ -20,7 +20,7 @@ class AnalisiSemantica:
 
         if risultato is not None and isinstance(risultato, str):
             self.tipi_risolti[id(node)] = risultato
-            print(f"  → tipo risolto: {risultato}")  # ← mostra il tipo restituito
+            print(f"  → tipo risolto: {risultato}")  #  mostra il tipo restituito
         return risultato
 
     def generic_visit(self, node):
@@ -33,17 +33,14 @@ class AnalisiSemantica:
     #   ---PROGRAM---
     def visit_Start(self, node):
         self.symbolTable = SymbolTable()
-        self.symbolTable.enterScope()
 
         for kid in node.program:
             self.visit(kid)
 
-        self.symbolTable.exitScope()
-
 
     #   ---CLASSE---
     def visit_Robba(self, node: Robba):
-        self.symbolTable.addId(node.nome, node)
+        self.symbolTable.addId(node.nome.nome, node)
         self.symbolTable.enterScope()
 
         for kid in node.variabili:
@@ -65,6 +62,7 @@ class AnalisiSemantica:
             self.tipi_risolti[id(par.nome)] = str(par.tipo)
 
         self.visit(node.corpo)
+        self.symbolTable.printTable()
         self.symbolTable.exitScope()
 
 
@@ -92,19 +90,20 @@ class AnalisiSemantica:
         return tipo
 
     def _compatibili(self, tipo_atteso, tipo_trovato):
-        n1 = tipo_atteso.nome if isinstance(tipo_atteso, TipoDato) else tipo_atteso
-        n2 = tipo_trovato.nome if isinstance(tipo_trovato, TipoDato) else tipo_trovato
-        if n1 == "burdell":
-            return True
-        return n1 == n2
+        #tipo_atteso = str(tipo_atteso)
+        #tipo_trovato = str(tipo_trovato)
+            if tipo_atteso == "burdell":
+                return True
+            return tipo_atteso == tipo_trovato
 
 
 
     #   ---FUNZIONI-----
     def visit_Mestier(self, node: Mestier):
-        #inserisce il nome della funzione nello scope precendente e
-        # ne crea uno nuovo per lo scope della funzione
-        self.symbolTable.addId(node.nome, node)
+        """inserisce il nome della funzione nello scope precendente e
+           ne crea uno nuovo per lo scope della funzione
+        """
+        self.symbolTable.addId(node.nome.nome, node)
         self.symbolTable.enterScope()
         #salvataggio del nodo con la funzione corrente
         self.funzione_corrente = node
@@ -125,8 +124,8 @@ class AnalisiSemantica:
 
     def visit_Parametro(self, node: Parametro):
         # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
-        nome_var = str(node.nome.nome)
-        tipo_var = node.tipo
+        nome_var = node.nome.nome
+        tipo_var = node.tipo.nome
 
         # Controlla se il parametro è già stato dichiarato nello scope corrente (duplicato)
         if self.symbolTable.probe(nome_var):
@@ -134,9 +133,9 @@ class AnalisiSemantica:
 
         # Inserisce il parametro nella Symbol Table come variabile valida in questo scope
         self.symbolTable.addId(nome_var, tipo_var)
+        self.tipi_risolti[id(node.nome)] = tipo_var
 
 
-        # da continuare a modificare questo metodo
     def visit_ReturnStatement(self, node: ReturnStatement):
         # nodo.valore contiene un nodo qualsiasi
         tipo_valore = self.visit(node.valore) if node.valore is not None else "vacant"
@@ -217,69 +216,67 @@ class AnalisiSemantica:
 
     #   ---VALUTAZIONE E ASSEGNAMENTO---
     def visit_OpBin(self, node: OpBin):
-        co = self.visit(node.left)
+        co = self.visit(node.left)   # stringa 'numr'
 
         if node.right is None:
             if node.op in ('++', '--'):
-                nome = co.nome if isinstance(co, TipoDato) else co
-                if nome != 'numr':
+                if co != 'numr':
                     raise SemanticError(f"'{node.op}' applicabile solo a numr")
-                return co
-            raise SemanticError(f"Operatore '{node.op}' senza operando destro")
+                return 'numr'
 
-        ci = self.visit(node.right)
+        ci = self.visit(node.right)  # stringa 'numr'
 
-        # estrai sempre il nome stringa per i confronti
-        nome_co = co.nome if isinstance(co, TipoDato) else co
-        nome_ci = ci.nome if isinstance(ci, TipoDato) else ci
-
-        if nome_co == "lota" and nome_ci == "lota":
+        # confronti diretti tra stringhe, niente isinstance
+        if co == "lota" and ci == "lota":
             if self.control_Ope_Bool(node.op):
-                return TipoDato(nome='lota', linea=None, colonna=None)
+                return 'lota'
 
-        if nome_co == "numr" and nome_ci == "numr":
+        if co == "numr" and ci == "numr":
             if self.control_Ope_Aritmetic(node.op):
-                return TipoDato(nome='numr', linea=None, colonna=None)
+                return 'numr'
             if self.control_Ope_Bool(node.op):
-                return TipoDato(nome='lota', linea=None, colonna=None)
+                return 'lota'
             if self.control_Ope_Assign(node.op, "numr"):
-                return TipoDato(nome='numr', linea=None, colonna=None)
+                return 'numr'
 
-        if nome_co == "nbruogglio" and nome_ci == "nbruogglio":
+        if co == "nbruogglio" and ci == "nbruogglio":
             if node.op == "+":
-                return TipoDato(nome='nbruogglio', linea=None, colonna=None)
+                return 'nbruogglio'
             if self.control_Ope_Bool(node.op):
-                return TipoDato(nome='lota', linea=None, colonna=None)
+                return 'lota'
 
+        if node.op == '=':
+            if not self._compatibili(co, ci):
+                raise SemanticError(f"Assegnazione non valida: '{co}' vs '{ci}'")
+            return co
+
+        # swap  richiede semplicemente tipi compatibili tra loro
+        if node.op == '<->':
+            if not self._compatibili(co, ci):
+                raise SemanticError(f"Swap non valido: '{co}' vs '{ci}'")
+            return co
         raise SemanticError(
-            f"MACCCCCCCCCHHHHHHHH STAI FACENNNNN!!!!!!!: "
-            f"i tipi sono diversi: sinistra '{nome_co}' destra '{nome_ci}'"
+            f"BOTT A MUR : Tipi incompatibili: '{co}' e '{ci}' con operatore '{node.op}'"
         )
 
     def visit_Dichiarazione(self, node: Dichiarazione):
+            tipo_dichiarato = node.tipo.nome
+            nome_variabile = node.nome.nome
 
-        tipo_dichiarato = node.tipo.nome  # es. "Numr", "Boolean", "Stringa"
-        nome_variabile = node.nome.nome
-        if node.valore is not None:
-           tipo_valore = self.visit(node.valore)  # visita l'espressione, ottiene la stringa del tipo
+            if self.symbolTable.probe(nome_variabile):
+                raise SemanticError(f"Variabile '{nome_variabile}' già dichiarata")
 
-        if self.symbolTable.probe(node.nome):
-            raise SemanticError(f"Errore ")
-        if node.valore is not None:
-            tipo_valore = self.visit(node.valore)
-            if not self._compatibili(tipo_dichiarato, tipo_valore):
-                raise SemanticError(
-                    f"Errore di tipo (riga {node.tipo.linea}, colonna {node.tipo.colonna}): "
-                    f"la variabile '{nome_variabile}' è dichiarata come '{tipo_dichiarato}' "
-                    f"ma le viene assegnato un valore di tipo '{tipo_valore}'")
+            if node.valore is not None:
+                tipo_valore = self.visit(node.valore)
+                if not self._compatibili(tipo_dichiarato, tipo_valore):
+                    raise SemanticError(
+                        f"Errore (riga {node.tipo.linea}, col {node.tipo.colonna}): "
+                        f"'{nome_variabile}' dichiarata come '{tipo_dichiarato}' "
+                        f"ma assegnato '{tipo_valore}'"
+                    )
 
-        self.symbolTable.addId(nome_variabile, tipo_dichiarato)
-        self.tipi_risolti[id(node.nome)] = tipo_dichiarato
-
-        return None
-
-
-
+            self.symbolTable.addId(nome_variabile, tipo_dichiarato)
+            self.tipi_risolti[id(node.nome)] = tipo_dichiarato
 
     def control_Ope_Bool(self, oper: str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":

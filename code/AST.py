@@ -8,7 +8,7 @@ class AST_Transformer(Transformer):
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
         'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'O_MAST', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
-        'PARAMETRI_TK'
+        'PARAMETRI_TK', 'CCASTA',  'SCCASCIA'
     }
 
 
@@ -142,8 +142,6 @@ class AST_Transformer(Transformer):
         op , allora = self.filtra(figli)
         return Mettimmca(op,allora,altrimenti=None)
 
-    def sezione_parametri(self, figli):
-        return [f for f in figli if isinstance(f, Parametro)]
 
     def ritornaStatem(self,figli):
         valor = self.filtra(figli)
@@ -152,6 +150,9 @@ class AST_Transformer(Transformer):
     def blocco(self, figli):
         return Block(statements=figli)
 
+    def sezione_parametri(self, figli):
+        return [f for f in figli if isinstance(f, Parametro)]
+
     def parametro(self, figli):
         tipo, value = self.filtra(figli)
         print("parametri figli:")
@@ -159,9 +160,18 @@ class AST_Transformer(Transformer):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
         return Parametro(tipo=tipo, nome = value)
 
+    def main(self, figli):
+        nodi = self.filtra(figli)
+        print("FIGLI MAIN_DEF")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        ritorno,nome,corpo =nodi
+        return Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome), is_array=False),parametri="",corpo=corpo,is_array=False)
+
+
     def funzione_semplice(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier(ritorno=tipo, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
+        return Mestier(ritorno=tipo.nome, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
 
     def funzione_array(self, figli):
 
@@ -169,7 +179,7 @@ class AST_Transformer(Transformer):
         print("FIGLI func array")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
-        return Mestier(ritorno=str(tipo), nome=nome,parametri=parametri,corpo=blocco, is_array=True)
+        return Mestier(ritorno=tipo.nome, nome=nome,parametri=parametri,corpo=blocco, is_array=True)
 
     def funzione_void(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
@@ -184,9 +194,11 @@ class AST_Transformer(Transformer):
 
     def robba(self , figli):
         nodi= self.filtra(figli)
+
         print("CLASSE FIGLI")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
+
         nome =nodi[0]
         costruttore = None
         variabili = []
@@ -201,8 +213,21 @@ class AST_Transformer(Transformer):
                 variabili.append(nodo)
             elif tipo_nodo == 'Mestier':
                 funzioni.append(nodo)
+            elif tipo_nodo == "list":
+                variabili.extend(nodo)
 
         return Robba(nome=nome, costruttore=costruttore, variabili=variabili, funzioni=funzioni)
+
+    def campi(self, figli):
+        risultato = []
+        for f in figli:
+            tipo_nodo = type(f).__name__
+            if tipo_nodo == "list":
+                risultato.extend(f)
+            else:
+                risultato.append(f)
+        return risultato
+
 
     def ambress_ambress(self,figli):
         declaration, condizione , varOp, corpo = self.filtra(figli)
@@ -221,4 +246,9 @@ class AST_Transformer(Transformer):
 
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""
-        return Start(program=figli)
+        nodi = self.filtra(figli)
+        print(" FIGLI START")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+
+        return Start(program=nodi)

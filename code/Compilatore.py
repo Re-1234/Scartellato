@@ -125,15 +125,15 @@ def compilatore(source: str, output_path: str = "output.c") :
             print(f"  - {e}")
         return
 
-   # transpiler = TranspilerC(analisiSemantica.tipi_risolti)
-   # transpiler.visit(ast)
-    """codice_c = transpiler.get_output()
+    transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+    transpiler.visit(ast)
+    codice_c = transpiler.get_output()
 
     with open(output_path, "w") as f:
         f.write(codice_c)
 
     print(codice_c)
-
+"""
     import subprocess
     risultato = subprocess.run(["gcc", output_path, "-o", "output.exe"], capture_output=True, text=True)
     if risultato.returncode != 0:
@@ -148,4 +148,50 @@ compilatore("""
                numr s!
                s= a+b!
             {
+                      
+            robba ciro }
+                numr c!
+                numr s!
+                
+                o_mast ) ( }
+                    numr apposo !
+                    apposo = c !
+                    c=5+6+9!
+                {
+                
+                numr apposo = s!
+                nbruogglio r = ??sdfdaf?? !
+                
+                vacant mestier classeFunzioneMimmo )  ( }
+                    burdell a = r !
+                {
+            {
+            
+             vacant Uè ) ( }
+                nbruogglio a = ??sifasf23?? !
+                nbruogglio v = ??sapposto?? !
+                numr s !
+                numr b!
+                 
+                jamm_ja : pippo ) guagliuni :  4 , 5 (  !
+                
+                mettimcà ) v == a ( }
+                    numr s = 5 !
+                { allor_fa_accussi }
+                    burdell z = 9 !
+                {
+                burdell c = a + v !
+                lota d = sasicchj!
+                d=friariell!
+                
+              ambressAmbress ) numr c= 5 ! c<8 ! c++( }
+                mettimcà ) 3<4( }
+                    s = 4+2 !
+                    c <-> b !              
+                { 
+              {
+              
+              ccàsta ! 
+            {
+            
     """)
