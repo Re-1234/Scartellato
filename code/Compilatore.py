@@ -125,14 +125,14 @@ def compilatore(source: str, output_path: str = "output.c") :
             print(f"  - {e}")
         return
 
-    transpiler = TranspilerC(analisiSemantica.tipi_risolti)
-    transpiler.visit(ast)
-    codice_c = transpiler.get_output()
+    #transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+    #transpiler.visit(ast)
+    #codice_c = transpiler.get_output()
 
-    with open(output_path, "w") as f:
+   # with open(output_path, "w") as f:
         f.write(codice_c)
 
-    print(codice_c)
+    #print(codice_c)
 """
     import subprocess
     risultato = subprocess.run(["gcc", output_path, "-o", "output.exe"], capture_output=True, text=True)
@@ -152,14 +152,19 @@ compilatore("""
             robba ciro }
                 numr c!
                 numr s!
-                
+                nbruogglio apposo!    
+                            
                 o_mast ) ( }
+                    
                     numr apposo !
                     apposo = c !
                     c=5+6+9!
+                   
+                    aspe)2+3 and sasicchj(
+                       jamm_ja : classeFunzioneMimmo)(!        
                 {
                 
-                numr apposo = s!
+                
                 nbruogglio r = ??sdfdaf?? !
                 
                 vacant mestier classeFunzioneMimmo )  ( }

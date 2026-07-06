@@ -55,8 +55,8 @@ class AnalisiSemantica:
         self.symbolTable.exitScope()
 
     def visit_Costruttore(self, node: Costruttore):
-        self.symbolTable.enterScope()
 
+        self.symbolTable.enterScope()
         for par in node.parametri:
             self.visit(par)
             self.tipi_risolti[id(par.nome)] = str(par.tipo)
@@ -90,8 +90,6 @@ class AnalisiSemantica:
         return tipo
 
     def _compatibili(self, tipo_atteso, tipo_trovato):
-        #tipo_atteso = str(tipo_atteso)
-        #tipo_trovato = str(tipo_trovato)
             if tipo_atteso == "burdell":
                 return True
             return tipo_atteso == tipo_trovato
@@ -262,7 +260,8 @@ class AnalisiSemantica:
     def visit_Dichiarazione(self, node: Dichiarazione):
             tipo_dichiarato = node.tipo.nome
             nome_variabile = node.nome.nome
-
+            print(f"tipo_dichiarazione = {tipo_dichiarato}, nome_"
+                  f"variabile = {nome_variabile}")
             if self.symbolTable.probe(nome_variabile):
                 raise SemanticError(f"Variabile '{nome_variabile}' già dichiarata")
 

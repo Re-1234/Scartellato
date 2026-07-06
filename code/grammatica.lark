@@ -93,7 +93,7 @@
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
                    | nome_var SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
-
+                   | CHIAMATA ":" nome_var ")""(" TERMINATORE -> call_stmt
 
 
         // RETURN E BREAK
