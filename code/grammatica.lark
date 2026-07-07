@@ -85,7 +85,7 @@
 
         ?istruzione: dichiarazione
                    | for_stmt
-                   | while_stmt    -> while_stmt
+                   | while_stmt
                    | if_stmt
                    | return_stmt
                    | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
@@ -93,7 +93,7 @@
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
                    | nome_var SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
-                   | CHIAMATA ":" nome_var ")""(" TERMINATORE -> call_stmt
+
 
 
         // RETURN E BREAK
@@ -152,17 +152,13 @@
 
         ?if_stmt: METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_senzaelse
                | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_completo
-               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA istruzione_singola ALLORFAACCUSSI istruzione_singola -> mettimca_completo
+               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA istruzione ALLORFAACCUSSI istruzione -> mettimca_completo
 
-        istruzione_singola: dichiarazione
-                          | for_stmt
-                          | while_stmt
-                          | return_stmt
 
         // WHILE
 
         while_stmt: ASPE TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> aspe
-                  | ASPE TONDASINISTRA assegnamento_composto TONDADESTRA istruzione_singola -> aspe
+                  | ASPE TONDASINISTRA assegnamento_composto TONDADESTRA istruzione -> aspe
 
         // FOR
 
@@ -181,7 +177,7 @@
                     |
 
         ?for_corpo: "}" blocco "{"
-                 | istruzione_singola
+                 | istruzione
 
 
 
