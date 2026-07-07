@@ -190,10 +190,10 @@
                              | nome_var  MENOUGUALE       expr_or
                              | expr_or
 
-        ?expr_or: expr_or OR expr_and
+        ?expr_or: expr_or OR expr_and -> or_exp
             | expr_and
 
-        ?expr_and: expr_and AND expr_eq
+        ?expr_and: expr_and AND expr_eq -> and_exp
                 | expr_eq
 
         ?expr_eq: expr_eq EQUALS expr_rel  -> uguale
