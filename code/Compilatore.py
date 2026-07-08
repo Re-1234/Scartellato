@@ -1,99 +1,67 @@
+import os
+import platform
+import shutil
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
-
 from AST import *
-
-from dataclasses import fields, is_dataclass
-from lark import Token, Tree
-
 from PatternVisitor import AnalisiSemantica
 from TranspilerC import *
+import subprocess
 
 
-def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
-    if e_radice:
-        ramo = ""
-        ext  = ""
-    else:
-        ramo = "└─ " if e_ultimo else "├─ "
-        ext  = "   " if e_ultimo else "│  "
+def generatore(analisiSemantica):
+    transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+    transpiler.visit(ast)
+    codice_c = transpiler.get_output()
 
-    # Token grezzo — ignora
-    if isinstance(nodo, Token):
-        return
+    output_path="output.c"
+    cartella_corrente = os.path.dirname(os.path.abspath(__file__))
+    percorso_sorgente = os.path.join(cartella_corrente, output_path)
 
-    # Tree non trasformato
-    if isinstance(nodo, Tree):
-        print(f"{prefisso}{ramo}[Tree non trasformato: {nodo.data}]")
-        return
+    with open(output_path, "w") as f:
+         f.write(codice_c)
+    print(f"📄 File '{output_path}' creato con successo.")
+    print(codice_c)
+    """
+    sistema = platform.system()
+    nome_eseguibile = "scartellato.exe" if sistema == "Windows" else "scartellato"
+    percorso_output = os.path.join(cartella_corrente, nome_eseguibile)
 
-    # None
-    if nodo is None:
-        print(f"{prefisso}{ramo}None")
-        return
+    #cerca nelle variabili d'ambiente gcc
+    comando = ["gcc", percorso_sorgente, "-o", percorso_output]
 
-    # Primitivi
-    if isinstance(nodo, (int, float, str, bool)):
-        print(f"{prefisso}{ramo}{repr(nodo)}")
-        return
+    try:
+        processo = subprocess.run(comando, capture_output=True, text=True)
 
-    # Lista
-    if isinstance(nodo, list):
-        if not nodo:
-            print(f"{prefisso}{ramo}[]")
-            return
-        print(f"{prefisso}{ramo}[lista]")
-        for i, el in enumerate(nodo):
-            stampa_ast(el, prefisso + ext, i == len(nodo) - 1, False)
-        return
+        if processo.returncode == 0:
+            print("✅ Compilazione completata con successo!\n")
 
-    # Dataclass — caso generale
-    if is_dataclass(nodo):
-        # etichetta compatta per i nodi foglia (un solo campo primitivo)
-        campi = fields(nodo)
+            # ESECUZIONE AUTOMATICA DEL PROGRAMMA C
+            print("-" * 30)
+            print("🚀 OUTPUT DEL PROGRAMMA C:")
 
-        # nodi con rappresentazione inline
-        if isinstance(nodo, Numr):
-            print(f"{prefisso}{ramo}Numr({nodo.value})")
-            return
-        if isinstance(nodo, Boolean):
-            print(f"{prefisso}{ramo}Boolean({nodo.value})")
-            return
-        if isinstance(nodo, Stringa):
-            print(f"{prefisso}{ramo}Stringa({repr(nodo.value)})")
-            return
-        if isinstance(nodo, Carattr):
-            print(f"{prefisso}{ramo}Carattr({repr(nodo.value)})")
-            return
-        if isinstance(nodo, GenericVar):
-            print(f"{prefisso}{ramo}GenericVar({repr(nodo.value)})")
-            return
-        if isinstance(nodo, Variabile):
-            arr = "[]" if nodo.is_array else ""
-            print(f"{prefisso}{ramo}Variabile({arr}{repr(str(nodo.nome))})")
-            return
+            # Eseguiamo il programma appena creato
+            esec_comando = [percorso_output] if sistema == "Windows" else [f"./{nome_eseguibile}"]
+            subprocess.run(esec_comando, cwd=cartella_corrente)
 
-        # nodi composti — stampa nome classe poi ogni campo
-        print(f"{prefisso}{ramo}{type(nodo).__name__}")
-        for i, campo in enumerate(campi):
-            valore = getattr(nodo, campo.name)
-            ultimo_campo = i == len(campi) - 1
-            ramo_c = "└─ " if ultimo_campo else "├─ "
-            ext_c  = "   " if ultimo_campo else "│  "
-            print(f"{prefisso}{ext}{ramo_c}{campo.name}:")
-            stampa_ast(
-                valore,
-                prefisso + ext + ext_c,
-                True,
-                False
-            )
-        return
+            print("-" * 30)
 
-    # Fallback
-    print(f"{prefisso}{ramo}??? {type(nodo).__name__}  {nodo!r}")
+            # decommentare la riga sotto se Python cancella il file .c dopo aver finito
+            # os.remove(percorso_sorgente)
+
+        else:
+            print("❌ Errore di compilazione nel codice C:")
+            print(processo.stderr)
+   
+
+    except FileNotFoundError:
+
+        # se il comando 'gcc' non esiste nel PATH
+        print("❌ Errore: Il comando 'gcc' non è stato trovato nel sistema.")
+        print("Assicurati che GCC sia installato correttamente e aggiunto al PATH (variabili d'ambiente).")
+"""
 
 
-
-def compilatore(source: str, output_path: str = "output.c") :
+def compilatore(source: str) :
     global tree
     global ast
     parser = Lark.open("grammatica.lark", parser="lalr", propagate_positions=True)
@@ -125,14 +93,8 @@ def compilatore(source: str, output_path: str = "output.c") :
             print(f"  - {e}")
         return
 
-    #transpiler = TranspilerC(analisiSemantica.tipi_risolti)
-    #transpiler.visit(ast)
-    #codice_c = transpiler.get_output()
+    generatore(analisiSemantica)
 
-   # with open(output_path, "w") as f:
-        f.write(codice_c)
-
-    #print(codice_c)
 """
     import subprocess
     risultato = subprocess.run(["gcc", output_path, "-o", "output.exe"], capture_output=True, text=True)

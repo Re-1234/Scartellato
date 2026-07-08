@@ -1,5 +1,5 @@
-from lark import Transformer
-
+from dataclasses import is_dataclass, fields
+from lark import Transformer, Token, Tree
 from Transformer import *
 
 class AST_Transformer(Transformer):
@@ -259,3 +259,86 @@ class AST_Transformer(Transformer):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
 
         return Start(program=nodi)
+
+
+def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
+    if e_radice:
+        ramo = ""
+        ext  = ""
+    else:
+        ramo = "└─ " if e_ultimo else "├─ "
+        ext  = "   " if e_ultimo else "│  "
+
+    # Token grezzo — ignora
+    if isinstance(nodo, Token):
+        return
+
+    # Tree non trasformato
+    if isinstance(nodo, Tree):
+        print(f"{prefisso}{ramo}[Tree non trasformato: {nodo.data}]")
+        return
+
+    # None
+    if nodo is None:
+        print(f"{prefisso}{ramo}None")
+        return
+
+    # Primitivi
+    if isinstance(nodo, (int, float, str, bool)):
+        print(f"{prefisso}{ramo}{repr(nodo)}")
+        return
+
+    # Lista
+    if isinstance(nodo, list):
+        if not nodo:
+            print(f"{prefisso}{ramo}[]")
+            return
+        print(f"{prefisso}{ramo}[lista]")
+        for i, el in enumerate(nodo):
+            stampa_ast(el, prefisso + ext, i == len(nodo) - 1, False)
+        return
+
+    # Dataclass — caso generale
+    if is_dataclass(nodo):
+        # etichetta compatta per i nodi foglia (un solo campo primitivo)
+        campi = fields(nodo)
+
+        # nodi con rappresentazione inline
+        if isinstance(nodo, Numr):
+            print(f"{prefisso}{ramo}Numr({nodo.value})")
+            return
+        if isinstance(nodo, Boolean):
+            print(f"{prefisso}{ramo}Boolean({nodo.value})")
+            return
+        if isinstance(nodo, Stringa):
+            print(f"{prefisso}{ramo}Stringa({repr(nodo.value)})")
+            return
+        if isinstance(nodo, Carattr):
+            print(f"{prefisso}{ramo}Carattr({repr(nodo.value)})")
+            return
+        if isinstance(nodo, GenericVar):
+            print(f"{prefisso}{ramo}GenericVar({repr(nodo.value)})")
+            return
+        if isinstance(nodo, Variabile):
+            arr = "[]" if nodo.is_array else ""
+            print(f"{prefisso}{ramo}Variabile({arr}{repr(str(nodo.nome))})")
+            return
+
+        # nodi composti — stampa nome classe poi ogni campo
+        print(f"{prefisso}{ramo}{type(nodo).__name__}")
+        for i, campo in enumerate(campi):
+            valore = getattr(nodo, campo.name)
+            ultimo_campo = i == len(campi) - 1
+            ramo_c = "└─ " if ultimo_campo else "├─ "
+            ext_c  = "   " if ultimo_campo else "│  "
+            print(f"{prefisso}{ext}{ramo_c}{campo.name}:")
+            stampa_ast(
+                valore,
+                prefisso + ext + ext_c,
+                True,
+                False
+            )
+        return
+
+    # Fallback
+    print(f"{prefisso}{ramo}??? {type(nodo).__name__}  {nodo!r}")
