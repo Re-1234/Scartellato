@@ -148,26 +148,35 @@ compilatore("""
                numr s!
                s= a+b!
             {
-                      
+            
             robba ciro }
                 numr c!
                 numr s!
                 nbruogglio apposo!    
                 nbruogglio r = ??sdfdaf?? !
-                 
-                 vacant mestier classeFunzioneMimmo )  ( }
-                    burdell a = r !
-                {
-                               
-                o_mast ) ( }
+                burdell c1!  
+                   
+                 o_mast ) ( }
                     
                     numr apposo !
                     apposo = c !
                     c=5+6+9!
                    
-                    aspe)sasicchj and sasicchj(
-                       jamm_ja : classeFunzioneMimmo)(!        
+                    aspe)sasicchj(}
+                        jamm_ja : classeFunzioneMimmo)(!
+                    {
+                               
+                    c1 = ??ciao??!
+                    
+                    c1 -= 1!
                 {
+                 
+                 
+                 vacant mestier classeFunzioneMimmo )  ( }
+                    burdell a = r !
+                    c1 = 1!
+                {
+                        
             {
             
              vacant Uè ) ( }

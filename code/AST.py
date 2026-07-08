@@ -11,8 +11,6 @@ class AST_Transformer(Transformer):
         'PARAMETRI_TK', 'CCASTA',  'SCCASCIA','ASPE'
     }
 
-
-
     def filtra(self, figli): #funzione per filtrare i token non necessari
         return [c for c in figli
                 if not (hasattr(c, 'type') and c.type in self.TOKEN_DA_SCARTARE)]
@@ -82,6 +80,15 @@ class AST_Transformer(Transformer):
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
         return OpBin(op= str(operatore),left=variabile1,right=variabile2)
+
+    def addizioneuguale(self,figli):
+        left , op1 , right = self.filtra(figli)
+        return OpBin(op = str(op1),left = left , right = right)
+
+    def menouguale(self,figli):
+        left , op1 , right = self.filtra(figli)
+        return OpBin(op = str(op1),left = left , right = right)
+
 
     def and_exp(self,figli):
          left , op1 , right = self.filtra(figli)

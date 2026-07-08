@@ -84,8 +84,19 @@ class AnalisiSemantica:
     def visit_Carattr(self, node: Carattr):
         return "lettr"
 
-    def visit_GenericVar(self, nodo):
-        return "burdell"
+    def visit_GenericVar(self, nodo: GenericVar):
+        var = self.visit(nodo.value)
+        if var == "numr":
+            return "numr"
+        elif var == "nbruogglio":
+            return "nbruogglio"
+        elif var == "lota":
+            return "lota"
+        elif var == "lettr":
+            return "lettr"
+
+        return "oggetto"
+
 
     def visit_Variabile(self, node: Variabile):
         tipo = self.symbolTable.lookup(node.nome)
@@ -263,6 +274,9 @@ class AnalisiSemantica:
             if self.control_Ope_Bool(node.op):
                 return 'lota'
 
+        if co == "oggetto":
+            
+
         if node.op == '=':
             if not self._compatibili(co, ci):
                 raise SemanticError(f"Assegnazione non valida: '{co}' vs '{ci}'")
@@ -321,3 +335,6 @@ class AnalisiSemantica:
             else:
                 return False
         return None
+
+    def control_OperSupportatiPerGen(self,oper: str,value : Any):
+

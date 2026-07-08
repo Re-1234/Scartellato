@@ -89,8 +89,8 @@
                    | if_stmt
                    | return_stmt
                    | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
-                   | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> append_array
-                   | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> remove_array
+                   | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
+                   | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
                    | nome_var SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
 
