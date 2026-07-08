@@ -31,6 +31,27 @@ class SymbolTable:
     def getScope(self):
         return self.table
 
+    def declare_pending(self, symbol, firma):
+        # inserisce con flag pending=True
+        self.table[symbol] = {'firma': firma, 'pending': True}
+
+    def resolve_pending(self, symbol):
+        # trova il simbolo e toglie il flag
+        if symbol in self.table:
+            self.table[symbol] = self.table[symbol]['firma']
+            return
+        for scope in reversed(self.stack):
+            if symbol in scope:
+                scope[symbol] = scope[symbol]['firma']
+                return
+
+    def check_pending(self):
+        # restituisce lista di nomi ancora pending nello scope corrente
+        return [
+            name for name, info in self.table.items()
+            if isinstance(info, dict) and info.get('pending')
+        ]
+
     def getStack(self):
         return self.stack
 

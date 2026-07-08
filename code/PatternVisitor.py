@@ -52,6 +52,10 @@ class AnalisiSemantica:
         for kid in node.funzioni:
             self.visit(kid)
 
+        errori = self.symbolTable.check_pending()
+        if errori:
+            raise SemanticError(f"Funzioni usate ma mai dichiarate: {errori}")
+
         self.symbolTable.exitScope()
 
     def visit_Costruttore(self, node: Costruttore):
@@ -101,23 +105,29 @@ class AnalisiSemantica:
         """inserisce il nome della funzione nello scope precendente e
            ne crea uno nuovo per lo scope della funzione
         """
-        self.symbolTable.addId(node.nome.nome, node)
+        nome = node.nome.nome
+        info = self.symbolTable.lookup(nome)
+
+        if isinstance(info, dict) and info.get('pending'):
+            # era pending → risolvo
+            self.symbolTable.resolve_pending(nome)
+            self.symbolTable.addId(nome, node)
+        else:
+            # dichiarazione normale
+            self.symbolTable.addId(nome, node)
+
         self.symbolTable.enterScope()
-        #salvataggio del nodo con la funzione corrente
         self.funzione_corrente = node
 
-        #visita i nodi figli riguardo alla funzione
         for kid in node.parametri:
             self.visit(kid)
             self.tipi_risolti[id(kid.nome)] = str(kid.tipo)
 
         self.visit(node.corpo)
-        self.symbolTable.printTable()  # stampa dei parametri
+        self.symbolTable.printTable()
 
-        # reset del valore cosi non sarà alterato in chiamate future
         self.funzione_corrente = None
         self.symbolTable.exitScope()
-
 
 
     def visit_Parametro(self, node: Parametro):
@@ -158,7 +168,17 @@ class AnalisiSemantica:
         nome_funzione = node.nome_func.nome
         funzione = self.symbolTable.lookup(nome_funzione)
         if funzione is None:
-            raise SemanticError(f"Funzione '{nome_funzione}' non dichiarata")
+            # inserisco come pending
+            self.symbolTable.declare_pending(nome_funzione, None)
+            for arg in node.args:
+                self.visit(arg)
+            return None
+
+        if isinstance(funzione, dict) and funzione.get('pending'):
+            for arg in node.args:
+                self.visit(arg)
+            return None
+
         if not isinstance(funzione, Mestier):
             raise SemanticError(f"'{nome_funzione}' non è una funzione")
 
