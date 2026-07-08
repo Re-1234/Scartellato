@@ -278,7 +278,7 @@ class AnalisiSemantica:
             self.tipi_risolti[id(node.nome)] = tipo_dichiarato
 
     def control_Ope_Bool(self, oper: str):
-        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=":
+        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not":
             return True
         else:
             return False

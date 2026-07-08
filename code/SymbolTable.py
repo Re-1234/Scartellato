@@ -1,8 +1,8 @@
 class SymbolTable:
-
     def __init__(self):
         self.table = {}
         self.stack = []
+        s = []
 
     def enterScope(self):
         self.stack.append(self.table)

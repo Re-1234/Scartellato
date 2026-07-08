@@ -83,6 +83,13 @@ class AST_Transformer(Transformer):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
         return OpBin(op= str(operatore),left=variabile1,right=variabile2)
 
+    def and_exp(self,figli):
+         left , op1 , right = self.filtra(figli)
+         return OpBin(op = str(op1),left = left,right = right)
+
+    def or_exp(self,figli):
+        left,op1,right = self.filtra(figli)
+        return OpBin(op = str(op1),left = left,right = right)
 
     def sottrazione (self,figli):
         var1 = figli[0]
