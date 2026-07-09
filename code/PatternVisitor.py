@@ -141,6 +141,7 @@ class AnalisiSemantica:
         self.symbolTable.exitScope()
 
 
+
     def visit_Parametro(self, node: Parametro):
         # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
         nome_var = node.nome.nome
@@ -245,8 +246,8 @@ class AnalisiSemantica:
 
     #   ---VALUTAZIONE E ASSEGNAMENTO---
     def visit_OpBin(self, node: OpBin):
-        co = self.visit(node.left)   # stringa 'numr'
-
+        co =  self.symbolTable.lookup(node.left)
+        print(co.__class__.__name__)
         if node.right is None:
             if node.op in ('++', '--'):
                 if co != 'numr':
@@ -255,7 +256,15 @@ class AnalisiSemantica:
 
         ci = self.visit(node.right)  # stringa 'numr'
 
-        # confronti diretti tra stringhe, niente isinstance
+        if isinstance(co,"burdell"):
+            if self.control_OperSupportatiPerGen(node.op, co.valore, ci):
+                if ci == "nbruogglio" or co == "nbruogglio":
+                    return "nbruogglio"
+                elif ci == "numr" and co == "numr":
+                    return "numr"
+
+
+            # confronti diretti tra stringhe, niente isinstance
         if co == "lota" and ci == "lota":
             if self.control_Ope_Bool(node.op):
                 return 'lota'
@@ -274,7 +283,6 @@ class AnalisiSemantica:
             if self.control_Ope_Bool(node.op):
                 return 'lota'
 
-        if co == "oggetto":
             
 
         if node.op == '=':
@@ -312,7 +320,7 @@ class AnalisiSemantica:
             self.tipi_risolti[id(node.nome)] = tipo_dichiarato
 
     def control_Ope_Bool(self, oper: str):
-        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not":
+        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not" or oper == "=":
             return True
         else:
             return False
@@ -336,5 +344,25 @@ class AnalisiSemantica:
                 return False
         return None
 
-    def control_OperSupportatiPerGen(self,oper: str,value : Any):
+    def control_OperSupportatiPerGen(self,oper: str,value: str,value1: str):
+        if value == "numr":
+                            # vado a fare il controllo quando la variabile generica
+                            # è numr e le operazioni che si posso fare con determinati tipi che stanno dall'altra variabile
+            if oper == "-" or oper == "*" or oper == "/" or oper == "%":
+                if value1 == "numr":
+                    return True
+                else:
+                    raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
+            elif oper == "+" or self.control_Ope_Assign(oper,value1):
+                return True
+            else:
+                raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
+        elif value == "nbruogglio":
+            if oper == "+" or oper == "+=" or oper == "=":
+                if value1 == "nbruogglio" or value1 == "letter" or value1 == "numr":
+                    return True
+                else:
+                    raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
+            else:
+                raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
 
