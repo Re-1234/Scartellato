@@ -1,6 +1,5 @@
 from Transformer import *
 
-
 class TranspilerC:
     TIPI_C = {
         "numr": "int",
@@ -74,19 +73,17 @@ class TranspilerC:
             self.indentazione("")
 
     # ══════════════════════════════════════════════════════════════
-    #   FUNZIONI  (e main, che è un Mestier con nome 'Uè')
+    #   FUNZIONI
     # ══════════════════════════════════════════════════════════════
     def visit_Mestier(self, node: Mestier):
         tipo_ritorno = self.tipo_c(node.ritorno)
         nome = str(node.nome.nome)
 
-        # Capiamo se siamo nel main
         is_main = (nome == "Uè")
         if is_main:
             nome = "main"
             tipo_ritorno = "int"
 
-        # Memorizziamo lo stato temporaneamente per le espressioni/istruzioni interne
         self.in_main = is_main
 
         params_parts = []
@@ -104,7 +101,6 @@ class TranspilerC:
 
         self.visit(node.corpo)
 
-        # Aggiungiamo return 0 DI SALVATAGGIO solo se non c'è già un return alla fine
         if is_main:
             ha_return = False
             if node.corpo and hasattr(node.corpo, 'statements') and node.corpo.statements:
@@ -116,15 +112,15 @@ class TranspilerC:
 
         self.indent -= 1
         self.indentazione("}")
-        self.in_main = False  # Resettiamo lo stato
+        self.in_main = False
 
     # ══════════════════════════════════════════════════════════════
-    #   CLASSI → struct + funzioni con prefisso
+    #   CLASSI
     # ══════════════════════════════════════════════════════════════
     def visit_Robba(self, node: Robba):
         nome_classe = str(node.nome.nome)
 
-        # struct con i campi
+        self.campi_classe = {v.nome.nome for v in node.variabili}
         self.indentazione(f"typedef struct {{")
         self.indent += 1
         for v in node.variabili:
@@ -132,9 +128,23 @@ class TranspilerC:
             self.indentazione(f"{tipo_c} {v.nome.nome};")
         self.indent -= 1
         self.indentazione(f"}} {nome_classe};")
+
+        self.indentazione(f"// Prototipi dei metodi della classe {nome_classe}")
+        for f in node.funzioni:
+            tipo_ritorno = self.tipo_c(f.ritorno)
+            nome_metodo = str(f.nome.nome)
+
+            # Ricostruiamo i parametri esattamente come farà visit_Mestier
+            params_parts = [f"{nome_classe}* self"]
+            for p in f.parametri:
+                params_parts.append(f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}")
+            params = ", ".join(params_parts)
+
+            # Stampa l'intestazione con il ";" finale, senza aprire le graffe!
+            # Esempio: void ciro_classeFunzioneMimmo(ciro* self);
+            self.indentazione(f"{tipo_ritorno} {nome_classe}_{nome_metodo}({params});")
         self.indentazione("")
 
-        # costruttore → funzione NomeClasse_init
         if node.costruttore is not None:
             params = ", ".join(
                 f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}"
@@ -143,30 +153,29 @@ class TranspilerC:
             self.indentazione(f"{nome_classe} {nome_classe}_init({params}) {{")
             self.indent += 1
             self.indentazione(f"{nome_classe} self;")
-            self.classe_corrente_init = nome_classe   # per generare "self.campo" invece di "campo"
+            self.classe_corrente_init = nome_classe
+            self.in_costruttore = True
             self.visit(node.costruttore.corpo)
+            self.in_costruttore = False
             self.indentazione("return self;")
             self.indent -= 1
             self.indentazione("}")
             self.indentazione("")
 
-        # metodi → funzioni NomeClasse_metodo(NomeClasse* self, ...)
         self.classe_corrente = nome_classe
         for f in node.funzioni:
             self.visit(f)
             self.indentazione("")
         self.classe_corrente = None
+        self.campi_classe = set()
 
     # ══════════════════════════════════════════════════════════════
-    #   BLOCCO
+    #   BLOCCO & DICHIARAZIONE
     # ══════════════════════════════════════════════════════════════
     def visit_Block(self, node: Block):
         for stmt in node.statements:
             self.visit(stmt)
 
-    # ══════════════════════════════════════════════════════════════
-    #   DICHIARAZIONE
-    # ══════════════════════════════════════════════════════════════
     def visit_Dichiarazione(self, node: Dichiarazione):
         tipo_c = self.tipo_c(node.tipo.nome)
         nome = str(node.nome.nome)
@@ -177,7 +186,7 @@ class TranspilerC:
             self.indentazione(f"{tipo_c} {nome};")
 
     # ══════════════════════════════════════════════════════════════
-    #   OpBin COME ISTRUZIONE  ( = e <-> )
+    #   OpBin COME ISTRUZIONE  ( = , <-> , +=, -=, ecc. )
     # ══════════════════════════════════════════════════════════════
     def visit_OpBin(self, node: OpBin):
         if node.op == "=":
@@ -202,10 +211,17 @@ class TranspilerC:
             self.indentazione(f"{sx}{node.op};")
             return
 
+        # MODIFICA: Aggiunti gli operatori composti come istruzioni!
+        if node.op in ("+=", "-=", "*=", "/=", "%="):
+            sx = self.espr(node.left)
+            dx = self.espr(node.right)
+            self.indentazione(f"{sx} {node.op} {dx};")
+            return
+
         raise Exception(f"OpBin con operatore '{node.op}' non gestito come istruzione")
 
     # ══════════════════════════════════════════════════════════════
-    #   IF
+    #   COSTRUTTI DI CONTROLLO
     # ══════════════════════════════════════════════════════════════
     def visit_Mettimmca(self, node: Mettimmca):
         cond = self.espr(node.condizione)
@@ -220,9 +236,6 @@ class TranspilerC:
             self.indent -= 1
         self.indentazione("}")
 
-    # ══════════════════════════════════════════════════════════════
-    #   WHILE
-    # ══════════════════════════════════════════════════════════════
     def visit_Aspe(self, node: Aspe):
         cond = self.espr(node.Condizione)
         self.indentazione(f"while ({cond}) {{")
@@ -231,9 +244,6 @@ class TranspilerC:
         self.indent -= 1
         self.indentazione("}")
 
-    # ══════════════════════════════════════════════════════════════
-    #   FOR
-    # ══════════════════════════════════════════════════════════════
     def visit_Ambress_Ambress(self, node: Ambress_Ambress):
         init = self._for_init(node.dichiarazione)
         cond = self.espr(node.condizione)
@@ -246,26 +256,20 @@ class TranspilerC:
         self.indentazione("}")
 
     def _for_init(self, dich):
-        # dich è una Dichiarazione: costruiamo l'init SENZA punto e virgola finale
         tipo_c = self.tipo_c(dich.tipo.nome)
         nome = dich.nome.nome
         valore = self.espr(dich.valore)
         return f"{tipo_c} {nome} = {valore}"
 
     def _for_step(self, op: OpBin):
-        # op è OpBin con op="++"/"--" o un normale assegnamento incrementale
         sx = self.espr(op.left)
         if op.op in ("++", "--"):
             return f"{sx}{op.op}"
         dx = self.espr(op.right)
         return f"{sx} {op.op} {dx}"
 
-    # ══════════════════════════════════════════════════════════════
-    #   RETURN
-    # ══════════════════════════════════════════════════════════════
     def visit_ReturnStatement(self, node: ReturnStatement):
         if node.valore is None:
-            # Se siamo nel main, un return vuoto deve sputare 0 per non far arrabbiare il GCC
             if getattr(self, "in_main", False):
                 self.indentazione("return 0;")
             else:
@@ -274,9 +278,6 @@ class TranspilerC:
             valore = self.espr(node.valore)
             self.indentazione(f"return {valore};")
 
-    # ══════════════════════════════════════════════════════════════
-    #   CHIAMATA COME ISTRUZIONE
-    # ══════════════════════════════════════════════════════════════
     def visit_CallStmt(self, node: CallStmt):
         nome = str(node.nome_func.nome)
         args = ", ".join(self.espr(a) for a in node.args)
@@ -290,7 +291,6 @@ class TranspilerC:
         return str(int(v)) if v == int(v) else str(v)
 
     def espr_Boolean(self, node: Boolean):
-        # node.value è un Token('BOOLEAN', 'sasicchj') o 'friariell'
         return "true" if str(node.value) == "sasicchj" else "false"
 
     def espr_Stringa(self, node: Stringa):
@@ -300,17 +300,37 @@ class TranspilerC:
         return f"'{node.value}'"
 
     def espr_Variabile(self, node: Variabile):
-        return str(node.nome)
+        nome = str(node.nome)
+        # Se siamo in una classe e la variabile è un campo della classe
+        if hasattr(self, 'campi_classe') and nome in self.campi_classe:
+            # Nel costruttore "self" è per valore, nei metodi è un puntatore
+            if getattr(self, 'in_costruttore', False):
+                return f"self.{nome}"
+            else:
+                return f"self->{nome}"
+        return nome
 
     def espr_OpBin(self, node: OpBin):
         if node.op in ("=", "<->"):
             raise Exception(f"'{node.op}' non può comparire dentro un'espressione")
 
+        # MODIFICA: GESTIONE strcmp PER LE STRINGHE
+        tipo_sx = self.tipo_di(node.left)
+        tipo_dx = self.tipo_di(node.right)
+
+        if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
+            sx = self.espr(node.left)
+            dx = self.espr(node.right)
+            if node.op == "==":
+                return f"(strcmp({sx}, {dx}) == 0)"
+            elif node.op == "!=":
+                return f"(strcmp({sx}, {dx}) != 0)"
+
         op_c = {"and": "&&", "or": "||", "not": "!"}.get(node.op, node.op)
 
         sx = self.espr(node.left)
         if node.right is None:
-            return f"{sx}{op_c}"  # es. incremento_destro c++
+            return f"{sx}{op_c}"
 
         dx = self.espr(node.right)
         return f"({sx} {op_c} {dx})"
