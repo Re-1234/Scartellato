@@ -93,17 +93,8 @@ def compilatore(source: str) :
             print(f"  - {e}")
         return
 
-   # generatore(analisiSemantica)
+    generatore(analisiSemantica)
 
-"""
-    import subprocess
-    risultato = subprocess.run(["gcc", output_path, "-o", "output.exe"], capture_output=True, text=True)
-    if risultato.returncode != 0:
-        print("ERRORI DI COMPILAZIONE C:")
-        print(risultato.stderr)
-    else:
-        print("Compilazione riuscita!")
-"""
 compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio r = ??a + b??  !
@@ -118,6 +109,7 @@ compilatore("""
                 nbruogglio apposo!    
                 nbruogglio r = ??sdfdaf?? !
                 burdell c1!  
+                lota d = sasicchj !
                    
                  o_mast ) ( }
                     
@@ -132,6 +124,8 @@ compilatore("""
                     c1 = ??ciao??!
                     
                     c1 -= 1!
+                    c1= d !
+                    c1= s! 
                 {
                  
                  

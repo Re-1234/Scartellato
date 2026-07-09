@@ -286,7 +286,7 @@ class AnalisiSemantica:
             if node.op == "+" or node.op == "-=":
                 return 'nbruogglio'
             if self.control_Ope_Bool(node.op):
-                raise SemanticError( f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {co} e tipo {ci}")
+                raise SemanticError( f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {co}e tipo {ci}")
 
 
         # NBRUOGGLIO con NUMR (prepend/append del numero come stringa)
