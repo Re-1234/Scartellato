@@ -40,10 +40,6 @@ class Carattr:
             raise ValueError("value deve contenere un solo carattere")
 
 @dataclass(frozen=True)
-class GenericVar:
-    value: Any
-
-@dataclass(frozen=True)
 class Variabile:
     nome : str
     is_array: bool= False

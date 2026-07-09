@@ -9,6 +9,8 @@ class AnalisiSemantica:
         symbolTable: SymbolTable
         self.tipi_risolti = {}
         self.funzione_corrente = None
+        self.set_burdell = set()
+
 
     def visit(self, node):
         class_name = node.__class__.__name__
@@ -84,19 +86,6 @@ class AnalisiSemantica:
     def visit_Carattr(self, node: Carattr):
         return "lettr"
 
-    def visit_GenericVar(self, nodo: GenericVar):
-        var = self.visit(nodo.value)
-        if var == "numr":
-            return "numr"
-        elif var == "nbruogglio":
-            return "nbruogglio"
-        elif var == "lota":
-            return "lota"
-        elif var == "lettr":
-            return "lettr"
-
-        return "oggetto"
-
 
     def visit_Variabile(self, node: Variabile):
         tipo = self.symbolTable.lookup(node.nome)
@@ -135,6 +124,10 @@ class AnalisiSemantica:
             self.tipi_risolti[id(kid.nome)] = str(kid.tipo)
 
         self.visit(node.corpo)
+        if node.ritorno != 'vacant' and not self._ha_return(node.corpo):
+            raise SemanticError(
+                f"Funzione '{node.nome.nome}' deve avere un return di tipo '{node.ritorno}'"
+            )
         self.symbolTable.printTable()
 
         self.funzione_corrente = None
@@ -169,6 +162,24 @@ class AnalisiSemantica:
                 )
 
         return tipo_valore
+
+    def _ha_return(self, block: Block):
+        for stmt in block.statements:
+            if isinstance(stmt, ReturnStatement) and stmt.valore is not None:
+                return True
+            # controlla anche dentro if/while/for
+            if isinstance(stmt, Mettimmca):
+                if self._ha_return(stmt.allora):
+                    return True
+                if stmt.altrimenti and self._ha_return(stmt.altrimenti):
+                    return True
+            if isinstance(stmt, Aspe):
+                if self._ha_return(stmt.Corpo):
+                    return True
+            if isinstance(stmt, Ambress_Ambress):
+                if self._ha_return(stmt.Corpo):
+                    return True
+        return False
 
 
     def visit_Block(self, node: Block):
@@ -244,31 +255,25 @@ class AnalisiSemantica:
             self.visit(node.altrimenti)
             self.symbolTable.exitScope()
 
+
     #   ---VALUTAZIONE E ASSEGNAMENTO---
     def visit_OpBin(self, node: OpBin):
-        co =  self.symbolTable.lookup(node.left)
-        print(co.__class__.__name__)
+        co = self.visit(node.left)
+
         if node.right is None:
             if node.op in ('++', '--'):
                 if co != 'numr':
                     raise SemanticError(f"'{node.op}' applicabile solo a numr")
                 return 'numr'
 
-        ci = self.visit(node.right)  # stringa 'numr'
+        ci = self.visit(node.right)
 
-        if isinstance(co,"burdell"):
-            if self.control_OperSupportatiPerGen(node.op, co.valore, ci):
-                if ci == "nbruogglio" or co == "nbruogglio":
-                    return "nbruogglio"
-                elif ci == "numr" and co == "numr":
-                    return "numr"
-
-
-            # confronti diretti tra stringhe, niente isinstance
+        # LOTA
         if co == "lota" and ci == "lota":
             if self.control_Ope_Bool(node.op):
                 return 'lota'
 
+        # NUMR
         if co == "numr" and ci == "numr":
             if self.control_Ope_Aritmetic(node.op):
                 return 'numr'
@@ -277,50 +282,84 @@ class AnalisiSemantica:
             if self.control_Ope_Assign(node.op, "numr"):
                 return 'numr'
 
+        # NBRUOGGLIO
         if co == "nbruogglio" and ci == "nbruogglio":
-            if node.op == "+":
+            if node.op == "+" or node.op == "-=":
                 return 'nbruogglio'
             if self.control_Ope_Bool(node.op):
-                return 'lota'
+                raise SemanticError( f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {co} e tipo {ci}")
 
-            
 
+        # NBRUOGGLIO con NUMR (prepend/append del numero come stringa)
+        if co == "nbruogglio" and ci == "numr":
+            if node.op in ("+=", "-="):
+                return 'nbruogglio'
+
+        if co == "numr" and ci == "nbruogglio":
+            if node.op in ("+=", "-="):
+                return 'nbruogglio'
+
+        # ASSEGNAMENTO
         if node.op == '=':
-            if not self._compatibili(co, ci):
-                raise SemanticError(f"Assegnazione non valida: '{co}' vs '{ci}'")
-            return co
+            if isinstance(node.left, Variabile):
+                nome = node.left.nome
+                if nome in self.set_burdell:
+                    self.symbolTable.addId(nome, ci)
+                    return ci
+                else:
+                    tipo_attuale = self.symbolTable.lookup(nome)
+                    if not self._compatibili(tipo_attuale, ci):
+                        raise SemanticError(
+                            f"Impossibile assegnare '{ci}' a '{nome}' "
+                            f"che è di tipo '{tipo_attuale}'"
+                        )
+                    return tipo_attuale
 
-        # swap  richiede semplicemente tipi compatibili tra loro
+        # BURDELL: se uno dei due operandi è burdell lascia passare
+        if co == "burdell" or ci == "burdell":
+            return ci if co == "burdell" else co
+
+        # SWAP
         if node.op == '<->':
             if not self._compatibili(co, ci):
                 raise SemanticError(f"Swap non valido: '{co}' vs '{ci}'")
             return co
+
         raise SemanticError(
             f"BOTT A MUR : Tipi incompatibili: '{co}' e '{ci}' con operatore '{node.op}'"
         )
 
     def visit_Dichiarazione(self, node: Dichiarazione):
-            tipo_dichiarato = node.tipo.nome
-            nome_variabile = node.nome.nome
-            print(f"tipo_dichiarazione = {tipo_dichiarato}, nome_"
-                  f"variabile = {nome_variabile}")
-            if self.symbolTable.probe(nome_variabile):
-                raise SemanticError(f"Variabile '{nome_variabile}' già dichiarata")
+        tipo_dichiarato = node.tipo.nome
+        nome_variabile = node.nome.nome
+        print(f"tipo_dichiarazione = {tipo_dichiarato}, nome_variabile = {nome_variabile}")
 
-            if node.valore is not None:
-                tipo_valore = self.visit(node.valore)
+        if self.symbolTable.probe(nome_variabile):
+            raise SemanticError(f"Variabile '{nome_variabile}' già dichiarata")
+
+        if node.valore is not None:  # ← questo controllo deve esserci SEMPRE
+            tipo_valore = self.visit(node.valore)
+            if tipo_dichiarato == 'burdell':
+                self.symbolTable.addId(nome_variabile, tipo_valore)
+                self.set_burdell.add(nome_variabile)
+            else:
                 if not self._compatibili(tipo_dichiarato, tipo_valore):
                     raise SemanticError(
                         f"Errore (riga {node.tipo.linea}, col {node.tipo.colonna}): "
                         f"'{nome_variabile}' dichiarata come '{tipo_dichiarato}' "
                         f"ma assegnato '{tipo_valore}'"
                     )
-
+                self.symbolTable.addId(nome_variabile, tipo_dichiarato)
+        else:
+            # nessun valore → salvo il tipo dichiarato così com'è
             self.symbolTable.addId(nome_variabile, tipo_dichiarato)
-            self.tipi_risolti[id(node.nome)] = tipo_dichiarato
+            if tipo_dichiarato == 'burdell':
+                self.set_burdell.add(nome_variabile)
+
+        self.tipi_risolti[id(node.nome)] = tipo_dichiarato
 
     def control_Ope_Bool(self, oper: str):
-        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not" or oper == "=":
+        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not":
             return True
         else:
             return False
@@ -343,26 +382,4 @@ class AnalisiSemantica:
             else:
                 return False
         return None
-
-    def control_OperSupportatiPerGen(self,oper: str,value: str,value1: str):
-        if value == "numr":
-                            # vado a fare il controllo quando la variabile generica
-                            # è numr e le operazioni che si posso fare con determinati tipi che stanno dall'altra variabile
-            if oper == "-" or oper == "*" or oper == "/" or oper == "%":
-                if value1 == "numr":
-                    return True
-                else:
-                    raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
-            elif oper == "+" or self.control_Ope_Assign(oper,value1):
-                return True
-            else:
-                raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
-        elif value == "nbruogglio":
-            if oper == "+" or oper == "+=" or oper == "=":
-                if value1 == "nbruogglio" or value1 == "letter" or value1 == "numr":
-                    return True
-                else:
-                    raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
-            else:
-                raise SemanticError(f"MMMMMMMMMAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCC STTTAAAIIIII FFFFFAAAAAAACCCCCCCEEEEEEEEENNNNNNNNNNN: operazione {oper} non supportata per i tipi il tipo generico con valore {value} e il tipo {value1}")
 
