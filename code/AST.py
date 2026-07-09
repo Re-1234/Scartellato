@@ -36,6 +36,7 @@ class AST_Transformer(Transformer):
     def carattere (self,figli):
         token = figli[0]
         return Carattr(value=str(token[1:-1]))
+
     def genType (self,figli):
         token = figli[0]
         return  GenericVar(value=token)
@@ -323,9 +324,7 @@ def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
         if isinstance(nodo, Carattr):
             print(f"{prefisso}{ramo}Carattr({repr(nodo.value)})")
             return
-        if isinstance(nodo, GenericVar):
-            print(f"{prefisso}{ramo}GenericVar({repr(nodo.value)})")
-            return
+
         if isinstance(nodo, Variabile):
             arr = "[]" if nodo.is_array else ""
             print(f"{prefisso}{ramo}Variabile({arr}{repr(str(nodo.nome))})")

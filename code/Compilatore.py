@@ -93,7 +93,7 @@ def compilatore(source: str) :
             print(f"  - {e}")
         return
 
-    generatore(analisiSemantica)
+   # generatore(analisiSemantica)
 
 """
     import subprocess
@@ -109,6 +109,7 @@ compilatore("""
                nbruogglio r = ??a + b??  !
                numr s!
                s= a+b!
+               ccàsta s!
             {
             
             robba ciro }
@@ -149,7 +150,8 @@ compilatore("""
                  
                 jamm_ja : pippo ) guagliuni :  4 , 5 (  !
                 
-                mettimcà ) v == a ( }
+                
+                mettimcà )  5<7( }
                     numr s = 5 !
                 { allor_fa_accussi }
                     burdell z = 9 !
