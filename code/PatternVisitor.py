@@ -134,6 +134,7 @@ class AnalisiSemantica:
         self.symbolTable.exitScope()
 
 
+
     def visit_Parametro(self, node: Parametro):
         # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
         nome_var = node.nome.nome
