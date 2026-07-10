@@ -94,8 +94,6 @@
                    | nome_var SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
 
-
-
         // RETURN E BREAK
 
         return_stmt: BREAK TERMINATORE
@@ -115,7 +113,7 @@
 
         ?nome_var: ID -> variabile_semplice
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
-
+                | QUADRATASINISTRA NUMERO QUADRATADESTRA ID  -> variabile_array
 
         //CLASSI
 

@@ -157,7 +157,7 @@ compilatore("""
                  
                  
                  vacant mestier classeFunzioneMimmo )  ( }
-                    burdell a = r !
+                    burdell a = ??ciao?? !
                     c1 = 1!
                 {
                         
@@ -168,7 +168,9 @@ compilatore("""
                 nbruogglio v = ??sapposto?? !
                 numr s !
                 numr b!
-                 
+                
+                numr ]1[ k! 
+                
                 jamm_ja : pippo ) guagliuni :  4 , 5 (  !
                 
                 
@@ -178,6 +180,10 @@ compilatore("""
                     burdell z = 9 !
                 {
                 burdell c = a + v !
+                burdell test = 1!
+                test = ??ciao??!
+                test += 1!
+                
                 lota d = sasicchj!
                 d=friariell!
                 
@@ -190,5 +196,5 @@ compilatore("""
               
               ccàsta ! 
             {
-            
+             
     """)

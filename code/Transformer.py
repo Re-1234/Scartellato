@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from operator import index
 
 from typing import Any, List, Optional
 
@@ -42,11 +43,14 @@ class Carattr:
 @dataclass(frozen=True)
 class Variabile:
     nome : str
-    is_array: bool= False
-
+    index: int
+    is_array: bool = False
+    def __post_init__(self):
+        if not isinstance(self.index, int):
+            raise TypeError(f"index deve essere int, ricevuto {type(self.index)}")
 
 @dataclass(frozen=True)
-class Dichiarazione :
+class Dichiarazione:
     tipo: TipoDato
     nome : Variabile
     valore: object

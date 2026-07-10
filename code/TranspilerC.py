@@ -16,6 +16,10 @@ class TranspilerC:
         self.indent = 0
         self.temp_counter = 0
         self.classe_corrente = None   # serve per generare self.campo dentro i metodi
+        self.campi_classe = set()
+        self.metodi_classe = set()
+        self.in_costruttore = False
+        self.in_main = False
 
     # ── utility di stampa ────────────────────────────────────────────
     def indentazione(self, riga):
@@ -90,7 +94,12 @@ class TranspilerC:
         if self.classe_corrente is not None:
             params_parts.append(f"{self.classe_corrente}* self")
 
-        for p in node.parametri:
+        parametri = node.parametri or []
+        if isinstance(parametri, str):
+            # caso "main": parametri è una stringa vuota, nessun parametro reale
+            parametri = []
+
+        for p in parametri:
             params_parts.append(f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}")
 
         params = ", ".join(params_parts)
@@ -121,6 +130,12 @@ class TranspilerC:
         nome_classe = str(node.nome.nome)
 
         self.campi_classe = {v.nome.nome for v in node.variabili}
+        self.metodi_classe = {str(f.nome.nome) for f in node.funzioni}
+        # Impostiamo la classe corrente GIA' PRIMA del costruttore, così le
+        # chiamate a metodi della stessa classe fatte dentro il costruttore
+        # vengono riconosciute correttamente (vedi _risolvi_chiamata).
+        self.classe_corrente = nome_classe
+
         self.indentazione(f"typedef struct {{")
         self.indent += 1
         for v in node.variabili:
@@ -153,7 +168,6 @@ class TranspilerC:
             self.indentazione(f"{nome_classe} {nome_classe}_init({params}) {{")
             self.indent += 1
             self.indentazione(f"{nome_classe} self;")
-            self.classe_corrente_init = nome_classe
             self.in_costruttore = True
             self.visit(node.costruttore.corpo)
             self.in_costruttore = False
@@ -162,12 +176,13 @@ class TranspilerC:
             self.indentazione("}")
             self.indentazione("")
 
-        self.classe_corrente = nome_classe
         for f in node.funzioni:
             self.visit(f)
             self.indentazione("")
+
         self.classe_corrente = None
         self.campi_classe = set()
+        self.metodi_classe = set()
 
     # ══════════════════════════════════════════════════════════════
     #   BLOCCO & DICHIARAZIONE
@@ -211,7 +226,6 @@ class TranspilerC:
             self.indentazione(f"{sx}{node.op};")
             return
 
-        # MODIFICA: Aggiunti gli operatori composti come istruzioni!
         if node.op in ("+=", "-=", "*=", "/=", "%="):
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -278,10 +292,26 @@ class TranspilerC:
             valore = self.espr(node.valore)
             self.indentazione(f"return {valore};")
 
-    def visit_CallStmt(self, node: CallStmt):
+    # ── chiamate a funzione/metodo ───────────────────────────────────
+    def _risolvi_chiamata(self, node):
+        """Restituisce (nome_c, lista_argomenti_c) per una CallStmt,
+        aggiungendo prefisso di classe e 'self'/'&self' se la chiamata
+        punta a un metodo della classe corrente."""
         nome = str(node.nome_func.nome)
-        args = ", ".join(self.espr(a) for a in node.args)
-        self.indentazione(f"{nome}({args});")
+        args = [self.espr(a) for a in node.args]
+
+        if self.classe_corrente is not None and nome in self.metodi_classe:
+            nome_c = f"{self.classe_corrente}_{nome}"
+            self_arg = "&self" if self.in_costruttore else "self"
+            args = [self_arg] + args
+        else:
+            nome_c = nome
+
+        return nome_c, args
+
+    def visit_CallStmt(self, node: CallStmt):
+        nome_c, args = self._risolvi_chiamata(node)
+        self.indentazione(f"{nome_c}({', '.join(args)});")
 
     # ══════════════════════════════════════════════════════════════
     #   ESPRESSIONI
@@ -302,9 +332,9 @@ class TranspilerC:
     def espr_Variabile(self, node: Variabile):
         nome = str(node.nome)
         # Se siamo in una classe e la variabile è un campo della classe
-        if hasattr(self, 'campi_classe') and nome in self.campi_classe:
+        if nome in self.campi_classe:
             # Nel costruttore "self" è per valore, nei metodi è un puntatore
-            if getattr(self, 'in_costruttore', False):
+            if self.in_costruttore:
                 return f"self.{nome}"
             else:
                 return f"self->{nome}"
@@ -314,9 +344,9 @@ class TranspilerC:
         if node.op in ("=", "<->"):
             raise Exception(f"'{node.op}' non può comparire dentro un'espressione")
 
-        # MODIFICA: GESTIONE strcmp PER LE STRINGHE
+        # GESTIONE strcmp PER LE STRINGHE
         tipo_sx = self.tipo_di(node.left)
-        tipo_dx = self.tipo_di(node.right)
+        tipo_dx = self.tipo_di(node.right) if node.right is not None else None
 
         if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
@@ -325,6 +355,16 @@ class TranspilerC:
                 return f"(strcmp({sx}, {dx}) == 0)"
             elif node.op == "!=":
                 return f"(strcmp({sx}, {dx}) != 0)"
+            elif node.op == "+":
+                # concatenazione di stringhe: in C non si possono sommare
+                # due char* con '+', serve allocare un buffer e usare
+                # strcpy/strcat. Uso una GNU statement-expression per
+                # poterlo restituire come se fosse una singola espressione.
+                tmp = self.nuova_temp()
+                return (
+                    f"({{ char* {tmp} = malloc(strlen({sx}) + strlen({dx}) + 1); "
+                    f"strcpy({tmp}, {sx}); strcat({tmp}, {dx}); {tmp}; }})"
+                )
 
         op_c = {"and": "&&", "or": "||", "not": "!"}.get(node.op, node.op)
 
@@ -336,6 +376,5 @@ class TranspilerC:
         return f"({sx} {op_c} {dx})"
 
     def espr_CallStmt(self, node: CallStmt):
-        nome = str(node.nome_func.nome)
-        args = ", ".join(self.espr(a) for a in node.args)
-        return f"{nome}({args})"
+        nome_c, args = self._risolvi_chiamata(node)
+        return f"{nome_c}({', '.join(args)})"

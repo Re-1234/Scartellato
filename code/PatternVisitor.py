@@ -351,7 +351,7 @@ class AnalisiSemantica:
                     )
                 self.symbolTable.addId(nome_variabile, tipo_dichiarato)
         else:
-            # nessun valore → salvo il tipo dichiarato così com'è
+            #nessun valore → salvo il tipo dichiarato così com'è
             self.symbolTable.addId(nome_variabile, tipo_dichiarato)
             if tipo_dichiarato == 'burdell':
                 self.set_burdell.add(nome_variabile)

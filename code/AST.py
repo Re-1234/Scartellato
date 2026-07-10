@@ -37,10 +37,6 @@ class AST_Transformer(Transformer):
         token = figli[0]
         return Carattr(value=str(token[1:-1]))
 
-    def genType (self,figli):
-        token = figli[0]
-        return  GenericVar(value=token)
-
     def swap(self, figli):
         left,swap, right = self.filtra(figli)
         return OpBin(op=str(swap),left=left ,right=right)
@@ -124,11 +120,16 @@ class AST_Transformer(Transformer):
 
     def variabile_semplice(self, figli):
         id_token = self.filtra(figli)[0]
-        return Variabile(nome=str(id_token), is_array=False)
+        return Variabile(nome=str(id_token),index = -1, is_array=False)
 
     def variabile_array(self, figli):
-        id_token = self.filtra(figli)[0]
-        return Variabile(nome=str(id_token), is_array=True)
+        nodi = self.filtra(figli)
+        if len(nodi) == 2:
+            index_tok, id_token = nodi  # [NUMERO, ID]
+            return Variabile(nome=str(id_token), index=int(index_tok), is_array=True)
+        else:
+            id_token = nodi[0]  # solo [ID], array senza dimensione
+            return Variabile(nome=str(id_token), index=-1, is_array=True)
 
     def dichiarazione(self, figli):
         nodi = self.filtra(figli)
@@ -181,7 +182,7 @@ class AST_Transformer(Transformer):
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
         ritorno,nome,corpo =nodi
-        return Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome), is_array=False),parametri="",corpo=corpo,is_array=False)
+        return Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri="",corpo=corpo,is_array=False)
 
 
     def funzione_semplice(self, figli):
