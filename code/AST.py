@@ -120,7 +120,7 @@ class AST_Transformer(Transformer):
 
     def variabile_semplice(self, figli):
         id_token = self.filtra(figli)[0]
-        return Variabile(nome=str(id_token), is_array=False)
+        return Variabile(nome=str(id_token), index=-1, is_array=False)
 
     def variabile_array(self, figli):
         nodi = self.filtra(figli)
