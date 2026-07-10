@@ -37,9 +37,6 @@ class AST_Transformer(Transformer):
         token = figli[0]
         return Carattr(value=str(token[1:-1]))
 
-    def genType (self,figli):
-        token = figli[0]
-        return  GenericVar(value=token)
 
     def swap(self, figli):
         left,swap, right = self.filtra(figli)

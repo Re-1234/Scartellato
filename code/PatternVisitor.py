@@ -219,13 +219,15 @@ class AnalisiSemantica:
     #   ---CICLI---
     def visit_Ambress_Ambress(self, node: Ambress_Ambress):
         self.symbolTable.enterScope()
-        self.visit(node.dichiarazione)
+        if node.dichiarazione is not None:  #dichiarazione non fatta
+            self.visit(node.dichiarazione)
 
         tipo_cond = self.visit(node.condizione)
         if tipo_cond != "lota":
             raise SemanticError( f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da boolean")
 
-        self.visit(node.VarOperation)
+        if node.VarOperation is not None:
+            self.visit(node.VarOperation)
         self.visit(node.Corpo)
 
         self.symbolTable.exitScope()
@@ -258,75 +260,85 @@ class AnalisiSemantica:
 
     #   ---VALUTAZIONE E ASSEGNAMENTO---
     def visit_OpBin(self, node: OpBin):
-        co = self.visit(node.left)
+        lv = self.visit(node.left)
 
         if node.right is None:
             if node.op in ('++', '--'):
-                if co != 'numr':
-                    raise SemanticError(f"'{node.op}' applicabile solo a numr")
+                if lv != 'numr' and lv != 'burdell':
+                    raise SemanticError(f"'{node.op}' applicabile solo a numr e burdell")
                 return 'numr'
 
-        ci = self.visit(node.right)
+        rv = self.visit(node.right)
+
+        if lv == "burdell" or rv == "burdell":
+            # risolvo il tipo concreto dalla symbol table
+            lv = self.symbolTable.lookup(node.left.nome) if isinstance(node.left,Variabile) and lv == "burdell" else lv
+            rv = self.symbolTable.lookup(node.right.nome) if isinstance(node.right,Variabile) and rv == "burdell" else rv
+
 
         # LOTA
-        if co == "lota" and ci == "lota":
+        if lv == "lota" or rv == "lota":
+            if node.op in ("+=", "-="):
+                raise SemanticError(f"Operatore '{node.op}' non applicabile a lota")
             if self.control_Ope_Bool(node.op):
-                return 'lota'
+                return "lota"
 
         # NUMR
-        if co == "numr" and ci == "numr":
-            if self.control_Ope_Aritmetic(node.op):
-                return 'numr'
-            if self.control_Ope_Bool(node.op):
-                return 'lota'
-            if self.control_Ope_Assign(node.op, "numr"):
-                return 'numr'
+        if lv == "numr" and rv == "numr":
+            if self.control_Ope_Aritmetic(node.op): return 'numr'
+            if self.control_Ope_Bool(node.op):      return 'lota'
+            if self.control_Ope_Assign(node.op, "numr"): return 'numr'
 
         # NBRUOGGLIO
-        if co == "nbruogglio" and ci == "nbruogglio":
-            if node.op == "+" or node.op == "-=":
+        if lv == "nbruogglio" and rv == "nbruogglio":
+            if node.op in ("+", "-="):
                 return 'nbruogglio'
             if self.control_Ope_Bool(node.op):
-                raise SemanticError( f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {co}e tipo {ci}")
+                raise SemanticError( f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {lv}e tipo {rv}")
 
 
         # NBRUOGGLIO con NUMR (prepend/append del numero come stringa)
-        if co == "nbruogglio" and ci == "numr":
-            if node.op in ("+=", "-="):
-                return 'nbruogglio'
+        if lv == "nbruogglio" and rv == "numr":
+            if node.op in ("+","+=", "-="):
+                return "nbruogglio"
 
-        if co == "numr" and ci == "nbruogglio":
-            if node.op in ("+=", "-="):
-                return 'nbruogglio'
+        if lv == "numr" and rv == "nbruogglio":
+            if node.op in ("+", "+=", "-="):
+                if isinstance(node.left, Variabile) and node.left.nome in self.set_burdell:
+                    self.symbolTable.addId(node.left.nome, "nbruogglio")
+                    self.tipi_risolti[id(node.left)] = "nbruogglio"
+                    return "nbruogglio"
+                raise SemanticError(
+                    f"Impossibile fare '{node.op}' tra  {lv}' e  {rv}: "
+                    f"'{node.left.nome if isinstance(node.left, Variabile) else '?'}' "
+                    f"è numr fisso e non può cambiare tipo"
+                )
 
         # ASSEGNAMENTO
         if node.op == '=':
             if isinstance(node.left, Variabile):
                 nome = node.left.nome
                 if nome in self.set_burdell:
-                    self.symbolTable.addId(nome, ci)
-                    return ci
+                    self.symbolTable.addId(nome, rv)
+                    self.tipi_risolti[id(node.left)] = rv
+                    return rv
                 else:
                     tipo_attuale = self.symbolTable.lookup(nome)
-                    if not self._compatibili(tipo_attuale, ci):
+                    if not self._compatibili(tipo_attuale, rv):
                         raise SemanticError(
-                            f"Impossibile assegnare '{ci}' a '{nome}' "
+                            f"Impossibile assegnare '{rv}' a '{nome}' "
                             f"che è di tipo '{tipo_attuale}'"
                         )
                     return tipo_attuale
 
-        # BURDELL: se uno dei due operandi è burdell lascia passare
-        if co == "burdell" or ci == "burdell":
-            return ci if co == "burdell" else co
-
         # SWAP
         if node.op == '<->':
-            if not self._compatibili(co, ci):
-                raise SemanticError(f"Swap non valido: '{co}' vs '{ci}'")
-            return co
+            if not self._compatibili(lv, rv):
+                raise SemanticError(f"Swap non valido: '{lv}' vs '{rv}'")
+            return lv
 
         raise SemanticError(
-            f"BOTT A MUR : Tipi incompatibili: '{co}' e '{ci}' con operatore '{node.op}'"
+            f"BOTT A MUR : Tipi incompatibili: '{lv}' e '{rv}' con operatore '{node.op}'"
         )
 
     def visit_Dichiarazione(self, node: Dichiarazione):
@@ -337,7 +349,7 @@ class AnalisiSemantica:
         if self.symbolTable.probe(nome_variabile):
             raise SemanticError(f"Variabile '{nome_variabile}' già dichiarata")
 
-        if node.valore is not None:  # ← questo controllo deve esserci SEMPRE
+        if node.valore is not None:
             tipo_valore = self.visit(node.valore)
             if tipo_dichiarato == 'burdell':
                 self.symbolTable.addId(nome_variabile, tipo_valore)

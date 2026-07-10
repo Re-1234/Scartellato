@@ -32,7 +32,7 @@ def trova_gcc():
 
 
 def generatore(analisiSemantica):
-    transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+    transpiler = TranspilerC(analisiSemantica.tipi_risolti,analisiSemantica.set_burdell)
     transpiler.visit(ast)
     codice_c = transpiler.get_output()
 
@@ -120,13 +120,13 @@ def compilatore(source: str) :
             print(f"  - {e}")
         return
 
-    generatore(analisiSemantica)
+    #generatore(analisiSemantica)
 
 compilatore("""
             numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio r = ??a + b??  !
-               numr s!
-               s= a+b!
+               numr ][ s !
+               s-= a+b!
                ccàsta s!
             {
             
@@ -142,6 +142,8 @@ compilatore("""
                     
                     numr apposo !
                     apposo = c !
+                    c1 = s!
+                    c1 -= r + c!  
                     c=5+6+9!
                    
                     aspe)sasicchj(}
