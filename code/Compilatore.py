@@ -1,14 +1,13 @@
 import os
 import platform
-import shutil
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
 from AST import *
 from PatternVisitor import AnalisiSemantica
 from TranspilerC import *
 import subprocess
-
-
 import shutil
+
+
 
 def trova_gcc():
     """Cerca gcc nel PATH di sistema. Se non lo trova, prova percorsi comuni di fallback su Windows."""
