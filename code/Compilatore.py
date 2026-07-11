@@ -146,7 +146,7 @@ compilatore("""
                     c1 -= r + c!  
                     c=5+6+9!
                    
-                    aspe)sasicchj(}
+                    aspe)1(}
                         jamm_ja : classeFunzioneMimmo)(!
                     {
                                

@@ -1,0 +1,265 @@
+from lark.load_grammar import GRAMMAR_ERRORS
+
+from agent.anthropicAPI import call_llm
+import re
+
+GRAMMAR_L = """
+BOOLEAN.2 : "sasicchj"|"friariell"
+        LOTA_TK: "lota"                 // token per boolean
+        NUMERO: /\d+(\.\d+)?e?/
+        NUMR_TK: "numr"
+        STRINGA: /\?\?[^?]*\?\?/
+        NBRUOGGLIO_TK: "nbruogglio"
+        ID: /[a-zA-Z_]\w*/
+        CARATTERE:  /\?[^?]\?/
+        LETTER_TK: "lettr"
+        VOID: "vacant"
+        GEN_TYPE: "burdell"    //variabile generica
+
+        //operazioni
+        DIVISIONEUGUALE: "*="
+        MOLTIPLICAUGUALE: "/="
+        ADDIZIONEUGUALE: "-="
+        MENOUGUALE: "+="
+        MENO: "+"
+        ADDIZIONE: "-"
+        MOLTIPLICA:"/"
+        DIVISIONE: "*"
+        ASSIGN: "="
+        PLUSPLUS: "++"
+        MENMEN: "--"
+        RESTO: "%"
+
+        //operazioni logiche
+        OR: "or" | "||"
+        AND: "and" | "&&"
+        NOT: "not" | "!!"
+        EQUALS: "=="
+        DIVERSO: "!="
+        MAGGIORE: ">"
+        MAGGIOREUGUALE: ">="
+        MINORE: "<"
+        MINOREUGUALE: "<="
+
+        //PARENTESSI
+        TONDASINISTRA: ")"
+        TONDADESTRA: "("
+        GRAFFASINISTRA: "}"
+        GRAFFADESTRA: "{"
+        QUADRATASINISTRA: "]"
+        QUADRATADESTRA: "["
+
+        //Keyword
+        METTIMCA: "mettimcà"                    //if
+        ALLORFAACCUSSI: "allor_fa_accussi"     //else
+        ROBA: "robba"                         //classe
+        O_MAST: "o_mast"               //costruttore
+        ASPE: "aspe"                        //while
+        AMBRESS_AMBRESS: "ambressAmbress"  //for
+        MESTIER: "mestier"           //funzione
+        MAIN: "Uè"                  //main
+        NULL: "Nuncsta_nient"      //null
+        BREAK: "stut_tutt"      //break
+        CCASTA: "ccàsta"         //return
+        TERMINATORE: "!"        //fine istruzione
+        CHIAMATA: "jamm_ja"    // keyword per chiamata a funzione
+        SWAP: "<->"           //swap dei valori
+        PARAMETRI_TK: "guagliuni" // elenco di parametri
+
+        %ignore /\s+/
+        %ignore /\/\/[^\n]*/
+        %ignore /\/\*[\s\S]*\*\//
+
+
+
+        start:  top_level* main_def top_level*
+             |  top_level+
+
+        main_def: main_opzione MAIN TONDASINISTRA TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> main
+
+        ?main_opzione: VOID |
+
+
+        ?top_level: funzione
+                  | classe
+                  | dichiarazione
+
+        //  BLOCCO E ISTRUZIONI
+
+        blocco: istruzione*
+
+        ?istruzione: dichiarazione
+                   | for_stmt
+                   | while_stmt
+                   | if_stmt
+                   | return_stmt
+                   | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
+                   | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
+                   | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
+                   | nome_var SWAP nome_var TERMINATORE  -> swap
+                   | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
+
+        // RETURN E BREAK
+
+        return_stmt: BREAK TERMINATORE
+                   | CCASTA  nome_var TERMINATORE ->returnstatement
+                   | CCASTA TERMINATORE   ->returnstatement
+
+        // DICHIARAZIONI DI VARIABILI
+
+        dichiarazione: tipo nome_var ASSIGN assegnamento_composto TERMINATORE
+                     | tipo nome_var TERMINATORE
+
+        ?tipo: GEN_TYPE -> tipo
+            | LOTA_TK -> tipo
+            | NUMR_TK -> tipo
+            | NBRUOGGLIO_TK -> tipo
+            | LETTER_TK -> tipo
+
+        ?nome_var: ID -> variabile_semplice
+                | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
+                | QUADRATASINISTRA NUMERO QUADRATADESTRA ID  -> variabile_array
+
+        //CLASSI
+
+        ?classe: ROBA nome_var GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
+
+        ?membro: campi
+               | metodi
+
+        // COSTRUTTORE
+        costruttore: O_MAST TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore
+
+        ?campi: dichiarazione
+             | campi dichiarazione
+
+
+        ?metodi: funzione
+              | metodi funzione
+
+
+
+        // FUNZIONI
+
+        funzione: tipo MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
+                | VOID MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
+
+
+        ?sezione_parametri: "guagliuni" ":" parametro ("," parametro)*
+                 |
+
+        parametro: tipo nome_var
+
+        // IF
+
+        ?if_stmt: METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_senzaelse
+               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA ALLORFAACCUSSI GRAFFASINISTRA blocco GRAFFADESTRA -> mettimca_completo
+               | METTIMCA TONDASINISTRA assegnamento_composto TONDADESTRA istruzione ALLORFAACCUSSI istruzione -> mettimca_completo
+
+
+        // WHILE
+
+        while_stmt: ASPE TONDASINISTRA assegnamento_composto TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> aspe
+                  | ASPE TONDASINISTRA assegnamento_composto TONDADESTRA istruzione -> aspe
+
+        // FOR
+
+        for_stmt: AMBRESS_AMBRESS TONDASINISTRA TERMINATORE assegnamento_composto TERMINATORE TONDADESTRA for_corpo -> ambress_ambress
+                | AMBRESS_AMBRESS TONDASINISTRA dichiarazione_for assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> ambress_ambress
+                | AMBRESS_AMBRESS TONDASINISTRA nome_var TERMINATORE assegnamento_composto TERMINATORE valutazione TONDADESTRA for_corpo -> ambress_ambress
+
+
+        dichiarazione_for: tipo nome_var ASSIGN assegnamento_composto TERMINATORE ->dichiarazione
+
+
+        valutazione :  nome_var PLUSPLUS -> incremento_destro
+                    |  PLUSPLUS  nome_var -> incremento_sinistra
+                    |  MENMEN  nome_var -> decremento_sinistro
+                    |  nome_var MENMEN -> decremento_destro
+                    |
+
+        ?for_corpo: "}" blocco "{"
+                 | istruzione
+
+
+
+
+        // ESPRESSIONI
+
+        ?assegnamento_composto: nome_var DIVISIONEUGUALE  expr_or
+                             | nome_var  MOLTIPLICAUGUALE expr_or
+                             | nome_var  ADDIZIONEUGUALE  expr_or
+                             | nome_var  MENOUGUALE       expr_or
+                             | expr_or
+
+        ?expr_or: expr_or OR expr_and -> or_exp
+            | expr_and
+
+        ?expr_and: expr_and AND expr_eq -> and_exp
+                | expr_eq
+
+        ?expr_eq: expr_eq EQUALS expr_rel  -> uguale
+               | expr_eq DIVERSO expr_rel  -> diverso
+               | expr_rel
+
+        ?expr_rel: expr_rel MAGGIORE      expr_add  -> maggiore
+                | expr_rel MAGGIOREUGUALE expr_add  -> maggioreuguale
+                | expr_rel MINORE         expr_add  -> minore
+                | expr_rel MINOREUGUALE   expr_add  -> minoreuguale
+                | expr_add
+
+        ?expr_add: expr_add ADDIZIONE expr_mul -> somma
+                | expr_add MENO      expr_mul -> sottrazione
+                | expr_mul
+
+        ?expr_mul: expr_mul MOLTIPLICA expr_unary  -> moltiplicazione
+                | expr_mul DIVISIONE  expr_unary  -> divisione
+                | expr_mul RESTO      expr_unary  -> resto
+                | expr_unary
+
+        ?expr_unary: NOT expr_unary
+                  | PLUSPLUS   expr_primary  -> incremento
+                  | MENMEN     expr_primary -> decremento
+                  | expr_primary PLUSPLUS -> incremento_destro
+                  | expr_primary MENMEN   -> decremento_destro
+                  | expr_primary
+
+        ?expr_primary: TONDASINISTRA assegnamento_composto TONDADESTRA
+                    | NUMERO  -> numero
+                    | BOOLEAN -> boolean
+                    | STRINGA -> stringa
+                    | CARATTERE -> carattere
+                    | ID       -> variabile_semplice
+"""
+
+FEW_SHOT_EXAMPLES = """
+        
+"""
+
+
+
+SYSTEM_GENERATOR = f"""Sei un generatore di programmi nel linguaggio L.
+GRAMMATICA :
+{ GRAMMAR_L }
+ESEMPI VALIDI :
+{ FEW_SHOT_EXAMPLES }
+Genera un programma valido in L. Rispondi SOLO con il codice .
+"""
+
+
+# agente generatore
+def generate_program () -> str :
+    raw = call_llm ( system = SYSTEM_GENERATOR ,
+            user =" Genera un programma in L.",
+            temperature =0.8)
+    return extract_code(raw)
+
+
+""" Rimuove eventuali fence markdown e whitespace di troppo ."""
+    # rimuove ‘‘‘ linguaggio ... ‘‘‘
+def extract_code ( raw : str ) -> str :
+    fenced = re . search (r" ‘ ‘ ‘(?:\w+) ?\n (.*?) ‘‘‘", raw , re . DOTALL )
+    if fenced :
+        return fenced . group (1) . strip ()
+    return raw . strip ()
