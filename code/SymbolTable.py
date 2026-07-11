@@ -64,3 +64,15 @@ class SymbolTable:
 
     def __str__(self):
         return f"SymbolicTable" + f"[table = {self.table}, stack = {self.stack}]"
+
+    def update(self, symbol, name):
+        """Aggiorna il valore associato a 'symbol' nello scope in cui è STATO TROVATO,
+           risalendo la pila se necessario — non crea mai una nuova voce."""
+        if symbol in self.table:
+            self.table[symbol] = name
+            return True
+        for scope in reversed(self.stack):
+            if symbol in scope:
+                scope[symbol] = name
+                return True
+        return False

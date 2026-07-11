@@ -9,7 +9,7 @@ class AnalisiSemantica:
         symbolTable: SymbolTable
         self.tipi_risolti = {}
         self.funzione_corrente = None
-        self.set_burdell = set()
+
 
 
     def visit(self, node):
@@ -91,6 +91,8 @@ class AnalisiSemantica:
         tipo = self.symbolTable.lookup(node.nome)
         if tipo is None:
             raise SemanticError(f"Variabile '{node.nome}' non dichiarata")
+        if isinstance(tipo, dict) and 'is_burdell' in tipo:
+            return tipo['tipo']
         return tipo
 
     def _compatibili(self, tipo_atteso, tipo_trovato):
@@ -234,11 +236,12 @@ class AnalisiSemantica:
 
     def visit_Aspe(self, node: Aspe):
         tipo_cond = self.visit(node.Condizione)
-        if tipo_cond != "lota":
-            raise SemanticError(f"La condizione del while deve essere booleana, trovato '{tipo_cond}'")
+        if tipo_cond != "lota" and tipo_cond != "numr":
+            raise SemanticError(f"La condizione del while deve essere booleana, o numr trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
         self.visit(node.Corpo)
+        self.symbolTable.printTable()
         self.symbolTable.exitScope()
 
 
@@ -271,10 +274,20 @@ class AnalisiSemantica:
         rv = self.visit(node.right)
 
         if lv == "burdell" or rv == "burdell":
-            # risolvo il tipo concreto dalla symbol table
-            lv = self.symbolTable.lookup(node.left.nome) if isinstance(node.left,Variabile) and lv == "burdell" else lv
-            rv = self.symbolTable.lookup(node.right.nome) if isinstance(node.right,Variabile) and rv == "burdell" else rv
+            if isinstance(node.left, Variabile) and lv == "burdell":
+                info_l = self.symbolTable.lookup(node.left.nome)
+                lv = info_l['tipo'] if isinstance(info_l, dict) else info_l
 
+            if isinstance(node.right, Variabile) and rv == "burdell":
+                info_r = self.symbolTable.lookup(node.right.nome)
+                rv = info_r['tipo'] if isinstance(info_r, dict) else info_r
+
+            if lv == "burdell" and node.op != '=':
+                nome = node.left.nome if isinstance(node.left, Variabile) else "?"
+                raise SemanticError(
+                    f"'{nome}' è 'burdell' non ancora inizializzata: "
+                    f"il primo utilizzo deve essere un'assegnazione semplice '=', non '{node.op}'"
+                )
 
         # LOTA
         if lv == "lota" or rv == "lota":
@@ -291,7 +304,7 @@ class AnalisiSemantica:
 
         # NBRUOGGLIO
         if lv == "nbruogglio" and rv == "nbruogglio":
-            if node.op in ("+", "-="):
+            if node.op in ("+", "-=", "+="):
                 return 'nbruogglio'
             if self.control_Ope_Bool(node.op):
                 raise SemanticError( f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {lv}e tipo {rv}")
@@ -303,9 +316,15 @@ class AnalisiSemantica:
                 return "nbruogglio"
 
         if lv == "numr" and rv == "nbruogglio":
-            if node.op in ("+", "+=", "-="):
-                if isinstance(node.left, Variabile) and node.left.nome in self.set_burdell:
-                    self.symbolTable.addId(node.left.nome, "nbruogglio")
+            if node.op == '+':
+                return 'nbruogglio'
+
+            if node.op in ("+=", "-="):
+                info_var = self.symbolTable.lookup(node.left.nome) if isinstance(node.left, Variabile) else None
+                is_dinamica = isinstance(info_var, dict) and info_var.get('is_burdell')
+
+                if isinstance(node.left, Variabile) and is_dinamica:
+                    self.symbolTable.addId(node.left.nome, {'tipo': "nbruogglio", 'is_burdell': True})
                     self.tipi_risolti[id(node.left)] = "nbruogglio"
                     return "nbruogglio"
                 raise SemanticError(
@@ -318,18 +337,31 @@ class AnalisiSemantica:
         if node.op == '=':
             if isinstance(node.left, Variabile):
                 nome = node.left.nome
-                if nome in self.set_burdell:
-                    self.symbolTable.addId(nome, rv)
+                info_var = self.symbolTable.lookup(nome)
+
+                # Capiamo se è dinamica e qual è il suo tipo attuale
+                is_dinamica = isinstance(info_var, dict) and info_var.get('is_burdell')
+                tipo_attuale = info_var['tipo'] if isinstance(info_var, dict) else info_var
+
+                if is_dinamica:
+                    # SALVIAMO IL NUOVO TIPO MANTENENDOLA DINAMICA
+                    self.symbolTable.addId(nome, {'tipo': rv, 'is_burdell': True})
                     self.tipi_risolti[id(node.left)] = rv
                     return rv
                 else:
-                    tipo_attuale = self.symbolTable.lookup(nome)
                     if not self._compatibili(tipo_attuale, rv):
                         raise SemanticError(
                             f"Impossibile assegnare '{rv}' a '{nome}' "
                             f"che è di tipo '{tipo_attuale}'"
                         )
                     return tipo_attuale
+
+        if rv == "burdell" and node.op != '=':
+            nome = node.right.nome if isinstance(node.right, Variabile) else "?"
+            raise SemanticError(
+                f"'{nome}' è 'burdell' non ancora inizializzata: "
+                f"il primo utilizzo deve essere un'assegnazione semplice '=', non '{node.op}'"
+            )
 
         # SWAP
         if node.op == '<->':
@@ -349,11 +381,12 @@ class AnalisiSemantica:
         if self.symbolTable.probe(nome_variabile):
             raise SemanticError(f"Variabile '{nome_variabile}' già dichiarata")
 
+        tipo_finale = tipo_dichiarato
         if node.valore is not None:
             tipo_valore = self.visit(node.valore)
             if tipo_dichiarato == 'burdell':
-                self.symbolTable.addId(nome_variabile, tipo_valore)
-                self.set_burdell.add(nome_variabile)
+                self.symbolTable.addId(nome_variabile, {'tipo': tipo_valore, 'is_burdell': True})
+                tipo_finale = tipo_valore
             else:
                 if not self._compatibili(tipo_dichiarato, tipo_valore):
                     raise SemanticError(
@@ -363,12 +396,10 @@ class AnalisiSemantica:
                     )
                 self.symbolTable.addId(nome_variabile, tipo_dichiarato)
         else:
-            #nessun valore → salvo il tipo dichiarato così com'è
-            self.symbolTable.addId(nome_variabile, tipo_dichiarato)
-            if tipo_dichiarato == 'burdell':
-                self.set_burdell.add(nome_variabile)
+            is_dinamico = (tipo_dichiarato == 'burdell')
+            self.symbolTable.addId(nome_variabile, {'tipo': tipo_dichiarato, 'is_burdell': is_dinamico})
 
-        self.tipi_risolti[id(node.nome)] = tipo_dichiarato
+        self.tipi_risolti[id(node.nome)] = tipo_finale
 
     def control_Ope_Bool(self, oper: str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not":

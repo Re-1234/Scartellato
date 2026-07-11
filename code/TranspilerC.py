@@ -7,7 +7,7 @@ class TranspilerC:
         "nbruogglio": "char*",
         "lettr": "char",
         "vacant": "void",
-        "burdell": "void*",
+        "burdell": "Burdell",
     }
 
     def __init__(self, tipi_risolti: dict):
@@ -20,6 +20,7 @@ class TranspilerC:
         self.metodi_classe = set()
         self.in_costruttore = False
         self.in_main = False
+        self.var_burdell = set()
 
     # ── utility di stampa ────────────────────────────────────────────
     def indentazione(self, riga):
@@ -72,6 +73,71 @@ class TranspilerC:
         self.indentazione("#include <string.h>")
         self.indentazione("#include <stdlib.h>")
         self.indentazione("")
+
+        self.indentazione("typedef enum { TIPO_NUMR, TIPO_LOTA, TIPO_NBRUOGGLIO, TIPO_LETTR } TagBurdell;")
+        self.indentazione("")
+        self.indentazione("""
+            typedef struct {
+                TagBurdell tag;
+                union {
+                    int numr;
+                    bool lota;
+                    char* nbruogglio;
+                    char lettr;
+                } val;
+            } Burdell;
+        """)
+        self.indentazione("""Burdell burdell_da_numr(int v) {
+                Burdell b; b.tag = TIPO_NUMR; b.val.numr = v; return b;
+            }
+            Burdell burdell_da_lota(bool v) {
+                Burdell b; b.tag = TIPO_LOTA; b.val.lota = v; return b;
+            }
+            Burdell burdell_da_nbruogglio(char* v) {
+                Burdell b; b.tag = TIPO_NBRUOGGLIO; b.val.nbruogglio = v; return b;
+            }
+            Burdell burdell_da_lettr(char v) {
+                Burdell b; b.tag = TIPO_LETTR; b.val.lettr = v; return b;
+            }
+            
+            #define MAX_ALLOCS 10000
+            void* _mem_tracker[MAX_ALLOCS];
+            int _mem_count = 0;
+
+            void* b_malloc(size_t size) {
+                void* ptr = malloc(size);
+                if (ptr && _mem_count < MAX_ALLOCS) {
+                    _mem_tracker[_mem_count++] = ptr;
+                }
+                return ptr;
+            }
+
+            void b_free_all() {
+                for(int i = 0; i < _mem_count; i++) {
+                    free(_mem_tracker[i]);
+                }
+            }
+            
+           char* burdell_concat(const char* s1, const char* s2) {
+                if(!s1) s1 = ""; if(!s2) s2 = "";
+                char* res = (char*)b_malloc(strlen(s1) + strlen(s2) + 1);
+                strcpy(res, s1); strcat(res, s2);
+                return res;
+            }
+            char* burdell_concat_str_num(const char* s, int n) {
+                if(!s) s = "";
+                char* res = (char*)b_malloc(strlen(s) + 32);
+                sprintf(res, "%s%d", s, n);
+                return res;
+            }
+            char* burdell_concat_num_str(int n, const char* s) {
+                if(!s) s = "";
+                char* res = (char*)b_malloc(strlen(s) + 32);
+                sprintf(res, "%d%s", n, s);
+                return res;
+            }
+        """)
+
         for decl in node.program:
             self.visit(decl)
             self.indentazione("")
@@ -100,6 +166,8 @@ class TranspilerC:
             parametri = []
 
         for p in parametri:
+            if p.tipo.nome == "burdell":
+                self.var_burdell.add(str(p.nome.nome))
             params_parts.append(f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}")
 
         params = ", ".join(params_parts)
@@ -107,6 +175,9 @@ class TranspilerC:
 
         self.indentazione(f"{tipo_ritorno} {nome_finale}({params}) {{")
         self.indent += 1
+
+        if is_main:
+            self.indentazione("atexit(b_free_all); // Avvia il Garbage Collector automatico")
 
         self.visit(node.corpo)
 
@@ -192,21 +263,53 @@ class TranspilerC:
             self.visit(stmt)
 
     def visit_Dichiarazione(self, node: Dichiarazione):
-        tipo_c = self.tipo_c(node.tipo.nome)
         nome = str(node.nome.nome)
+
+        if node.tipo.nome == "burdell":
+            self.var_burdell.add(nome)
+            tipo_c = "Burdell"
+        else:
+            tipo_c = self.tipo_c(node.tipo.nome)
+
         if node.valore is not None:
             valore = self.espr(node.valore)
+            # Se la variabile è dinamica, in C dobbiamo inscatolarla nella Struct
+            if node.tipo.nome == "burdell":
+                valore = self._wrappa_burdell(node.valore)
             self.indentazione(f"{tipo_c} {nome} = {valore};")
         else:
-            self.indentazione(f"{tipo_c} {nome};")
+            # GESTIONE VARIABILI NON INIZIALIZZATE (Default values)
+            if node.tipo.nome == "numr":
+                default = "0"
+            elif node.tipo.nome == "lota":
+                default = "false"
+            elif node.tipo.nome == "nbruogglio":
+                default = '""'
+            elif node.tipo.nome == "lettr":
+                default = "'\\0'"
+            elif node.tipo.nome == "burdell":
+                default = "burdell_da_numr(0)"
+            else:
+                default = "0"  # Fallback generico
+
+            self.indentazione(f"{tipo_c} {nome} = {default};")
 
     # ══════════════════════════════════════════════════════════════
     #   OpBin COME ISTRUZIONE  ( = , <-> , +=, -=, ecc. )
     # ══════════════════════════════════════════════════════════════
     def visit_OpBin(self, node: OpBin):
         if node.op == "=":
-            sx = self.espr(node.left)
+            if isinstance(node.left, Variabile):
+                sx = self._accesso_base(str(node.left.nome))
+            else:
+                sx = self.espr(node.left)
+
             dx = self.espr(node.right)
+
+            # Se a sinistra ho una var dinamica, inscatolo il lato destro
+            if isinstance(node.left, Variabile) and str(node.left.nome) in self.var_burdell:
+                dx = self._wrappa_burdell(node.right)
+
             self.indentazione(f"{sx} = {dx};")
             return
 
@@ -229,6 +332,39 @@ class TranspilerC:
         if node.op in ("+=", "-=", "*=", "/=", "%="):
             sx = self.espr(node.left)
             dx = self.espr(node.right)
+
+            # Usa il calcolatore infallibile per dedurre i tipi
+            tipo_sx = self._calcola_tipo(node.left)
+            tipo_dx = self._calcola_tipo(node.right)
+
+            # GESTIONE SICURA DELLE STRINGHE (se dx o sx è nbruogglio)
+            if tipo_sx == "nbruogglio" or tipo_dx == "nbruogglio":
+
+                # --- APPEND (-=) : sx = sx + dx ---
+                if node.op == "-=":
+                    if tipo_sx == "nbruogglio" and tipo_dx == "numr":
+                        self.indentazione(f"{sx} = burdell_concat_str_num({sx}, {dx});")
+                    elif tipo_sx == "numr" and tipo_dx == "nbruogglio":
+                        self.indentazione(f"{sx} = burdell_concat_num_str({sx}, {dx});")
+                    else:
+                        # Entrambi nbruogglio
+                        self.indentazione(f"{sx} = burdell_concat({sx}, {dx});")
+                    return
+
+                # --- PREPEND (+=) : sx = dx + sx ---
+                elif node.op == "+=":
+                    if tipo_sx == "nbruogglio" and tipo_dx == "numr":
+                        # Aggiungo un numero all'inizio di una stringa
+                        self.indentazione(f"{sx} = burdell_concat_num_str({dx}, {sx});")
+                    elif tipo_sx == "numr" and tipo_dx == "nbruogglio":
+                        # Aggiungo una stringa all'inizio di un numero
+                        self.indentazione(f"{sx} = burdell_concat_str_num({dx}, {sx});")
+                    else:
+                        # Entrambi nbruogglio, inverto l'ordine
+                        self.indentazione(f"{sx} = burdell_concat({dx}, {sx});")
+                    return
+
+            # Caso base (es. numr += numr)
             self.indentazione(f"{sx} {node.op} {dx};")
             return
 
@@ -331,23 +467,36 @@ class TranspilerC:
 
     def espr_Variabile(self, node: Variabile):
         nome = str(node.nome)
-        # Se siamo in una classe e la variabile è un campo della classe
-        if nome in self.campi_classe:
-            # Nel costruttore "self" è per valore, nei metodi è un puntatore
-            if self.in_costruttore:
-                return f"self.{nome}"
-            else:
-                return f"self->{nome}"
+
+        # 1. Se è burdell, gestisci lo spacchettamento (con il prefisso giusto sotto)
+        if nome in self.var_burdell:
+            tipo_in_questo_punto = self.tipo_di(node)
+            base = self._accesso_base(nome)
+            mappa = {
+                "numr": f"{base}.val.numr",
+                "lota": f"{base}.val.lota",
+                "nbruogglio": f"{base}.val.nbruogglio",
+                "lettr": f"{base}.val.lettr",
+            }
+            return mappa[tipo_in_questo_punto]
+
+        # 2. Altrimenti, decidi il percorso base senza assumere self-> a priori
+        return self._accesso_base(nome)
+
+    def _accesso_base(self, nome):
+        """Decide come accedere a 'nome': campo di classe (self./self->) o variabile normale."""
+        if self.classe_corrente is not None and nome in self.campi_classe:
+            return f"self.{nome}" if self.in_costruttore else f"self->{nome}"
         return nome
 
     def espr_OpBin(self, node: OpBin):
         if node.op in ("=", "<->"):
             raise Exception(f"'{node.op}' non può comparire dentro un'espressione")
 
-        # GESTIONE strcmp PER LE STRINGHE
         tipo_sx = self.tipo_di(node.left)
         tipo_dx = self.tipo_di(node.right) if node.right is not None else None
 
+        # GESTIONE STRINGHE (ora usando le funzioni helper)
         if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -356,16 +505,21 @@ class TranspilerC:
             elif node.op == "!=":
                 return f"(strcmp({sx}, {dx}) != 0)"
             elif node.op == "+":
-                # concatenazione di stringhe: in C non si possono sommare
-                # due char* con '+', serve allocare un buffer e usare
-                # strcpy/strcat. Uso una GNU statement-expression per
-                # poterlo restituire come se fosse una singola espressione.
-                tmp = self.nuova_temp()
-                return (
-                    f"({{ char* {tmp} = malloc(strlen({sx}) + strlen({dx}) + 1); "
-                    f"strcpy({tmp}, {sx}); strcat({tmp}, {dx}); {tmp}; }})"
-                )
+                return f"burdell_concat({sx}, {dx})"
 
+        if tipo_sx == "nbruogglio" and tipo_dx == "numr":
+            sx = self.espr(node.left)
+            dx = self.espr(node.right)
+            if node.op == "+":
+                return f"burdell_concat_str_num({sx}, {dx})"
+
+        if tipo_sx == "numr" and tipo_dx == "nbruogglio":
+            sx = self.espr(node.left)
+            dx = self.espr(node.right)
+            if node.op == "+":
+                return f"burdell_concat_num_str({sx}, {dx})"
+
+        # GESTIONE OPERATORI BASE
         op_c = {"and": "&&", "or": "||", "not": "!"}.get(node.op, node.op)
 
         sx = self.espr(node.left)
@@ -378,3 +532,35 @@ class TranspilerC:
     def espr_CallStmt(self, node: CallStmt):
         nome_c, args = self._risolvi_chiamata(node)
         return f"{nome_c}({', '.join(args)})"
+
+    def _wrappa_burdell(self, nodo_valore):
+        tipo = self.tipo_di(nodo_valore)
+        valore_espr = self.espr(nodo_valore)
+        mappa = {
+            "numr": "burdell_da_numr",
+            "lota": "burdell_da_lota",
+            "nbruogglio": "burdell_da_nbruogglio",
+            "lettr": "burdell_da_lettr",
+        }
+        return f"{mappa[tipo]}({valore_espr})"
+
+    def _calcola_tipo(self, node):
+        """Cerca il tipo nella symbol table, se non c'è lo deduce ricorsivamente."""
+        if node is None:
+            return None
+        try:
+            return self.tipo_di(node)
+        except Exception:
+            cls = node.__class__.__name__
+            if cls == "Numr": return "numr"
+            if cls == "Stringa": return "nbruogglio"
+            if cls == "Boolean": return "lota"
+            if cls == "Carattr": return "lettr"
+            if cls == "OpBin":
+                t_sx = self._calcola_tipo(node.left)
+                t_dx = self._calcola_tipo(node.right)
+                # Nel tuo linguaggio string + something = string
+                if t_sx == "nbruogglio" or t_dx == "nbruogglio":
+                    return "nbruogglio"
+                return t_sx
+            return None
