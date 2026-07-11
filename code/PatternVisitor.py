@@ -150,9 +150,7 @@ class AnalisiSemantica:
         self.symbolTable.addId(nome_var, tipo_var)
         self.tipi_risolti[id(node.nome)] = tipo_var
 
-
     def visit_ReturnStatement(self, node: ReturnStatement):
-        # nodo.valore contiene un nodo qualsiasi
         tipo_valore = self.visit(node.valore) if node.valore is not None else "vacant"
 
         if self.funzione_corrente is not None:
@@ -161,6 +159,25 @@ class AnalisiSemantica:
                 raise SemanticError(
                     f"Return di tipo '{tipo_valore}' ma la funzione "
                     f"'{self.funzione_corrente.nome.nome}' ritorna '{tipo_atteso}'"
+                )
+
+            # nuovo controllo: shape (array vs scalare)
+            if isinstance(node.valore, Variabile):
+                is_array_valore = self.symbolTable.is_array(node.valore.nome)
+            else:
+                is_array_valore = False
+
+            funzione_vuole_array = getattr(self.funzione_corrente, 'is_array', False)
+
+            if funzione_vuole_array and not is_array_valore:
+                raise SemanticError(
+                    f"La funzione '{self.funzione_corrente.nome.nome}' deve ritornare un array, "
+                    f"ma '{node.valore.nome}' non lo è"
+                )
+            if not funzione_vuole_array and is_array_valore:
+                raise SemanticError(
+                    f"La funzione '{self.funzione_corrente.nome.nome}' ritorna uno scalare, "
+                    f"ma '{node.valore.nome}' è un array"
                 )
 
         return tipo_valore
@@ -376,7 +393,7 @@ class AnalisiSemantica:
     def visit_Dichiarazione(self, node: Dichiarazione):
         tipo_dichiarato = node.tipo.nome
         nome_variabile = node.nome.nome
-        print(f"tipo_dichiarazione = {tipo_dichiarato}, nome_variabile = {nome_variabile}")
+        is_array = node.nome.is_array
 
         if self.symbolTable.probe(nome_variabile):
             raise SemanticError(f"Variabile '{nome_variabile}' già dichiarata")
@@ -385,7 +402,7 @@ class AnalisiSemantica:
         if node.valore is not None:
             tipo_valore = self.visit(node.valore)
             if tipo_dichiarato == 'burdell':
-                self.symbolTable.addId(nome_variabile, {'tipo': tipo_valore, 'is_burdell': True})
+                self.symbolTable.addId(nome_variabile, {'tipo': tipo_valore, 'is_burdell': True, 'is_array': is_array})
                 tipo_finale = tipo_valore
             else:
                 if not self._compatibili(tipo_dichiarato, tipo_valore):
@@ -394,10 +411,12 @@ class AnalisiSemantica:
                         f"'{nome_variabile}' dichiarata come '{tipo_dichiarato}' "
                         f"ma assegnato '{tipo_valore}'"
                     )
-                self.symbolTable.addId(nome_variabile, tipo_dichiarato)
+                self.symbolTable.addId(nome_variabile,
+                                       {'tipo': tipo_dichiarato, 'is_burdell': False, 'is_array': is_array})
         else:
             is_dinamico = (tipo_dichiarato == 'burdell')
-            self.symbolTable.addId(nome_variabile, {'tipo': tipo_dichiarato, 'is_burdell': is_dinamico})
+            self.symbolTable.addId(nome_variabile,
+                                   {'tipo': tipo_dichiarato, 'is_burdell': is_dinamico, 'is_array': is_array})
 
         self.tipi_risolti[id(node.nome)] = tipo_finale
 

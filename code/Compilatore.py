@@ -127,6 +127,7 @@ compilatore("""
                nbruogglio r = ??a + b??  !
                numr ][ s !
                numr c1 = 4 !
+               s+= c1 !
                lota d = sasicchj !
                nbruogglio x = ??2?? !
                r -=  c1 + x !

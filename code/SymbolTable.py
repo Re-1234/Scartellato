@@ -76,3 +76,7 @@ class SymbolTable:
                 scope[symbol] = name
                 return True
         return False
+
+    def is_array(self, symbol):
+        val = self.lookup(symbol)
+        return isinstance(val, dict) and val.get('is_array', False)

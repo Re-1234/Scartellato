@@ -21,6 +21,7 @@ class TranspilerC:
         self.in_costruttore = False
         self.in_main = False
         self.var_burdell = set()
+        self.var_array = set()
 
     # ── utility di stampa ────────────────────────────────────────────
     def indentazione(self, riga):
@@ -86,6 +87,14 @@ class TranspilerC:
                     char lettr;
                 } val;
             } Burdell;
+            
+            typedef struct {
+                Burdell* dati;
+                int len;
+                int cap;
+            } ArrayDinamico;
+            
+            
         """)
         self.indentazione("""Burdell burdell_da_numr(int v) {
                 Burdell b; b.tag = TIPO_NUMR; b.val.numr = v; return b;
@@ -100,42 +109,57 @@ class TranspilerC:
                 Burdell b; b.tag = TIPO_LETTR; b.val.lettr = v; return b;
             }
             
-            #define MAX_ALLOCS 10000
-            void* _mem_tracker[MAX_ALLOCS];
-            int _mem_count = 0;
-
-            void* b_malloc(size_t size) {
-                void* ptr = malloc(size);
-                if (ptr && _mem_count < MAX_ALLOCS) {
-                    _mem_tracker[_mem_count++] = ptr;
-                }
-                return ptr;
-            }
-
-            void b_free_all() {
-                for(int i = 0; i < _mem_count; i++) {
-                    free(_mem_tracker[i]);
-                }
-            }
-            
-           char* burdell_concat(const char* s1, const char* s2) {
+            char* burdell_concat(const char* s1, const char* s2) {
                 if(!s1) s1 = ""; if(!s2) s2 = "";
-                char* res = (char*)b_malloc(strlen(s1) + strlen(s2) + 1);
+                char* res = malloc(strlen(s1) + strlen(s2) + 1);
                 strcpy(res, s1); strcat(res, s2);
                 return res;
             }
             char* burdell_concat_str_num(const char* s, int n) {
                 if(!s) s = "";
-                char* res = (char*)b_malloc(strlen(s) + 32);
+                char* res = malloc(strlen(s) + 32);
                 sprintf(res, "%s%d", s, n);
                 return res;
             }
             char* burdell_concat_num_str(int n, const char* s) {
                 if(!s) s = "";
-                char* res = (char*)b_malloc(strlen(s) + 32);
+                char* res = malloc(strlen(s) + 32);
                 sprintf(res, "%d%s", n, s);
                 return res;
             }
+            int burdell_equals(Burdell a, Burdell b) {
+                if (a.tag != b.tag) return 0;
+                switch (a.tag) {
+                    case TIPO_NUMR: return a.val.numr == b.val.numr;
+                    case TIPO_LOTA: return a.val.lota == b.val.lota;
+                    case TIPO_NBRUOGGLIO: return strcmp(a.val.nbruogglio, b.val.nbruogglio) == 0;
+                    case TIPO_LETTR: return a.val.lettr == b.val.lettr;
+                }
+                return 0;
+            }
+        """)
+        self.indentazione("""
+        void arr_init(ArrayDinamico* a) {
+            a->dati = NULL; a->len = 0; a->cap = 0;
+        }
+        
+        void arr_append(ArrayDinamico* a, Burdell v) {
+            if (a->len >= a->cap) {
+                a->cap = a->cap == 0 ? 4 : a->cap * 2;
+                a->dati = realloc(a->dati, a->cap * sizeof(Burdell));
+            }
+            a->dati[a->len++] = v;
+        }
+        void arr_remove_value(ArrayDinamico* a, Burdell v) {
+            for (int i = 0; i < a->len; i++) {
+                if (burdell_uguale(a->dati[i], v)) {
+                    for (int j = i; j < a->len - 1; j++) a->dati[j] = a->dati[j+1];
+                    a->len--;
+                    return;
+                }
+            }
+        }
+        
         """)
 
         for decl in node.program:
@@ -146,8 +170,12 @@ class TranspilerC:
     #   FUNZIONI
     # ══════════════════════════════════════════════════════════════
     def visit_Mestier(self, node: Mestier):
-        tipo_ritorno = self.tipo_c(node.ritorno)
         nome = str(node.nome.nome)
+
+        if node.is_array:
+            tipo_ritorno = "ArrayDinamico"
+        else:
+            tipo_ritorno = self.tipo_c(node.ritorno)
 
         is_main = (nome == "Uè")
         if is_main:
@@ -175,9 +203,6 @@ class TranspilerC:
 
         self.indentazione(f"{tipo_ritorno} {nome_finale}({params}) {{")
         self.indent += 1
-
-        if is_main:
-            self.indentazione("atexit(b_free_all); // Avvia il Garbage Collector automatico")
 
         self.visit(node.corpo)
 
@@ -217,25 +242,32 @@ class TranspilerC:
 
         self.indentazione(f"// Prototipi dei metodi della classe {nome_classe}")
         for f in node.funzioni:
-            tipo_ritorno = self.tipo_c(f.ritorno)
+            if f.is_array:
+                tipo_ritorno = "ArrayDinamico"
+            else:
+                tipo_ritorno = self.tipo_c(f.ritorno)
             nome_metodo = str(f.nome.nome)
 
-            # Ricostruiamo i parametri esattamente come farà visit_Mestier
             params_parts = [f"{nome_classe}* self"]
             for p in f.parametri:
-                params_parts.append(f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}")
+                tipo_c_param = self.tipo_c(p.tipo.nome)
+                if p.nome.is_array:
+                    tipo_c_param += "*"
+                params_parts.append(f"{tipo_c_param} {p.nome.nome}")
             params = ", ".join(params_parts)
 
-            # Stampa l'intestazione con il ";" finale, senza aprire le graffe!
-            # Esempio: void ciro_classeFunzioneMimmo(ciro* self);
             self.indentazione(f"{tipo_ritorno} {nome_classe}_{nome_metodo}({params});")
         self.indentazione("")
 
         if node.costruttore is not None:
-            params = ", ".join(
-                f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}"
-                for p in node.costruttore.parametri
-            )
+            params_list = []
+            for p in node.costruttore.parametri:
+                tipo_c_param = self.tipo_c(p.tipo.nome)
+                if p.nome.is_array:
+                    tipo_c_param += "*"
+                params_list.append(f"{tipo_c_param} {p.nome.nome}")
+            params = ", ".join(params_list)
+
             self.indentazione(f"{nome_classe} {nome_classe}_init({params}) {{")
             self.indent += 1
             self.indentazione(f"{nome_classe} self;")
@@ -264,6 +296,13 @@ class TranspilerC:
 
     def visit_Dichiarazione(self, node: Dichiarazione):
         nome = str(node.nome.nome)
+        is_array = node.nome.is_array
+
+        if is_array:
+            self.var_array.add(nome)
+            self.indentazione(f"ArrayDinamico {nome};")
+            self.indentazione(f"arr_init(&{nome});")
+            return  # gli array non hanno valore iniziale nel tuo linguaggio, quindi ci fermiamo qui
 
         if node.tipo.nome == "burdell":
             self.var_burdell.add(nome)
@@ -273,25 +312,12 @@ class TranspilerC:
 
         if node.valore is not None:
             valore = self.espr(node.valore)
-            # Se la variabile è dinamica, in C dobbiamo inscatolarla nella Struct
             if node.tipo.nome == "burdell":
                 valore = self._wrappa_burdell(node.valore)
             self.indentazione(f"{tipo_c} {nome} = {valore};")
         else:
-            # GESTIONE VARIABILI NON INIZIALIZZATE (Default values)
-            if node.tipo.nome == "numr":
-                default = "0"
-            elif node.tipo.nome == "lota":
-                default = "false"
-            elif node.tipo.nome == "nbruogglio":
-                default = '""'
-            elif node.tipo.nome == "lettr":
-                default = "'\\0'"
-            elif node.tipo.nome == "burdell":
-                default = "burdell_da_numr(0)"
-            else:
-                default = "0"  # Fallback generico
-
+            default = {"numr": "0", "lota": "false", "nbruogglio": '""', "lettr": "'\\0'",
+                       "burdell": "burdell_da_numr(0)"}.get(node.tipo.nome, "0")
             self.indentazione(f"{tipo_c} {nome} = {default};")
 
     # ══════════════════════════════════════════════════════════════
@@ -330,6 +356,19 @@ class TranspilerC:
             return
 
         if node.op in ("+=", "-=", "*=", "/=", "%="):
+            if isinstance(node.left, Variabile) and str(node.left.nome) in self.var_array:
+                nome_array = str(node.left.nome)
+                tipo_elemento = self._calcola_tipo(node.right)
+                valore_wrappato = self._wrappa_valore_per_tipo(node.right, tipo_elemento)
+
+                if node.op == "-=":
+                    self.indentazione(f"arr_append(&{nome_array}, {valore_wrappato});")
+                elif node.op == "+=":
+                    self.indentazione(f"arr_remove_value(&{nome_array}, {valore_wrappato});")
+                else:
+                    raise Exception(f"Operatore '{node.op}' non supportato sugli array")
+                return
+
             sx = self.espr(node.left)
             dx = self.espr(node.right)
 
@@ -564,3 +603,13 @@ class TranspilerC:
                     return "nbruogglio"
                 return t_sx
             return None
+
+    def _wrappa_valore_per_tipo(self, nodo_valore, tipo):
+        valore_espr = self.espr(nodo_valore)
+        mappa = {
+            "numr": "burdell_da_numr",
+            "lota": "burdell_da_lota",
+            "nbruogglio": "burdell_da_nbruogglio",
+            "lettr": "burdell_da_lettr",
+        }
+        return f"{mappa[tipo]}({valore_espr})"
