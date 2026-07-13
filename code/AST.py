@@ -270,8 +270,8 @@ class AST_Transformer(Transformer):
         return Start(program=nodi)
 
     def stampante(self, figli):
-        valore1  = self.filtra(figli)
-        variabili1 = self.filtra(figli)
+        valore1  = self.filtra(figli)[0]
+        variabili1 = self.filtra(figli)[1:]
         return Arape_a_vocca(valore = valore1,variabili = variabili1)
 
 def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):

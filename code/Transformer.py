@@ -117,4 +117,4 @@ class ReturnStatement:
 @dataclass(frozen=True)
 class Arape_a_vocca:
     valore: str
-    variabili: list[object]
+    variabili: list[Variabile]
