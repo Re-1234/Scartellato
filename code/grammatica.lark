@@ -60,6 +60,8 @@
         CHIAMATA: "jamm_ja"    // keyword per chiamata a funzione
         SWAP: "<->"           //swap dei valori
         PARAMETRI_TK: "guagliuni" // elenco di parametri
+        PRINT: "arape_a_vocca"
+
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
@@ -93,6 +95,7 @@
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
                    | nome_var SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
+                   | PRINT TONDASINISTRA STRINGA ("," nome_var)* TONDADESTRA TERMINATORE -> stampante
 
         // RETURN E BREAK
 

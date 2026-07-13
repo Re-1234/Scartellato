@@ -13,7 +13,7 @@ from code.Compilatore import compilatore
 
 
 GRAMMAR_L = """
-BOOLEAN.2 : "sasicchj"|"friariell"
+        BOOLEAN.2 : "sasicchj"|"friariell"
         LOTA_TK: "lota"                 // token per boolean
         NUMERO: /\d+(\.\d+)?e?/
         NUMR_TK: "numr"
@@ -289,6 +289,7 @@ SYSTEM_GENERATE_TESTER = f""" sei un generatore di test
 
 
 """
+#qua invochiamo Lark per prendere il pars tree
 _parser = Lark(GRAMMAR_L, start="start", parser="lalr")
 
 def write_code ( spec : str ) -> str :
@@ -345,6 +346,9 @@ def extract_code ( raw : str ) -> str :
     if fenced :
         return fenced . group (1) . strip ()
     return raw . strip ()
+
+
+
 
 
 

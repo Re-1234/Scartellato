@@ -8,7 +8,7 @@ class AST_Transformer(Transformer):
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
         'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'O_MAST', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
-        'PARAMETRI_TK', 'CCASTA',  'SCCASCIA','ASPE'
+        'PARAMETRI_TK', 'CCASTA',  'SCCASCIA','ASPE','PRINT'
     }
 
     def filtra(self, figli): #funzione per filtrare i token non necessari
@@ -269,6 +269,10 @@ class AST_Transformer(Transformer):
 
         return Start(program=nodi)
 
+    def stampante(self, figli):
+        valore1  = self.filtra(figli)
+        variabili1 = self.filtra(figli)
+        return Arape_a_vocca(valore = valore1,variabili = variabili1)
 
 def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
     if e_radice:

@@ -113,3 +113,8 @@ class Robba:
 @dataclass(frozen=True)
 class ReturnStatement:
       valore: object
+
+@dataclass(frozen=True)
+class Arape_a_vocca:
+    valore: str
+    variabili: list[object]
