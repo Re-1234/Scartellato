@@ -1,7 +1,16 @@
+import json
+
 from lark.load_grammar import GRAMMAR_ERRORS
 
 from agent.anthropicAPI import call_llm
 import re
+from lark import Lark
+
+from code.Compilatore import compilatore
+
+# Parser costruito UNA volta sola fuori dalla funzione (fuori dal ciclo!),
+# altrimenti ricompili la grammatica ad ogni singola chiamata: costoso e inutile.
+
 
 GRAMMAR_L = """
 BOOLEAN.2 : "sasicchj"|"friariell"
@@ -233,28 +242,101 @@ BOOLEAN.2 : "sasicchj"|"friariell"
                     | ID       -> variabile_semplice
 """
 
+PRODUCTIONS = ["start", "main_def", "main_opzione", "top_level",
+               "blocco", "istruzione" , "dichiarazione" , "for_stmt","while_stmt","if_stmt","return_stmt","nome_var","assegnamento_composto"
+               ,"tipo","classe","membro","metodi","costruttore","campi","funzione","sezione_parametri",
+               "parametro","dichiarazione_for","valutazione","for_corpo","expr_or","expr_and","expr_eq","expr_rel",
+               "expr_add","expr_mul","expr_unary","expr_primary"]
+
 FEW_SHOT_EXAMPLES = """
         
 """
 
-
-
-SYSTEM_GENERATOR = f"""Sei un generatore di programmi nel linguaggio L.
+SYSTEM_SPEC = f""" Sei lo Spec Designer per la generazione di programmi in L.
+NON scrivi codice . Produci una specifica STRUTTURALE (forma , non funzione ).
 GRAMMATICA :
 { GRAMMAR_L }
-ESEMPI VALIDI :
+FORMATO DI USCITA esatto :
+TITOLO : <una riga >
+COSTRUTTI RICHIESTI : <lista separata da virgole >
+STRUTTURA : <2 -4 frasi sulla forma >"""
+
+
+
+SYSTEM_WRITER = f"""Sei un Code Writer . Ricevi una specifica strutturale
+e scrivi un programma in L che la rispetta .
+GRAMMATICA :
+{ GRAMMAR_L }
+ESEMPI :
 { FEW_SHOT_EXAMPLES }
-Genera un programma valido in L. Rispondi SOLO con il codice .
+Rispondi SOLO con il codice del programma , niente altro ."""
+
+
+SYSTEM_REPAIR = f"""Sei un riparatore di programmi nel linguaggio L.
+Ricevi un programma con errori e i messaggi del compilatore .
+Riscrivi il programma correggendo SOLO gli errori segnalati .
+Mantieni il piu ’ possibile la struttura originale .
+GRAMMATICA :
+{ GRAMMAR_L }
+Rispondi SOLO con il programma corretto ."""
+
+
+SYSTEM_GENERATE_TESTER = f""" sei un generatore di test 
+    
+
+
+
+
+
 """
+_parser = Lark(GRAMMAR_L, start="start", parser="lalr")
+
+def write_code ( spec : str ) -> str :
+        user = f" SPECIFICA :\n{ spec }\n\ nScrivi il programma in L."
+        return extract_code ( call_llm ( system = SYSTEM_WRITER , user = user , temperature =0.7) )
+# Repair : identico alla prima ora
+def repair_program ( program : str , errors : list [ str ]) -> str :
+    user = f" PROGRAMMA :\n{ program }\n\ nERRORI :\n" + "\n". join ( errors )
+    return extract_code ( call_llm ( system = SYSTEM_REPAIR , user = user , temperature =0.2) )
 
 
-# agente generatore
-def generate_program () -> str :
-    raw = call_llm ( system = SYSTEM_GENERATOR ,
-            user =" Genera un programma in L.",
-            temperature =0.8)
-    return extract_code(raw)
 
+
+def design_spec ( state : dict ) -> str :
+    coverage_report = "\n". join (
+        f"- {p}: {n} volte " + (" <-- sotto - coperto " if n < 3 else "")
+        for p , n in state [" coverage "]. items ()
+    )
+    user = f""" COSTRUTTI GIA ’ COPERTI :
+    { coverage_report }
+        Produci una spec per un programma di 8 -15 righe che includa almeno un costrutto sotto - coperto .
+        NON descrivere lo scopo del programma , solo la forma ."""
+    return call_llm ( system = SYSTEM_SPEC , user = user , temperature =0.7)
+
+
+def test_code (program : str):
+
+    return call_llm()
+
+def new_state () -> dict :
+    return {
+        " coverage ": {p : 0 for p in PRODUCTIONS }, # quante volte ogni costrutto e’ stato usato
+        " valid_programs ": [] , # programmi che hanno compilato
+        " all_attempts ": 0, # totale chiamate LLM ( per cost )
+        " total_tokens ": 0, # token consumati ( per cost )
+        }
+
+def update_coverage(state: dict, program: str) -> None:
+    """Coverage precisa al 100%: parsa il programma e conta ogni
+    produzione realmente usata nell'albero (tree.data)."""
+    try:
+        tree = _parser.parse(program)
+    except Exception:
+        return
+    for subtree in tree.iter_subtrees():
+        prod = subtree.data
+        if prod in state["coverage"]:
+            state["coverage"][prod] += 1
 
 """ Rimuove eventuali fence markdown e whitespace di troppo ."""
     # rimuove ‘‘‘ linguaggio ... ‘‘‘
@@ -263,3 +345,52 @@ def extract_code ( raw : str ) -> str :
     if fenced :
         return fenced . group (1) . strip ()
     return raw . strip ()
+
+
+
+
+def run_pipeline ( n_programs : int , max_repairs : int = 5) -> dict :
+    state = new_state ()
+    for i in range ( n_programs ):
+        # 1. Spec Designer decide la forma del prossimo programma
+        spec = design_spec (state)
+        # 2. Code Writer la traduce in L
+        program = write_code ( spec )
+        # 3. Loop di repair
+        for attempt in range ( max_repairs + 1) :
+            result = compilatore(program)
+            if result . ok :
+
+
+
+                state [" valid_programs "]. append ( program )
+                update_coverage ( state , program )
+                break
+            program = repair_program ( program , result . errors )
+    # se esce dal for senza break , e’ fallito : si ricomincia con un nuovo seme
+        state [" all_attempts "] += 1
+        print (f"[{i +1}/{ n_programs }] validi : { len ( state ["valid_programs"])} , "
+        f" coverage : { sum (1 for v in state ["coverage"]. values () if v >0) }/{ len (
+        PRODUCTIONS )}")
+        return state
+
+
+def compute_metrics ( state : dict , n_requested : int ) -> dict :
+    valid = state [" valid_programs "]
+    coverage = state [" coverage "]
+    return {
+        " validity_rate ": len ( valid ) / n_requested if n_requested else 0 ,
+        " n_valid ": len ( valid ) ,
+        " coverage_pct ": sum (1 for v in coverage . values () if v > 0) / len ( coverage ) ,
+        " coverage_detail ": dict ( coverage ) ,
+        " diversity_unique ": len ( set ( valid ) ) / len ( valid ) if valid else 0,
+        " avg_attempts_per_valid ": state [" all_attempts "] / len ( valid ) if valid else
+        float (" inf ") ,
+    }
+
+
+
+# Uso:
+final_state = run_pipeline ( n_programs =100)
+metrics = compute_metrics ( final_state , n_requested =100)
+print (json . dumps ( metrics , indent =2) )

@@ -21,6 +21,3 @@ def call_llm ( system : str , user : str , temperature : float = 0.7) -> str :
         temperature = temperature ,
     )
     return response . content [0]. text
-
-
-
