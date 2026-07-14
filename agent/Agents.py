@@ -252,7 +252,7 @@ FEW_SHOT_EXAMPLES = """
         
 """
 
-SYSTEM_SPEC = f""" Sei lo Spec Designer per la generazione di programmi in L.
+SYSTEM_SPEC = f""" Sei lo Spec Designer per la generazione di programmi in Scartellato.
 NON scrivi codice . Produci una specifica STRUTTURALE (forma , non funzione ).
 GRAMMATICA :
 { GRAMMAR_L }
@@ -262,9 +262,8 @@ COSTRUTTI RICHIESTI : <lista separata da virgole >
 STRUTTURA : <2 -4 frasi sulla forma >"""
 
 
-
 SYSTEM_WRITER = f"""Sei un Code Writer . Ricevi una specifica strutturale
-e scrivi un programma in L che la rispetta .
+e scrivi un programma in Scartellato che la rispetta .
 GRAMMATICA :
 { GRAMMAR_L }
 ESEMPI :
@@ -272,7 +271,7 @@ ESEMPI :
 Rispondi SOLO con il codice del programma , niente altro ."""
 
 
-SYSTEM_REPAIR = f"""Sei un riparatore di programmi nel linguaggio L.
+SYSTEM_REPAIR = f"""Sei un riparatore di programmi nel linguaggio Scartellato.
 Ricevi un programma con errori e i messaggi del compilatore .
 Riscrivi il programma correggendo SOLO gli errori segnalati .
 Mantieni il piu ’ possibile la struttura originale .
@@ -281,20 +280,17 @@ GRAMMATICA :
 Rispondi SOLO con il programma corretto ."""
 
 
-SYSTEM_GENERATE_TESTER = f""" sei un generatore di test 
-    
-
-
-
-
-
+SYSTEM_GENERATE_TESTER = f""" sei un generatore di casi di test del programma che ti viene 
+dato come parametro e mi devi Rispondi SOLAMENTE con tutti i casi di test e deve coprire
+tutti i casi possibili riguradanti il programma
 """
+
 #qua invochiamo Lark per prendere il pars tree
 _parser = Lark(GRAMMAR_L, start="start", parser="lalr")
 
 def write_code ( spec : str ) -> str :
-        user = f" SPECIFICA :\n{ spec }\n\ nScrivi il programma in L."
-        return extract_code ( call_llm ( system = SYSTEM_WRITER , user = user , temperature =0.7) )
+        user = f" SPECIFICA :\n{ spec }\n\ nScrivi il programma in Scartellato."
+        return extract_code ( call_llm ( system = SYSTEM_WRITER , user = user , temperature =0.7))
 # Repair : identico alla prima ora
 def repair_program ( program : str , errors : list [ str ]) -> str :
     user = f" PROGRAMMA :\n{ program }\n\ nERRORI :\n" + "\n". join ( errors )
@@ -316,8 +312,8 @@ def design_spec ( state : dict ) -> str :
 
 
 def test_code (program : str):
-
-    return call_llm()
+    user = f"""PROGRAMMA: {program} \n genera i casi di testa"""
+    return extract_code(call_llm(system= SYSTEM_GENERATE_TESTER , user = user, temperature = 0.5))
 
 def new_state () -> dict :
     return {
@@ -346,11 +342,6 @@ def extract_code ( raw : str ) -> str :
     if fenced :
         return fenced . group (1) . strip ()
     return raw . strip ()
-
-
-
-
-
 
 
 def run_pipeline ( n_programs : int , max_repairs : int = 5) -> dict :
@@ -391,8 +382,6 @@ def compute_metrics ( state : dict , n_requested : int ) -> dict :
         " avg_attempts_per_valid ": state [" all_attempts "] / len ( valid ) if valid else
         float (" inf ") ,
     }
-
-
 
 # Uso:
 final_state = run_pipeline ( n_programs =100)
