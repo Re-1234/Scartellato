@@ -613,3 +613,4 @@ class TranspilerC:
             "lettr": "burdell_da_lettr",
         }
         return f"{mappa[tipo]}({valore_espr})"
+

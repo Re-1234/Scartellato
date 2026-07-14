@@ -1,4 +1,5 @@
 import json
+import time
 
 from lark.load_grammar import GRAMMAR_ERRORS
 
@@ -280,23 +281,28 @@ GRAMMATICA :
 Rispondi SOLO con il programma corretto ."""
 
 
-SYSTEM_GENERATE_TESTER = f""" sei un generatore di casi di test del programma che ti viene 
-dato come parametro e mi devi Rispondi SOLAMENTE con tutti i casi di test e deve coprire
-tutti i casi possibili riguradanti il programma
+SYSTEM_GENERATE_TESTER = f""" sei un tester di programmi e mi devi generare 
+all'interno del programma di cui ti viene passato il programma con tutti i casi di test 
+possibili di cui devi tenere traccia e poi devi rispettare le seguenti cose :
+- non modificare il programma originale 
+- non modificare la logica del programma di cui ti do in input
+- aggiungi i test al'interno del programma 
+e poi devi seguire la seguente grammatica:
+{GRAMMAR_L }
 """
 
 #qua invochiamo Lark per prendere il pars tree
 _parser = Lark(GRAMMAR_L, start="start", parser="lalr")
 
-def write_code ( spec : str ) -> str :
-        user = f" SPECIFICA :\n{ spec }\n\ nScrivi il programma in Scartellato."
+def write_code () -> str :
+        user = f" \n\n Scrivi il programma in Scartellato."
         return extract_code ( call_llm ( system = SYSTEM_WRITER , user = user , temperature =0.7))
+
+
 # Repair : identico alla prima ora
 def repair_program ( program : str , errors : list [ str ]) -> str :
     user = f" PROGRAMMA :\n{ program }\n\ nERRORI :\n" + "\n". join ( errors )
     return extract_code ( call_llm ( system = SYSTEM_REPAIR , user = user , temperature =0.2) )
-
-
 
 
 def design_spec ( state : dict ) -> str :
@@ -312,15 +318,15 @@ def design_spec ( state : dict ) -> str :
 
 
 def test_code (program : str):
-    user = f"""PROGRAMMA: {program} \n genera i casi di testa"""
-    return extract_code(call_llm(system= SYSTEM_GENERATE_TESTER , user = user, temperature = 0.5))
+    user = f"""PROGRAMMA: {program} \n aggiungimi i casi di test all'interno del programma mandato"""
+    return extract_code(call_llm(system= SYSTEM_GENERATE_TESTER , user = user, temperature = 0.2))
 
 def new_state () -> dict :
     return {
         " coverage ": {p : 0 for p in PRODUCTIONS }, # quante volte ogni costrutto e’ stato usato
         " valid_programs ": [] , # programmi che hanno compilato
         " all_attempts ": 0, # totale chiamate LLM ( per cost )
-        " total_tokens ": 0, # token consumati ( per cost )
+        " total_tokens ": 0, # token consumati ( per cost)
         }
 
 def update_coverage(state: dict, program: str) -> None:
@@ -338,7 +344,7 @@ def update_coverage(state: dict, program: str) -> None:
 """ Rimuove eventuali fence markdown e whitespace di troppo ."""
     # rimuove ‘‘‘ linguaggio ... ‘‘‘
 def extract_code ( raw : str ) -> str :
-    fenced = re . search (r" ‘ ‘ ‘(?:\w+) ?\n (.*?) ‘‘‘", raw , re . DOTALL )
+    fenced = re . search (r" ‘ ‘ ‘(?:\w+) ?\n (.*?) ‘‘‘", raw , re . DOTALL)
     if fenced :
         return fenced . group (1) . strip ()
     return raw . strip ()
@@ -346,22 +352,23 @@ def extract_code ( raw : str ) -> str :
 
 def run_pipeline ( n_programs : int , max_repairs : int = 5) -> dict :
     state = new_state ()
+    log = open("agent\\log.md","w")
     for i in range ( n_programs ):
-        # 1. Spec Designer decide la forma del prossimo programma
-        spec = design_spec (state)
-        # 2. Code Writer la traduce in L
-        program = write_code ( spec )
-        # 3. Loop di repair
-        for attempt in range ( max_repairs + 1) :
+        # 1. Code Writer la traduce in Scartellato
+        program = write_code()
+        log.write(json.dumps({"Step" : "generate code","Program" : program , "Time" : time.time()}))
+        # 2. Loop di repair
+        for attempt in range ( max_repairs + 1):
             result = compilatore(program)
+            log.write(json.dumps({"Step" : "compile", "result" : result ,"Time" : time.time()}))
             if result . ok :
+               state [" valid_programs "].append(program)
+               update_coverage (state,program)
+               log.write(json.dumps({"Step" : "Update Coverage" , "Time" : time.time()}))
+               break
 
-
-
-                state [" valid_programs "]. append ( program )
-                update_coverage ( state , program )
-                break
             program = repair_program ( program , result . errors )
+            log.write(json.dumps({"Step" : "repair","Program Repair" : program,"Time" : time.time()}))
     # se esce dal for senza break , e’ fallito : si ricomincia con un nuovo seme
         state [" all_attempts "] += 1
         print (f"[{i +1}/{ n_programs }] validi : { len ( state ["valid_programs"])} , "
