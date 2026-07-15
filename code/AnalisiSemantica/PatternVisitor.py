@@ -1,6 +1,7 @@
+from code.AnalisiSemantica.SemanticError import SemanticError
 from code.AnalisiSemantica.SymbolTable import SymbolTable
-from SemanticError import SemanticError
-from Transformer import *
+
+from code.AnalisiSintattica.Transformer import *
 
 
 class AnalisiSemantica:
