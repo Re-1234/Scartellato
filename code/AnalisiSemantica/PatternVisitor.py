@@ -1,6 +1,8 @@
+from AnalisiSintattica.Transformer import Robba, Costruttore, Numr, Boolean, Stringa, Carattr, Variabile, Mestier, \
+    Parametro, ReturnStatement, Mettimmca, Aspe, Ambress_Ambress, CallStmt, Arape_a_vocca, Dichiarazione, OpBin
 from code.AnalisiSemantica.SymbolTable import SymbolTable
 from SemanticError import SemanticError
-from Transformer import *
+from AnalisiSintattica import Transformer
 
 
 class AnalisiSemantica:
