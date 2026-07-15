@@ -113,3 +113,7 @@ class Robba:
 @dataclass(frozen=True)
 class ReturnStatement:
       valore: object
+
+@dataclass(frozen=True)
+class Break:
+    pass

@@ -260,6 +260,9 @@ class AST_Transformer(Transformer):
         valore = nodi[0] if len(nodi) > 0 else None
         return ReturnStatement(valore)
 
+    def break_statement(self, figli):
+        return Break()
+
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""
         nodi = self.filtra(figli)
