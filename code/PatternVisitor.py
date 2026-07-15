@@ -454,6 +454,17 @@ class AnalisiSemantica:
         self.tipi_risolti[id(node.nome)] = tipo_finale
         self.burdell_info[id(node.nome)] = (tipo_dichiarato == 'burdell')
 
+
+    def visit_Arape_a_vocca(self,node : Arape_a_vocca):
+        variabili = node.variabili
+        if variabili:
+            for variabile in variabili:
+                if not self.symbolTable.lookup(variabile):
+                    raise SemanticError(f"MAC STAI FACEN: Errore la variabile {variabile.nome} non è dichiarata")
+
+
+
+
     def control_Ope_Bool(self, oper: str):
         if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not":
             return True

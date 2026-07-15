@@ -117,3 +117,8 @@ class ReturnStatement:
 @dataclass(frozen=True)
 class Break:
     pass
+
+@dataclass(frozen=True)
+class Arape_a_vocca:
+    valore: str
+    variabili: list[Variabile]
