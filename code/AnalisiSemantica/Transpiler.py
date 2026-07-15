@@ -1,4 +1,4 @@
-from Transformer import *
+from code.AnalisiSintattica.Transformer import *
 from code.utility import _accesso_base, _calcola_tipo, _risolvi_chiamata
 from utility import *
 

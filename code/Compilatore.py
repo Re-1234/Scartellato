@@ -1,13 +1,12 @@
 import os
 import platform
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
-from AST import *
-from PatternVisitor import AnalisiSemantica
+from code.AnalisiSintattica.AST import *
+from code.AnalisiSemantica.PatternVisitor import AnalisiSemantica
 import subprocess
 import shutil
-from TranspilerC import *
 
-from code.Transpiler import  *
+from code.AnalisiSemantica.Transpiler import  *
 
 
 def trova_gcc():

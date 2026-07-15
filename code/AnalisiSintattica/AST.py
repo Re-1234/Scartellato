@@ -1,6 +1,6 @@
 from dataclasses import is_dataclass, fields
 from lark import Transformer, Token, Tree
-from Transformer import *
+from code.AnalisiSintattica.Transformer import *
 
 class AST_Transformer(Transformer):
     TOKEN_DA_SCARTARE = {

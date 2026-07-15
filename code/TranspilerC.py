@@ -1,4 +1,4 @@
-from Transformer import *
+from code.AnalisiSintattica.Transformer import *
 
 
 class TranspilerC:

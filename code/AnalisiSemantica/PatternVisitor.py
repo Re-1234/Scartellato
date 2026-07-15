@@ -1,4 +1,4 @@
-from SymbolTable import SymbolTable
+from code.AnalisiSemantica.SymbolTable import SymbolTable
 from SemanticError import SemanticError
 from Transformer import *
 
