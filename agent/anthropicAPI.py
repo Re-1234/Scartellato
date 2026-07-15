@@ -18,7 +18,7 @@ client = Anthropic()
 def call_llm ( system : str , user : str , temperature : float = 0.7) -> str :
     """Una chiamata LLM , ritorna solo la stringa del testo ."""
     log = open("agent\\log.md", "a")
-    response = client . messages . create (
+    response = client . messages . create(
         model =" claude - sonnet -4 -5",
         max_tokens =2048 ,
         system = system ,

@@ -1,9 +1,9 @@
 import os
 import platform
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
-from AST import *
-from PatternVisitor import AnalisiSemantica
-from TranspilerC import *
+from .AST import *
+from .PatternVisitor import AnalisiSemantica
+from .TranspilerC import *
 import subprocess
 import shutil
 
@@ -88,65 +88,64 @@ def generatore(analisiSemantica):
 
 
 
-def compilatore(source: str) :
+class CompileResult:
+    def __init__(self, ok: bool, errors: list[str] | None = None):
+        self.ok = ok
+        self.errors = errors or []
+
+
+def compilatore(source: str) -> CompileResult:
     global tree
     global ast
-    parser = Lark.open("grammatica.lark", parser="lalr", propagate_positions=True)
-    for token in parser.lex(source):
-        print(token,repr(token))
+    parser = Lark.open(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "grammatica.lark"),
+        parser="lalr", propagate_positions=True
+    )
 
-    """gestione degli errori"""
     try:
         tree = parser.parse(source)
-        print(tree.pretty())
         ast = AST_Transformer().transform(tree)
-        stampa_ast(ast)
-
     except UnexpectedToken as e:
-        print(f"Errore sintattico alla riga {e.line}, col {e.column}")
-        print(f"Token inatteso: {e.token!r}")
-        print(f"Token attesi: {e.expected}")
-        print(e.get_context(source))
+        return CompileResult(False, [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {e.expected}"])
     except UnexpectedCharacters as e:
-        print(f"Errore lessicale: {e.char!r}")
-
+        return CompileResult(False, [f"Errore lessicale: carattere inatteso {e.char!r}"])
 
     analisiSemantica = AnalisiSemantica()
     analisiSemantica.visit(ast)
 
     if analisiSemantica.errori:
-        print("Errori semantici:")
-        for e in analisiSemantica.errori:
-            print(f"  - {e}")
-        return
+        return CompileResult(False, list(analisiSemantica.errori))
 
     generatore(analisiSemantica)
+    return CompileResult(True)
 
-compilatore("""
-            numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
-               nbruogglio r = ??a + b??  !
-               numr ][ s !
-               numr c1 = 4 !
-               s+= c1 !
-               lota d = sasicchj !
-               nbruogglio x = ??2?? !
-               r -=  c1 + x !
-            
-                //controllo di burdell
-                burdell z !
-                z = a+b !
-                z=r!
+
+if __name__ == "__main__":
+    compilatore("""
+                numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
+                   nbruogglio r = ??a + b??  !
+                   numr ][ s !
+                   numr c1 = 4 !
+                   s+= c1 !
+                   lota d = sasicchj !
+                   nbruogglio x = ??2?? !
+                   r -=  c1 + x !
                 
-                aspe)2( }
-                    z = r !
-                    burdell p !
-                    p= z!
-                    z += r !
-                    arape_a_vocca)??ciao??(!
+                    //controllo di burdell
+                    burdell z !
+                    z = a+b !
+                    z=r!
+                    
+                    aspe)2( }
+                        z = r !
+                        burdell p !
+                        p= z!
+                        z += r !
+                        arape_a_vocca)??ciao??(!
+                    {
+                   
+                   //return 
+                   ccàsta s!
                 {
-               
-               //return 
-               ccàsta s!
-            {
-        
-    """)
+            
+        """)
