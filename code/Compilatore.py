@@ -1,12 +1,12 @@
 import os
 import platform
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
-from .AST import *
-from .PatternVisitor import AnalisiSemantica
-from .TranspilerC import *
+from code.AnalisiSintattica.AST import *
+from code.AnalisiSemantica.PatternVisitor import AnalisiSemantica
 import subprocess
 import shutil
 
+from code.AnalisiSemantica.Transpiler import  *
 
 
 def trova_gcc():
@@ -32,7 +32,7 @@ def trova_gcc():
 
 
 def generatore(analisiSemantica):
-    transpiler = TranspilerC(analisiSemantica.tipi_risolti)
+    transpiler = Transpiler(analisiSemantica.tipi_risolti, analisiSemantica.burdell_info)
     transpiler.visit(ast)
     codice_c = transpiler.get_output()
 
@@ -104,9 +104,12 @@ def compilatore(source: str) -> CompileResult:
 
     try:
         tree = parser.parse(source)
+        print(tree.pretty())
         ast = AST_Transformer().transform(tree)
+        stampa_ast(ast)
     except UnexpectedToken as e:
-        return CompileResult(False, [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {e.expected}"])
+        return CompileResult(False,
+        [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {e.expected}"])
     except UnexpectedCharacters as e:
         return CompileResult(False, [f"Errore lessicale: carattere inatteso {e.char!r}"])
 
@@ -119,33 +122,103 @@ def compilatore(source: str) -> CompileResult:
     generatore(analisiSemantica)
     return CompileResult(True)
 
-
-if __name__ == "__main__":
-    compilatore("""
-                numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
-                   nbruogglio r = ??a + b??  !
-                   numr ][ s !
-                   numr c1 = 4 !
-                   s+= c1 !
-                   lota d = sasicchj !
-                   nbruogglio x = ??2?? !
-                   r -=  c1 + x !
-                
-                    //controllo di burdell
-                    burdell z !
-                    z = a+b !
-                    z=r!
-                    
-                    aspe)2( }
-                        z = r !
-                        burdell p !
-                        p= z!
-                        z += r !
-                        arape_a_vocca)??ciao??(!
-                    {
-                   
-                   //return 
-                   ccàsta s!
-                {
+compilatore("""
+            numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
+               nbruogglio stringa = ??a + b??  !
+               numr ][ s !
+               burdell ][ g ! 
+               numr c1 = 4 +7 !
+               s+= c1 !
+               lota d = sasicchj !
+               nbruogglio x = ??2?? !
+               stringa -=  c1 + x !
             
-        """)
+                //controllo di burdell
+                burdell z !
+                z = a+b !
+                
+                aspe)2( }
+                    z = stringa !
+                    burdell p !
+                    p= z!
+                    z += stringa !
+                    stut_tutt !
+                {
+                s-= c1!
+               
+               //return 
+               ccàsta s!
+            {
+            
+             robba ciro }
+                numr c!
+                numr s!
+                nbruogglio apposo!    
+                nbruogglio r = ??sdfdaf?? !
+                burdell c1!  
+                lota d = sasicchj !
+                   
+                 o_mast ) ( }
+                    
+                    numr apposo !
+                    apposo = c !
+                    c1 = s!
+                    c1 -= r + c!  
+                    c=5+6+9!
+                   
+                    aspe)1(}
+                        jamm_ja : classeFunzioneMimmo)(!
+                        stut_tutt !
+                    {
+                               
+                    c1 = ??ciao??!
+                    
+                    c1 -= 1!
+                    c1= d !
+                    c1= s! 
+                {
+                 
+                 
+                 vacant mestier classeFunzioneMimmo )  ( }
+                    burdell a = ??ciao?? !
+                    c1 = 1!
+                {
+                        
+            {
+            
+             vacant Uè ) ( }
+                nbruogglio a = ??sifasf23?? !
+                nbruogglio v = ??sapposto?? !
+                numr s !
+                numr b!
+                
+                numr ]1[ k! 
+                
+                jamm_ja : pippo ) guagliuni :  4 , 5 (  !
+                
+                
+                mettimcà )  5<7( }
+                    numr s = 5 !
+                { allor_fa_accussi }
+                    burdell z = 9 !
+                {
+                burdell c = a + v !
+                burdell test = 1!
+                test = ??ciao??!
+                test += 1!
+                
+                lota d = sasicchj!
+                d=friariell!
+                
+              ambressAmbress ) numr c= 5 ! c<8 ! c++( }
+                mettimcà ) 3<4( }
+                    s = 4+2 !
+                    c <-> b !              
+                { 
+              {
+              
+              ccàsta ! 
+            {
+             
+        
+    """)

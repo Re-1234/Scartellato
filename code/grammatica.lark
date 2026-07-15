@@ -89,6 +89,7 @@
                    | for_stmt
                    | while_stmt
                    | if_stmt
+                   | break_stmt
                    | return_stmt
                    | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
                    | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
@@ -99,9 +100,10 @@
 
         // RETURN E BREAK
 
-        return_stmt: BREAK TERMINATORE
-                   | CCASTA  nome_var TERMINATORE ->returnstatement
+        return_stmt: CCASTA  nome_var TERMINATORE ->returnstatement
                    | CCASTA TERMINATORE   ->returnstatement
+
+        break_stmt: BREAK TERMINATORE             -> break_statement
 
         // DICHIARAZIONI DI VARIABILI
 

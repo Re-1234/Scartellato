@@ -1,4 +1,4 @@
-from SymbolTable import SymbolTable
+from code.AnalisiSemantica.SymbolTable import SymbolTable
 from SemanticError import SemanticError
 from Transformer import *
 
@@ -8,7 +8,10 @@ class AnalisiSemantica:
         self.errori = []
         symbolTable: SymbolTable
         self.tipi_risolti = {}
+        self.burdell_info = {}
         self.funzione_corrente = None
+        self.dentro_ciclo = 0
+
 
 
 
@@ -86,20 +89,21 @@ class AnalisiSemantica:
     def visit_Carattr(self, node: Carattr):
         return "lettr"
 
-
     def visit_Variabile(self, node: Variabile):
-        tipo = self.symbolTable.lookup(node.nome)
-        if tipo is None:
+        info = self.symbolTable.lookup(node.nome)
+        if info is None:
             raise SemanticError(f"Variabile '{node.nome}' non dichiarata")
-        if isinstance(tipo, dict) and 'is_burdell' in tipo:
-            return tipo['tipo']
-        return tipo
+        if isinstance(info, dict):
+            self.burdell_info[id(node)] = info.get('is_burdell', False)
+            return info.get('tipo', 'burdell')
+        self.burdell_info[id(node)] = False
+        return info
+
 
     def _compatibili(self, tipo_atteso, tipo_trovato):
             if tipo_atteso == "burdell":
                 return True
             return tipo_atteso == tipo_trovato
-
 
 
     #   ---FUNZIONI-----
@@ -149,6 +153,7 @@ class AnalisiSemantica:
         # Inserisce il parametro nella Symbol Table come variabile valida in questo scope
         self.symbolTable.addId(nome_var, tipo_var)
         self.tipi_risolti[id(node.nome)] = tipo_var
+        self.burdell_info[id(node.nome)] = (tipo_var == 'burdell')
 
     def visit_ReturnStatement(self, node: ReturnStatement):
         tipo_valore = self.visit(node.valore) if node.valore is not None else "vacant"
@@ -247,7 +252,10 @@ class AnalisiSemantica:
 
         if node.VarOperation is not None:
             self.visit(node.VarOperation)
+
+        self.dentro_ciclo += 1
         self.visit(node.Corpo)
+        self.dentro_ciclo -= 1
 
         self.symbolTable.exitScope()
 
@@ -257,7 +265,11 @@ class AnalisiSemantica:
             raise SemanticError(f"La condizione del while deve essere booleana, o numr trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
+
+        self.dentro_ciclo += 1
         self.visit(node.Corpo)
+        self.dentro_ciclo -= 1
+
         self.symbolTable.printTable()
         self.symbolTable.exitScope()
 
@@ -289,6 +301,23 @@ class AnalisiSemantica:
                 return 'numr'
 
         rv = self.visit(node.right)
+
+        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome):
+            if node.op not in ("-=", "+="):
+                raise SemanticError(
+                    f"Su un array puoi usare solo '-=' (aggiungi) o '+=' (rimuovi), non '{node.op}'"
+                )
+            info_array = self.symbolTable.lookup(node.left.nome)
+            tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
+            tipo_valore = rv
+
+            if tipo_array != "burdell" and tipo_array != tipo_valore:
+                raise SemanticError(
+                    f"Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
+                    f"da un array di '{tipo_array}'"
+                )
+            return tipo_array
+
 
         if lv == "burdell" or rv == "burdell":
             if isinstance(node.left, Variabile) and lv == "burdell":
@@ -341,8 +370,12 @@ class AnalisiSemantica:
                 is_dinamica = isinstance(info_var, dict) and info_var.get('is_burdell')
 
                 if isinstance(node.left, Variabile) and is_dinamica:
-                    self.symbolTable.addId(node.left.nome, {'tipo': "nbruogglio", 'is_burdell': True})
-                    self.tipi_risolti[id(node.left)] = "nbruogglio"
+                    # tipi_risolti[id(node.left)] deve restare il tipo VECCHIO (lv),
+                    # perché il transpiler usa QUESTO stesso nodo per leggere il valore
+                    # attuale prima di riassegnarlo — se lo metti a "nbruogglio" legge
+                    # il campo sbagliato della union mentre il tag è ancora TIPO_NUMR.
+                    self.tipi_risolti[id(node.left)] = lv  # ← era "nbruogglio", ora lv
+                    self.symbolTable.update(node.left.nome, {'tipo': "nbruogglio", 'is_burdell': True})
                     return "nbruogglio"
                 raise SemanticError(
                     f"Impossibile fare '{node.op}' tra  {lv}' e  {rv}: "
@@ -362,7 +395,7 @@ class AnalisiSemantica:
 
                 if is_dinamica:
                     # SALVIAMO IL NUOVO TIPO MANTENENDOLA DINAMICA
-                    self.symbolTable.addId(nome, {'tipo': rv, 'is_burdell': True})
+                    self.symbolTable.update(nome, {'tipo': rv, 'is_burdell': True})
                     self.tipi_risolti[id(node.left)] = rv
                     return rv
                 else:
@@ -419,6 +452,7 @@ class AnalisiSemantica:
                                    {'tipo': tipo_dichiarato, 'is_burdell': is_dinamico, 'is_array': is_array})
 
         self.tipi_risolti[id(node.nome)] = tipo_finale
+        self.burdell_info[id(node.nome)] = (tipo_dichiarato == 'burdell')
 
 
     def visit_Arape_a_vocca(self,node : Arape_a_vocca):
@@ -456,3 +490,7 @@ class AnalisiSemantica:
                 return False
         return None
 
+    def visit_Break(self, node):
+        if self.dentro_ciclo == 0:
+            raise SemanticError(
+                "Errore Semantico: Uè! O' 'stut_tutt' s'adda ausà sulo rint' a nu ciclo (aspe o ambress_ambress)!")

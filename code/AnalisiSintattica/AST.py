@@ -1,6 +1,6 @@
 from dataclasses import is_dataclass, fields
 from lark import Transformer, Token, Tree
-from Transformer import *
+from code.AnalisiSintattica.Transformer import *
 
 class AST_Transformer(Transformer):
     TOKEN_DA_SCARTARE = {
@@ -259,6 +259,9 @@ class AST_Transformer(Transformer):
         nodi = self.filtra(figli)
         valore = nodi[0] if len(nodi) > 0 else None
         return ReturnStatement(valore)
+
+    def break_statement(self, figli):
+        return Break()
 
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""
