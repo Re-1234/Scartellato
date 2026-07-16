@@ -116,9 +116,6 @@ def compilatore(source: str) -> CompileResult:
     analisiSemantica = AnalisiSemantica()
     analisiSemantica.visit(ast)
 
-    if analisiSemantica.errori:
-        return CompileResult(False, list(analisiSemantica.errori))
-
     generatore(analisiSemantica)
     return CompileResult(True)
 

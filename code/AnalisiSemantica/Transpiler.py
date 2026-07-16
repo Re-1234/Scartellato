@@ -1,6 +1,6 @@
 from code.AnalisiSintattica.Transformer import *
-from code.utility import _accesso_base, _calcola_tipo, _risolvi_chiamata
-from utility import *
+from code.utility import _accesso_base, _calcola_tipo, _risolvi_chiamata, wrappa_burdell
+from code.utility import *
 
 
 class Transpiler:
@@ -28,6 +28,7 @@ class Transpiler:
             self.var_burdell = set()
             self.campi_burdell_classe = set()
             self.var_array = {}
+            self.var_locali_shadow = set()  # nomi dichiarati localmente che oscurano campi di classe
 
 
     def indentazione(self, riga):
@@ -155,6 +156,7 @@ class Transpiler:
         self.campi_classe = set()
         self.campi_burdell_classe = set()
         self.metodi_classe = set()
+        self.var_locali_shadow = set()
 
 
 
@@ -175,6 +177,9 @@ class Transpiler:
     def visit_Dichiarazione(self, node: Dichiarazione):
         nome = str(node.nome.nome)
         is_array = node.nome.is_array
+
+        if self.classe_corrente is not None and nome in self.campi_classe:
+            self.var_locali_shadow.add(nome)
 
         if is_array:
             tipo_elemento = node.tipo.nome

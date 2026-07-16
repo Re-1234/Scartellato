@@ -14,8 +14,6 @@ class AnalisiSemantica:
         self.dentro_ciclo = 0
 
 
-
-
     def visit(self, node):
         class_name = node.__class__.__name__
         method_name = f'visit_{class_name}'

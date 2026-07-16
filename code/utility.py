@@ -11,6 +11,8 @@ def wrappa_burdell(transpiler, nodo_valore):
 
 def _accesso_base(transpiler, nome):
     """Decide come accedere a 'nome': campo di classe (self./self->) o variabile normale."""
+    if nome in transpiler.var_locali_shadow:
+        return nome
     if transpiler.classe_corrente is not None and nome in transpiler.campi_classe:
         return f"self.{nome}" if transpiler.in_costruttore else f"self->{nome}"
     return nome
