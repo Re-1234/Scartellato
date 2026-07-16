@@ -1,4 +1,5 @@
 from dataclasses import is_dataclass, fields
+
 from lark import Transformer, Token, Tree
 from code.AnalisiSintattica.Transformer import *
 
@@ -262,6 +263,14 @@ class AST_Transformer(Transformer):
 
     def break_statement(self, figli):
         return Break()
+
+    def chiamata_oggetto(self,figli):
+        nodi = self.filtra(figli)
+        nome = str(nodi[0])
+        variabili = nodi[1]
+        parametri1 = nodi[2:] if len(nodi) > 2 else None
+        return ChiamataOggetto(nome = nome , variabile = variabili , Parametri = parametri1)
+
 
     def start(self, figli):
         """La regola 'start' ha un solo figlio: l'espressione intera."""

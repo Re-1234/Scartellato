@@ -43,6 +43,14 @@ class AnalisiSemantica:
         for kid in node.program:
             self.visit(kid)
 
+    def visit_ChiamataOggetto(self,node : ChiamataOggetto):
+        self.symbolTable.lookup(node.nome)
+        self.symbolTable.lookup(node.variabile.nome)
+
+        for p in node.Parametri:
+            self.visit(p)
+            self.tipi_risolti[id(p.nome)] = str(p.tipo)
+
 
     #   ---CLASSE---
     def visit_Robba(self, node: Robba):
