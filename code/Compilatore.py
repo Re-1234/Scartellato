@@ -1,6 +1,8 @@
 import os
 import platform
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
+
+from AnalisiSemantica.SemanticError import SemanticError
 from code.AnalisiSintattica.AST import *
 from code.AnalisiSemantica.PatternVisitor import AnalisiSemantica
 import subprocess
@@ -108,13 +110,21 @@ def compilatore(source: str) -> CompileResult:
         ast = AST_Transformer().transform(tree)
         stampa_ast(ast)
     except UnexpectedToken as e:
+        print(f"Errore sintattico alla riga {e.line}, col {e.column}")
+        print(f"Token inatteso: {e.token!r}")
+        print(f"Token attesi: {e.expected}")
+        print(e.get_context(source))
         return CompileResult(False,
         [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {e.expected}"])
     except UnexpectedCharacters as e:
+        print(f"Errore lessicale: {e.char!r}")
         return CompileResult(False, [f"Errore lessicale: carattere inatteso {e.char!r}"])
 
-    analisiSemantica = AnalisiSemantica()
-    analisiSemantica.visit(ast)
+    try:
+        analisiSemantica = AnalisiSemantica()
+        analisiSemantica.visit(ast)
+    except SemanticError as e:
+        e.with_traceback()
 
     generatore(analisiSemantica)
     return CompileResult(True)
@@ -195,6 +205,7 @@ compilatore("""
                 
                 
                 mettimcà )  5<7( }
+                    ciro.classeFunzioneMimmo)??ciao?? , 1(!
                     numr s = 5 !
                 { allor_fa_accussi }
                     burdell z = 9 !

@@ -122,3 +122,8 @@ class Break:
 class Arape_a_vocca:
     valore: str
     variabili: list[Variabile]
+@dataclass(frozen=True)
+class ChiamataOggetto:
+    nome: str
+    variabile: Variabile
+    Parametri: list[Parametro]

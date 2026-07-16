@@ -97,6 +97,7 @@
                    | nome_var SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
                    | PRINT TONDASINISTRA STRINGA ("," nome_var)* TONDADESTRA TERMINATORE -> stampante
+                   | ID "." nome_var TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
 
         // RETURN E BREAK
 
