@@ -126,112 +126,116 @@ def compilatore(source: str) -> CompileResult:
     except SemanticError as e:
         e.with_traceback()
 
-    if analisiSemantica.errori:
-        return CompileResult(False, list(analisiSemantica.errori))
-
     generatore(analisiSemantica)
     return CompileResult(True)
 
-
-if __name__ == "__main__":
-    compilatore("""
-                numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
-                   nbruogglio stringa = ??a + b??  !
-                   numr ][ s !
-                   burdell ][ g ! 
-                   numr c1 = 4 +7 !
-                   s+= c1 !
-                   lota d = sasicchj !
-                   nbruogglio x = ??2?? !
-                   stringa -=  c1 + x !
+compilatore("""
+            numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
+               nbruogglio stringa = ??a + b??  !
+               numr ][ s !
+               burdell ][ g ! 
+               numr c1 = 4 +7 !
+               s+= c1 !
+               lota d = sasicchj !
+               nbruogglio x = ??2?? !
+               stringa -=  c1 + x !
+            
+                //controllo di burdell
+                burdell z !
+                z = a+b !
                 
-                    //controllo di burdell
-                    burdell z !
-                    z = a+b !
+                aspe)2( }
+                    z = stringa !
+                    burdell p !
+                    p= z!
+                    z += stringa !
+                    stut_tutt !
+                {
+                s-= c1!
+               
+               //return 
+               ccàsta s!
+            {
+            
+             vacant mestier classeFunzioneMimmo )  ( }
+                    burdell a = ??ciao?? !
+                {
+            
+            
+             robba ciro }
+                numr c!
+                numr s!
+                nbruogglio apposo!    
+                nbruogglio r = ??sdfdaf?? !
+                burdell c1!  
+                lota d = sasicchj !
+                   
+                 o_mast ) ( }
                     
-                    aspe)2( }
-                        z = stringa !
-                        burdell p !
-                        p= z!
-                        z += stringa !
+                    numr apposo !
+                    apposo = c !
+                    c1 = s!
+                    c1 -= r + c!  
+                    c=5+6+9!
+                   
+                    aspe)1(}
+                        jamm_ja : classeFunzioneMimmo)(!
                         stut_tutt !
                     {
-                    s-= c1!
-                   
-                   //return 
-                   ccàsta s!
-                {
-                
-                 robba ciro }
-                    numr c!
-                    numr s!
-                    nbruogglio apposo!    
-                    nbruogglio r = ??sdfdaf?? !
-                    burdell c1!  
-                    lota d = sasicchj !
-                       
-                     o_mast ) ( }
-                        
-                        numr apposo !
-                        apposo = c !
-                        c1 = s!
-                        c1 -= r + c!  
-                        c=5+6+9!
-                       
-                        aspe)1(}
-                            jamm_ja : classeFunzioneMimmo)(!
-                            stut_tutt !
-                        {
-                                   
-                        c1 = ??ciao??!
-                        
-                        c1 -= 1!
-                        c1= d !
-                        c1= s! 
-                    {
-                     
-                     
-                     vacant mestier classeFunzioneMimmo )  ( }
-                        burdell a = ??ciao?? !
-                        c1 = 1!
-                    {
-                            
-                {
-                
-                 vacant Uè ) ( }
-                    nbruogglio a = ??sifasf23?? !
-                    nbruogglio v = ??sapposto?? !
-                    numr s !
-                    numr b!
+                               
+                    c1 = ??ciao??!
                     
-                    numr ]1[ k! 
-                    
-                    jamm_ja : pippo ) guagliuni :  4 , 5 (  !
-                    
-                    
-                    mettimcà )  5<7( }
-                        ciro.classeFunzioneMimmo)??ciao?? , 1(!
-                        numr s = 5 !
-                    { allor_fa_accussi }
-                        burdell z = 9 !
-                    {
-                    burdell c = a + v !
-                    burdell test = 1!
-                    test = ??ciao??!
-                    test += 1!
-                    
-                    lota d = sasicchj!
-                    d=friariell!
-                    
-                  ambressAmbress ) numr c= 5 ! c<8 ! c++( }
-                    mettimcà ) 3<4( }
-                        s = 4+2 !
-                        c <-> b !              
-                    { 
-                  {
-                  
-                  ccàsta ! 
+                    c1 -= 1!
+                    c1= d !
+                    c1= s! 
                 {
                  
+                 
+                 vacant mestier classeFunzioneMimmo )  ( }
+                    burdell a = ??ciao?? !
+                    c1 = 1!
+                {
+                        
+            {
             
-        """)
+             vacant Uè ) ( }
+                nbruogglio a = ??sifasf23?? !
+                nbruogglio v = ??sapposto?? !
+                numr s !
+                numr b!
+                
+                numr ]1[ k! 
+                
+                jamm_ja : pippo ) guagliuni :  4 , 5 (  !
+                
+                
+                mettimcà ) 5<7( } 
+                    ciro c = c.o_mast)( !      //chiamata costruttore
+                    c.classeFunzioneMimmo)(!   //chiamata a oggetto 
+                    numr d = c.s!
+                     jamm_ja : classeFunzioneMimmo)(!
+                  
+                    numr s = 5 !
+                { allor_fa_accussi }
+                    burdell z = 9 !
+                {
+                burdell c = a + v !
+                burdell test = 1!
+                test = ??ciao??!
+                test += 1!
+                
+                lota d = sasicchj!
+                d=friariell!
+                
+              ambressAmbress ) numr c= 5 ! c<8 ! c++( }
+                mettimcà ) 3<4( }
+                    s = 4+2 !
+                    c <-> b !              
+                { 
+              {
+              
+              ccàsta ! 
+            {
+             
+        
+    """)

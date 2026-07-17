@@ -6,9 +6,6 @@ from lark import Lark
 
 from code.Compilatore import compilatore
 
-
-
-
 """
 Pipeline a 2 agenti per la generazione di programmi in Scartellato.
 
@@ -41,8 +38,6 @@ FLUSSO per ogni programma richiesto:
          -> diversi: feedback dettagliato al Generator, torna al punto 1
                       (fino a max_regenerations)
 """
-
-
 
 # ============================================================
 # GRAMMATICA (invariata rispetto all'originale)
@@ -284,13 +279,11 @@ PRODUCTIONS = [
     "return_stmt", "nome_var", "assegnamento_composto",
     "tipo", "classe", "membro", "metodi", "costruttore", "campi", "funzione", "sezione_parametri",
     "parametro", "dichiarazione_for", "valutazione", "for_corpo", "expr_or", "expr_and", "expr_eq",
-    "expr_rel", "expr_add", "expr_mul", "expr_unary", "expr_primary",  ]
-
+    "expr_rel", "expr_add", "expr_mul", "expr_unary", "expr_primary", ]
 
 # Parser costruito una volta sola fuori dal ciclo (ricompilarlo ad ogni
 # chiamata sarebbe costoso e inutile).
 _parser = Lark(GRAMMAR_L, start="start", parser="lalr")
-
 
 # ============================================================
 # FEW-SHOT: 5 esempi di programmi Scartellato validi
@@ -309,7 +302,7 @@ FEW_SHOT_EXAMPLES = r"""
     Uè)( }
     numr x = 5!
     {
-    
+
     ESEMPIO 2 - if senza else:
     Uè)( }
     numr x = 5!
@@ -317,7 +310,7 @@ FEW_SHOT_EXAMPLES = r"""
     numr y = 1!
     {
     {
-    
+
     ESEMPIO 3 - while:
     Uè)( }
     numr x = 0!
@@ -325,19 +318,19 @@ FEW_SHOT_EXAMPLES = r"""
     x += 1!
     {
     {
-    
+
     ESEMPIO 4 - for con dichiarazione, condizione e incremento:
     Uè)( }
     ambressAmbress) numr i = 0! i < 5! i++( }
     numr y = i!
     {
     {
-    
+
     ESEMPIO 5 - funzione void definita fuori dal main e chiamata dentro il main:
     vacant mestier saluta ) guagliuni : numr n ( }
     numr doppio = n!
     {
-    
+
     Uè)( }
     jamm_ja : saluta ) guagliuni : 5 ( !
     {
@@ -347,31 +340,31 @@ _FEW_SHOT_PROGRAMS = [
     """Uè)( }
     numr x = 5!
     {""",
-        """Uè)( }
-    numr x = 5!
-    mettimcà) x > 3 ( }
-    numr y = 1!
-    {
-    {""",
-        """Uè)( }
-    numr x = 0!
-    aspe) x < 10 ( }
-    x += 1!
-    {
-    {""",
-        """Uè)( }
-    ambressAmbress) numr i = 0! i < 5! i++( }
-    numr y = i!
-    {
-    {""",
-        """vacant mestier saluta ) guagliuni : numr n ( }
-    numr doppio = n!
-    {
-    
-    Uè)( }
-    jamm_ja : saluta ) guagliuni : 5 ( !
-    {""",
-    ]
+    """Uè)( }
+numr x = 5!
+mettimcà) x > 3 ( }
+numr y = 1!
+{
+{""",
+    """Uè)( }
+numr x = 0!
+aspe) x < 10 ( }
+x += 1!
+{
+{""",
+    """Uè)( }
+ambressAmbress) numr i = 0! i < 5! i++( }
+numr y = i!
+{
+{""",
+    """vacant mestier saluta ) guagliuni : numr n ( }
+numr doppio = n!
+{
+
+Uè)( }
+jamm_ja : saluta ) guagliuni : 5 ( !
+{""",
+]
 
 
 def _valida_few_shot() -> None:
@@ -453,7 +446,6 @@ REGOLE:
   o test falliti), correggi esattamente quel problema mantenendo il resto
   della struttura il piu' possibile invariato."""
 
-
 SYSTEM_AGENT2_REPAIR = f"""Sei l'Agente 2 di Scartellato, in modalita' REPAIR.
 Ricevi un programma con errori e i messaggi del compilatore.
 Riscrivi il programma correggendo SOLO gli errori segnalati.
@@ -463,7 +455,6 @@ GRAMMATICA:
 {GRAMMAR_L}
 
 Rispondi SOLO con il programma corretto, in un unico blocco ```."""
-
 
 SYSTEM_AGENT2_TESTER = f"""Sei l'Agente 2 di Scartellato, in modalita' TESTER.
 Ricevi un programma che COMPILA correttamente. Devi:
@@ -724,31 +715,29 @@ import os
 from time import time
 import anthropic
 
-
-client = anthropic.Anthropic(api_key = "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")
+client = anthropic.Anthropic(api_key="")
 
 print("ANTHROPIC_API_KEY presente?", "ANTHROPIC_API_KEY" in os.environ)
 print("Tutte le chiavi che contengono ANTHROPIC:", [k for k in os.environ if "ANTHROPIC" in k.upper()])
 
-def call_llm ( system : str , user : str , temperature : float = 0.7) -> str :
+
+def call_llm(system: str, user: str, temperature: float = 0.7) -> str:
     """Una chiamata LLM , ritorna solo la stringa del testo ."""
     import os
 
     LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.md")
     log = open(LOG_PATH, "a", encoding="utf-8")
-    response = client . messages . create(
-        model ="claude-sonnet-4-6",
-        max_tokens =2048 ,
-        cache_control = {"type": "ephemeral"},
-        system = system ,
-        messages =[{"role": "user", "content": user }] ,
-        temperature = temperature ,
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=2048,
+        cache_control={"type": "ephemeral"},
+        system=system,
+        messages=[{"role": "user", "content": user}],
+        temperature=temperature,
     )
-    log.write(json.dumps({"Step":"create d'agent","Response": response.content[0].text, "Time" : time()}))
+    log.write(json.dumps({"Step": "create d'agent", "Response": response.content[0].text, "Time": time()}))
     log.close()
-    return response . content [0]. text
-
-
+    return response.content[0].text
 
 
 if __name__ == "__main__":

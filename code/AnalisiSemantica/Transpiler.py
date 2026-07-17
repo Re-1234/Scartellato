@@ -1,6 +1,6 @@
 from code.AnalisiSintattica.Transformer import *
-from code.utility import _accesso_base, _calcola_tipo, _risolvi_chiamata
-from utility import *
+from code.utility import accesso_base, calcola_tipo, risolvi_chiamata, wrappa_burdell
+from code.utility import *
 
 
 class Transpiler:
@@ -28,6 +28,8 @@ class Transpiler:
             self.var_burdell = set()
             self.campi_burdell_classe = set()
             self.var_array = {}
+            self.var_locali_shadow = set()  # nomi dichiarati localmente che oscurano campi di classe
+            self.var_classe = {}
 
 
     def indentazione(self, riga):
@@ -155,15 +157,18 @@ class Transpiler:
         self.campi_classe = set()
         self.campi_burdell_classe = set()
         self.metodi_classe = set()
+        self.var_locali_shadow = set()
 
+    def visit_ChiamataOggetto(self, node: ChiamataOggetto):
+        self.indentazione(f"{genera_chiamata_oggetto(self,node)};")
 
-
-
+    def espr_ChiamataOggetto(self, node: ChiamataOggetto):
+        return genera_chiamata_oggetto(self,node)
 
 
     def espr_Variabile(self, node: Variabile):
         nome_var = str(node.nome)
-        base = _accesso_base(self,nome_var)
+        base = accesso_base(self,nome_var)
 
         if self.burdell_info.get(id(node), False):  #se è un burdell bisogna restituire il tipo corrente non la variabile
             tipo_corrente = self.tipo_di(node)
@@ -175,6 +180,9 @@ class Transpiler:
     def visit_Dichiarazione(self, node: Dichiarazione):
         nome = str(node.nome.nome)
         is_array = node.nome.is_array
+
+        if self.classe_corrente is not None and nome in self.campi_classe:
+            self.var_locali_shadow.add(nome)
 
         if is_array:
             tipo_elemento = node.tipo.nome
@@ -188,13 +196,26 @@ class Transpiler:
                 self.indentazione(f"{tipo_elemento}_array_init(&{nome});") #inizializza i valori di default
             return
 
+        tipo_dichiarato = node.tipo.nome
 
-        tipo_c = self.tipo_c(node.tipo.nome)  # traduzione del tipo
+        if tipo_dichiarato == "burdell":
+            tipo_c = "Burdell"
+
+        elif tipo_dichiarato not in self.TIPI_C:
+            self.var_classe[nome] = tipo_dichiarato
+            tipo_c = tipo_dichiarato
+        else:
+            tipo_c = self.tipo_c(tipo_dichiarato) # traduzione del tipo
+
+
 
         if node.valore is not None:
-            valore = self.espr(node.valore)
-            if node.tipo.nome == "burdell":
-                valore = wrappa_burdell(self,node.valore)
+            if isinstance(node.valore, ChiamataCostruttore):
+                valore = genera_chiamata_costruttore(self,node.valore, tipo_dichiarato)
+            else:
+                valore = self.espr(node.valore)
+                if node.tipo.nome == "burdell":
+                    valore = wrappa_burdell(self,node.valore)
             self.indentazione(f"{tipo_c} {nome} = {valore};")
         else:
             default = {"numr": "0", "lota": "false", "nbruogglio": '""', "lettr": "'\\0'",
@@ -266,7 +287,7 @@ class Transpiler:
             is_lato_sx_burdell = False
             if isinstance(node.left, Variabile):
                 is_lato_sx_burdell = self.burdell_info.get(id(node.left), False)  #mette il valore False se non trova l'id all'interno
-                sx = _accesso_base(self,str(node.left.nome))
+                sx = accesso_base(self,str(node.left.nome))
             else:
                 sx = self.espr(node.left)
 
@@ -274,8 +295,8 @@ class Transpiler:
             dx = self.espr(node.right)
 
             #  Calcoliamo i tipi per gestire le conversioni implicite
-            tipo_sx = _calcola_tipo(self, node.left)
-            tipo_dx = _calcola_tipo(self, node.right)
+            tipo_sx = calcola_tipo(self, node.left)
+            tipo_dx = calcola_tipo(self, node.right)
 
             # Applichiamo i wrapper o le conversioni necessarie
             if is_lato_sx_burdell:
@@ -332,8 +353,8 @@ class Transpiler:
                         )
                         return
 
-            tipo_sx = _calcola_tipo(self, node.left)
-            tipo_dx = _calcola_tipo(self, node.right)
+            tipo_sx = calcola_tipo(self, node.left)
+            tipo_dx = calcola_tipo(self, node.right)
 
             # ECCO LA MODIFICA CHIAVE! Usiamo l'helper per riconoscere sia i burdell locali che di classe.
             sx_is_burdell = isinstance(node.left, Variabile) and self.burdell_info.get(id(node.left), False)
@@ -358,7 +379,7 @@ class Transpiler:
                     else:
                         risultato = f"burdell_concat({dx}, {sx})"
 
-                sx_assign =_accesso_base(self,str(node.left.nome)) if isinstance(node.left, Variabile) else sx
+                sx_assign =accesso_base(self,str(node.left.nome)) if isinstance(node.left, Variabile) else sx
                 if sx_is_burdell:
                     self.indentazione(f"{sx_assign} = burdell_da_nbruogglio({risultato});")
                 else:
@@ -692,7 +713,7 @@ class Transpiler:
         # ── chiamate a funzione/metodo ───────────────────────────────────
 
     def visit_CallStmt(self, node: CallStmt):
-        nome_c, args = _risolvi_chiamata(self,node)
+        nome_c, args = risolvi_chiamata(self,node)
         self.indentazione(f"{nome_c}({', '.join(args)});")
 
 
@@ -712,3 +733,9 @@ class Transpiler:
 
     def espr_Carattr(self, node: Carattr):
         return f"'{node.value}'"
+
+    def espr_AccessoCampo(self, node):
+        nome_var = str(node.variabile.nome)
+        nome_campo = str(node.campo.nome)
+        base = accesso_base(self,nome_var)
+        return f"{base}.{nome_campo}"
