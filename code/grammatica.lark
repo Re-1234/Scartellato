@@ -95,9 +95,12 @@
                    | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
                    | nome_var SWAP nome_var TERMINATORE  -> swap
-                   | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
+                   | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
                    | PRINT TONDASINISTRA STRINGA ("," nome_var)* TONDADESTRA TERMINATORE -> stampante
-                   | ID "." nome_var TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
+                   | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
+                   | nome_var_semplice "." nome_var_semplice -> accesso_campo
+
+
 
         // RETURN E BREAK
 
@@ -116,14 +119,18 @@
             | NUMR_TK -> tipo
             | NBRUOGGLIO_TK -> tipo
             | LETTER_TK -> tipo
+            | ID -> tipo
 
         ?nome_var: ID -> variabile_semplice
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
                 | QUADRATASINISTRA NUMERO QUADRATADESTRA ID  -> variabile_array
 
+        ?nome_var_semplice: ID -> variabile_semplice
+
+
         //CLASSI
 
-        ?classe: ROBA nome_var GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
+        ?classe: ROBA nome_var_semplice GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
 
         ?membro: campi
                | metodi
@@ -142,9 +149,9 @@
 
         // FUNZIONI
 
-        funzione: tipo MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
-                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
-                | VOID MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
+        funzione: tipo MESTIER  nome_var_semplice TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var_semplice TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
+                | VOID MESTIER  nome_var_semplice TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
 
 
         ?sezione_parametri: "guagliuni" ":" parametro ("," parametro)*
@@ -232,3 +239,5 @@
                     | STRINGA -> stringa
                     | CARATTERE -> carattere
                     | ID       -> variabile_semplice
+                    | nome_var_semplice "." O_MAST TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA -> chiamata_costruttore
+                    | nome_var_semplice "." nome_var_semplice -> accesso_campo

@@ -265,11 +265,29 @@ class AST_Transformer(Transformer):
         return Break()
 
     def chiamata_oggetto(self,figli):
+
+        print("CHIAMATA oggetto figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
         nodi = self.filtra(figli)
-        nome = str(nodi[0])
+        nome = nodi[0]
         variabili = nodi[1]
         parametri1 = nodi[2:] if len(nodi) > 2 else None
         return ChiamataOggetto(nome = nome , variabile = variabili , Parametri = parametri1)
+
+    def chiamata_costruttore(self,figli):
+
+        print("CHIAMATA COSTRUTTORE figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+        nodi = self.filtra(figli)
+        nomevar =nodi[0]
+        parametri = nodi[1:] if len(nodi) > 2 else None
+        return ChiamataCostruttore(nome=nomevar,parametri=parametri)
+
+    def accesso_campo(self,figli):
+        variabile,campo = self.filtra(figli)
+        return AccessoCampo(variabile=variabile, campo=campo)
 
 
     def start(self, figli):
@@ -285,6 +303,9 @@ class AST_Transformer(Transformer):
         valore1  = self.filtra(figli)[0]
         variabili1 = self.filtra(figli)[1:]
         return Arape_a_vocca(valore = valore1,variabili = variabili1)
+
+
+
 
 def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
     if e_radice:

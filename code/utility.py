@@ -1,3 +1,6 @@
+from code.AnalisiSintattica.Transformer import ChiamataCostruttore, ChiamataOggetto
+
+
 def wrappa_burdell(transpiler, nodo_valore):
     tipo = transpiler.tipo_di(nodo_valore)
     valore_espr = transpiler.espr(nodo_valore)
@@ -9,7 +12,7 @@ def wrappa_burdell(transpiler, nodo_valore):
     }
     return f"{mappa[tipo]}({valore_espr})"
 
-def _accesso_base(transpiler, nome):
+def accesso_base(transpiler, nome):
     """Decide come accedere a 'nome': campo di classe (self./self->) o variabile normale."""
     if nome in transpiler.var_locali_shadow:
         return nome
@@ -17,7 +20,7 @@ def _accesso_base(transpiler, nome):
         return f"self.{nome}" if transpiler.in_costruttore else f"self->{nome}"
     return nome
 
-def _calcola_tipo(self, node):
+def calcola_tipo(self, node):
     """Cerca il tipo nella symbol table, se non c'è lo deduce ricorsivamente."""
     if node is None:
         return None
@@ -40,7 +43,7 @@ def _calcola_tipo(self, node):
 
 
 
-def _risolvi_chiamata(transpiler, node):
+def risolvi_chiamata(transpiler, node):
     """Restituisce (nome_c, lista_argomenti_c) per una CallStmt,
     aggiungendo prefisso di classe e 'self'/'&self' se la chiamata
     punta a un metodo della classe corrente."""
@@ -57,5 +60,19 @@ def _risolvi_chiamata(transpiler, node):
     return nome_c, args
 
 
-def _is_burdell(self, node):
+def is_burdell(self, node):
         return self.burdell_info.get(id(node), False)
+
+def genera_chiamata_costruttore(transpiler, node: ChiamataCostruttore, nome_classe):
+    args = [transpiler.espr(a) for a in (node.parametri or [])]
+    return f"{nome_classe}_init({', '.join(args)})"
+
+def genera_chiamata_oggetto(self, node: ChiamataOggetto):
+    nome_var = str(node.nome.nome)
+    nome_metodo = str(node.variabile.nome)
+    nome_classe = self.var_classe.get(nome_var)
+
+    args = [self.espr(a) for a in (node.Parametri or [])]
+    args_finali = [f"&{nome_var}"] + args
+
+    return f"{nome_classe}_{nome_metodo}({', '.join(args_finali)})"

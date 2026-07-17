@@ -157,6 +157,11 @@ compilatore("""
                ccàsta s!
             {
             
+             vacant mestier classeFunzioneMimmo )  ( }
+                    burdell a = ??ciao?? !
+                {
+            
+            
              robba ciro }
                 numr c!
                 numr s!
@@ -204,8 +209,12 @@ compilatore("""
                 jamm_ja : pippo ) guagliuni :  4 , 5 (  !
                 
                 
-                mettimcà )  5<7( }
-                    ciro.classeFunzioneMimmo)??ciao?? , 1(!
+                mettimcà ) 5<7( } 
+                    ciro c = c.o_mast)( !      //chiamata costruttore
+                    c.classeFunzioneMimmo)(!   //chiamata a oggetto 
+                    numr d = c.s!
+                     jamm_ja : classeFunzioneMimmo)(!
+                  
                     numr s = 5 !
                 { allor_fa_accussi }
                     burdell z = 9 !

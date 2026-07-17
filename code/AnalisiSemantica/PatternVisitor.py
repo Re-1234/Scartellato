@@ -41,14 +41,9 @@ class AnalisiSemantica:
         for kid in node.program:
             self.visit(kid)
 
-    def visit_ChiamataOggetto(self,node : ChiamataOggetto):
-        self.symbolTable.lookup(node.nome)
-        self.symbolTable.lookup(node.variabile.nome)
-
-        for p in node.Parametri:
-            self.visit(p)
-            self.tipi_risolti[id(p.nome)] = str(p.tipo)
-
+        errori = self.symbolTable.check_pending()
+        if errori:
+            raise SemanticError(f"Funzioni usate ma mai dichiarate: {errori}")
 
     #   ---CLASSE---
     def visit_Robba(self, node: Robba):
@@ -122,12 +117,16 @@ class AnalisiSemantica:
         info = self.symbolTable.lookup(nome)
 
         if isinstance(info, dict) and info.get('pending'):
-            # era pending → risolvo
-            self.symbolTable.resolve_pending(nome)
-            self.symbolTable.addId(nome, node)
+            if getattr(self, 'classe_corrente', None) is not None:  #controllo che il metodo sia solo della classe
+                # È un metodo di classe: NON risolve i pending del main
+                pass
+            else:
+                # È una funzione globale: risolve il pending
+                self.symbolTable.resolve_pending(nome)
+                self.symbolTable.addId(nome, node)
         else:
-            # dichiarazione normale
             self.symbolTable.addId(nome, node)
+
 
         self.symbolTable.enterScope()
         self.funzione_corrente = node
@@ -217,6 +216,75 @@ class AnalisiSemantica:
         for element in node.statements:
             self.visit(element)
 
+    def visit_ChiamataCostruttore(self, node: ChiamataCostruttore):
+        nome_classe_attesa = self._tipo_atteso_costruttore  # letto dallo stato temporaneo
+
+        classe = self.symbolTable.lookup(nome_classe_attesa)
+        if classe is None or not isinstance(classe, Robba):
+            raise SemanticError(f"'{nome_classe_attesa}' non è una classe valida")
+
+        parametri_attesi = classe.costruttore.parametri if classe.costruttore else []
+        args = node.parametri or []
+
+        if len(args) != len(parametri_attesi):
+            raise SemanticError(...)
+        for arg in args:
+            self.visit(arg)
+
+        return nome_classe_attesa
+
+    def visit_ChiamataOggetto(self, node: ChiamataOggetto):
+        nome_var = node.nome.nome if hasattr(node.variabile, 'nome') else str(node.variabile)
+        print(nome_var)
+        tipo_var = self.symbolTable.lookup(nome_var) #controllo se nomevar è presente nello scope
+        print(tipo_var)
+        tipo_nome = tipo_var['tipo'] if isinstance(tipo_var, dict) else tipo_var
+        print(tipo_nome)
+
+        if tipo_nome is None:
+            raise SemanticError(f"Variabile '{nome_var}' non dichiarata")
+
+        classe = self.symbolTable.lookup(tipo_nome)
+        if not isinstance(classe, Robba):
+            raise SemanticError(f"'{nome_var}' non è un'istanza di una classe")
+
+        nome_metodo = node.variabile.nome if hasattr(node.nome, 'nome') else str(node.nome)
+        metodo = next((f for f in classe.funzioni if str(f.nome.nome) == nome_metodo), None)
+
+        if metodo is None:
+            raise SemanticError(f"Metodo '{nome_metodo}' non esiste nella classe '{tipo_nome}'")
+
+        args = node.Parametri or []
+        if len(args) != len(metodo.parametri):
+            raise SemanticError(
+                f"'{nome_metodo}' si aspetta {len(metodo.parametri)} argomenti, ricevuti {len(args)}"
+            )
+
+        for arg in args:
+            self.visit(arg)
+
+        return str(metodo.ritorno)
+
+    def visit_AccessoCampo(self, node: AccessoCampo):
+        nome_var = node.variabile.nome
+        tipo_var = self.symbolTable.lookup(nome_var)
+        tipo_nome = tipo_var['tipo'] if isinstance(tipo_var, dict) else tipo_var
+
+        if tipo_nome is None:
+            raise SemanticError(f"Variabile '{nome_var}' non dichiarata")
+
+        classe = self.symbolTable.lookup(tipo_nome)
+        if not isinstance(classe, Robba):
+            raise SemanticError(f"'{nome_var}' non è un'istanza di una classe")
+
+        nome_campo = node.campo.nome
+        campo = next((v for v in classe.variabili if str(v.nome.nome) == nome_campo), None)
+
+        if campo is None:
+            raise SemanticError(f"Campo '{nome_campo}' non esiste nella classe '{tipo_nome}'")
+
+        self.tipi_risolti[id(node)] = campo.tipo.nome
+        return campo.tipo.nome
 
     def visit_CallStmt(self, node: CallStmt):
         nome_funzione = node.nome_func.nome
@@ -440,7 +508,13 @@ class AnalisiSemantica:
 
         tipo_finale = tipo_dichiarato
         if node.valore is not None:
-            tipo_valore = self.visit(node.valore)
+            if isinstance(node.valore, ChiamataCostruttore):
+                self._tipo_atteso_costruttore = tipo_dichiarato
+                self.visit(node.valore)
+                tipo_valore = self.visit(node.valore)
+            else:
+                tipo_valore = self.visit(node.valore)
+
             if tipo_dichiarato == 'burdell':
                 self.symbolTable.addId(nome_variabile, {'tipo': tipo_valore, 'is_burdell': True, 'is_array': is_array})
                 tipo_finale = tipo_valore
