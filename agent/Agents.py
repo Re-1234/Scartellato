@@ -3,7 +3,7 @@ import re
 import time
 import subprocess
 from lark import Lark
-from agent.anthropicAPI import call_llm
+
 from code.Compilatore import compilatore
 
 
@@ -405,9 +405,7 @@ def _valida_few_shot() -> None:
 # solleva un errore esplicito, per non confrontare in silenzio due stringhe
 # vuote e dichiarare "successo" a caso.
 
-OUTPUT_FUNCTION_NAME = "stampa"  # nome della funzione di libreria usata per
-                                  # stampare a video in Scartellato - TODO:
-                                  # sostituire con quella reale del runtime
+OUTPUT_FUNCTION_NAME = "arape_a_vocca"
 
 
 def esegui_programma(programma: str, timeout: float = 5.0) -> str:
@@ -622,7 +620,13 @@ def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int =
     _valida_few_shot()
     state = new_state()
 
-    with open("agent/log.md", "w", encoding="utf-8") as log:
+    import os
+
+    import os
+
+    LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.md")
+
+    with open(LOG_PATH, "w", encoding="utf-8") as log:
         for i in range(n_programs):
             feedback = None
             successo = False
@@ -631,7 +635,7 @@ def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int =
                 # --- 1. AGENTE 1: GENERATOR ---
                 program = generate_code(feedback=feedback)
                 log.write(json.dumps({
-                    "step": "generate_code", "regen": regen, "program": program, "time": time.time(),
+                    "step": "generate_code", "regen": regen, "program": program, "time": time(),
                 }) + "\n")
 
                 # --- 2. COMPILAZIONE + AGENTE 2 (repair) ---
@@ -641,14 +645,14 @@ def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int =
                     result = compilatore(program)
                     log.write(json.dumps({
                         "step": "compile", "attempt": attempt, "ok": result.ok,
-                        "errors": getattr(result, "errors", None), "time": time.time(),
+                        "errors": getattr(result, "errors", None), "time": time(),
                     }) + "\n")
                     if result.ok:
                         compiled_ok = True
                         break
                     program = repair_program(program, result.errors)
                     log.write(json.dumps({
-                        "step": "repair", "attempt": attempt, "program": program, "time": time.time(),
+                        "step": "repair", "attempt": attempt, "program": program, "time": time(),
                     }) + "\n")
 
                 if not compiled_ok:
@@ -669,7 +673,7 @@ def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int =
                 result_test = compilatore(program_con_test)
                 log.write(json.dumps({
                     "step": "compile_with_tests", "ok": result_test.ok,
-                    "errors": getattr(result_test, "errors", None), "time": time.time(),
+                    "errors": getattr(result_test, "errors", None), "time": time(),
                 }) + "\n")
                 if not result_test.ok:
                     feedback = (
@@ -685,17 +689,17 @@ def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int =
                     raise  # errore di configurazione: va risolto, non "recuperato"
                 except Exception as e:
                     feedback = f"Errore durante l'esecuzione del programma: {e}"
-                    log.write(json.dumps({"step": "run_error", "error": str(e), "time": time.time()}) + "\n")
+                    log.write(json.dumps({"step": "run_error", "error": str(e), "time": time()}) + "\n")
                     continue
 
                 log.write(json.dumps({
-                    "step": "run", "stdout": stdout_reale, "expected": output_attesi, "time": time.time(),
+                    "step": "run", "stdout": stdout_reale, "expected": output_attesi, "time": time(),
                 }) + "\n")
 
                 if confronta_output(stdout_reale, output_attesi):
                     state["valid_programs"].append(program_con_test)
                     update_coverage(state, program)
-                    log.write(json.dumps({"step": "test_passed", "time": time.time()}) + "\n")
+                    log.write(json.dumps({"step": "test_passed", "time": time()}) + "\n")
                     successo = True
                     break
                 else:
@@ -703,7 +707,7 @@ def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int =
                         "I test sono falliti. Output atteso:\n"
                         f"{output_attesi}\nOutput ottenuto dall'esecuzione:\n{stdout_reale}"
                     )
-                    log.write(json.dumps({"step": "test_failed", "feedback": feedback, "time": time.time()}) + "\n")
+                    log.write(json.dumps({"step": "test_failed", "feedback": feedback, "time": time()}) + "\n")
 
             state["all_attempts"] += 1
             print(
@@ -713,6 +717,38 @@ def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int =
             )
 
     return state
+
+
+import json
+import os
+from time import time
+import anthropic
+
+
+client = anthropic.Anthropic(api_key = "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")
+
+print("ANTHROPIC_API_KEY presente?", "ANTHROPIC_API_KEY" in os.environ)
+print("Tutte le chiavi che contengono ANTHROPIC:", [k for k in os.environ if "ANTHROPIC" in k.upper()])
+
+def call_llm ( system : str , user : str , temperature : float = 0.7) -> str :
+    """Una chiamata LLM , ritorna solo la stringa del testo ."""
+    import os
+
+    LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.md")
+    log = open(LOG_PATH, "a", encoding="utf-8")
+    response = client . messages . create(
+        model ="claude-sonnet-4-6",
+        max_tokens =2048 ,
+        cache_control = {"type": "ephemeral"},
+        system = system ,
+        messages =[{"role": "user", "content": user }] ,
+        temperature = temperature ,
+    )
+    log.write(json.dumps({"Step":"create d'agent","Response": response.content[0].text, "Time" : time()}))
+    log.close()
+    return response . content [0]. text
+
+
 
 
 if __name__ == "__main__":
