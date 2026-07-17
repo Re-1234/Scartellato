@@ -540,7 +540,7 @@ class AnalisiSemantica:
         variabili = node.variabili
         if variabili:
             for variabile in variabili:
-                if not self.symbolTable.lookup(variabile):
+                if not self.symbolTable.lookup(variabile.nome):
                     raise SemanticError(f"MAC STAI FACEN: Errore la variabile {variabile.nome} non è dichiarata")
 
 
