@@ -752,5 +752,5 @@ def log_step(step: str, **data) -> None:
 
 if __name__ == "__main__":
     final_state = run_pipeline(n_programs=50)
-    metrics = compute_metrics(final_state, n_requested=100)
+    metrics = compute_metrics(final_state, n_requested=50)
     print(json.dumps(metrics, indent=2))

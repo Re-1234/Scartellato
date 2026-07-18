@@ -2,7 +2,6 @@ import os
 import platform
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
 
-from AnalisiSemantica.SemanticError import SemanticError
 from code.AnalisiSintattica.AST import *
 from code.AnalisiSemantica.PatternVisitor import AnalisiSemantica
 import subprocess
@@ -123,7 +122,8 @@ def compilatore(source: str) -> CompileResult:
     analisiSemantica = AnalisiSemantica()
     analisiSemantica.visit(ast)
 
-    print(analisiSemantica.getErrori())
+    if analisiSemantica.getErrori():
+        return CompileResult(False,analisiSemantica.getErrori())
 
     generatore(analisiSemantica)
     return CompileResult(True)
