@@ -96,9 +96,10 @@
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
                    | nome_var SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
-                   | PRINT TONDASINISTRA STRINGA ("," nome_var)* TONDADESTRA TERMINATORE -> stampante
+                   | PRINT TONDASINISTRA STRINGA (ADDIZIONE expr_primary)* TONDADESTRA TERMINATORE -> stampante
                    | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
                    | nome_var_semplice "." nome_var_semplice -> accesso_campo
+
 
 
 

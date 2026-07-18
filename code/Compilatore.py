@@ -34,7 +34,7 @@ def trova_gcc():
 
 
 def generatore(analisiSemantica):
-    transpiler = Transpiler(analisiSemantica.tipi_risolti, analisiSemantica.burdell_info)
+    transpiler = Transpiler(analisiSemantica.tipi_risolti, analisiSemantica.burdell_info, analisiSemantica.print_types)
     transpiler.visit(ast)
     codice_c = transpiler.get_output()
 
@@ -134,8 +134,8 @@ compilatore("""
                nbruogglio stringa = ??a + b??  !
                numr ][ s !
                burdell ][ g ! 
+               g -= stringa !
                numr c1 = 4 +7 !
-               s+= c1 !
                lota d = sasicchj !
                nbruogglio x = ??2?? !
                stringa -=  c1 + x !
@@ -204,6 +204,8 @@ compilatore("""
                 numr s !
                 numr b!
                 
+                v -= s + a ! 
+                
                 numr ]1[ k! 
                 
                 jamm_ja : pippo ) guagliuni :  4 , 5 (  !
@@ -219,6 +221,7 @@ compilatore("""
                 { allor_fa_accussi }
                     burdell z = 9 !
                 {
+                
                 burdell c = a + v !
                 burdell test = 1!
                 test = ??ciao??!
@@ -226,6 +229,8 @@ compilatore("""
                 
                 lota d = sasicchj!
                 d=friariell!
+                
+                arape_a_vocca)?? valore di d ?? -d -??valore di test ?? -test( !
                 
               ambressAmbress ) numr c= 5 ! c<8 ! c++( }
                 mettimcà ) 3<4( }

@@ -300,8 +300,20 @@ class AST_Transformer(Transformer):
         return Start(program=nodi)
 
     def stampante(self, figli):
-        valore1  = self.filtra(figli)[0]
-        variabili1 = self.filtra(figli)[1:]
+        print(" FIGLI stampa ")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+
+        elementi = self.filtra(figli)
+
+        elementi_puliti = [
+            f for f in elementi
+            if getattr(f, 'type', None) != 'ADDIZIONE' and str(f) != '-'
+        ]
+
+        # 3. Estrai i dati dalla lista pulita locale
+        valore1 = str(elementi_puliti[0])
+        variabili1 = elementi_puliti[1:]
         return Arape_a_vocca(valore = valore1,variabili = variabili1)
 
 

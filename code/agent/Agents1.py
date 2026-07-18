@@ -714,6 +714,7 @@ import json
 import os
 from time import time
 import anthropic
+from dotenv import load_dotenv
 
 client = anthropic.Anthropic()
 
@@ -741,6 +742,5 @@ def call_llm(system: str, user: str, temperature: float = 0.7) -> str:
 
 
 if __name__ == "__main__":
-    final_state = run_pipeline(n_programs=100)
-    metrics = compute_metrics(final_state, n_requested=100)
-    print(json.dumps(metrics, indent=2))
+    load_dotenv()
+    print(os.environ.get("ANTHROPIC_API_KEY"))

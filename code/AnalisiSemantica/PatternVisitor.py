@@ -10,6 +10,7 @@ class AnalisiSemantica:
         symbolTable: SymbolTable
         self.tipi_risolti = {}
         self.burdell_info = {}
+        self.print_types = {}
         self.funzione_corrente = None
         self.dentro_ciclo = 0
 
@@ -538,10 +539,15 @@ class AnalisiSemantica:
 
     def visit_Arape_a_vocca(self,node : Arape_a_vocca):
         variabili = node.variabili
+        print(variabili)
+        if node.valore is not None:
+            #  Il testo fisso (node.valore) è una stringa costante. Non lo visitiamo.
+            self.tipi_risolti[id(node.valore)] = "nbruogglio"
+
         if variabili:
             for variabile in variabili:
-                if not self.symbolTable.lookup(variabile):
-                    raise SemanticError(f"MAC STAI FACEN: Errore la variabile {variabile.nome} non è dichiarata")
+                tipo_rilevato = self.visit(variabile)
+                self.print_types[id(variabile)] = tipo_rilevato
 
 
 

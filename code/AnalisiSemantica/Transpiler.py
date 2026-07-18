@@ -14,9 +14,10 @@ class Transpiler:
     }
 
 
-    def __init__(self, tipi_risolti: dict, burdell_info: dict):
+    def __init__(self, tipi_risolti: dict, burdell_info: dict, print_types: dict):
             self.tipi_risolti = tipi_risolti
             self.burdell_info = burdell_info
+            self.print_types = print_types
             self.output = []
             self.indent = 0
             self.temp_counter = 0
@@ -716,7 +717,74 @@ class Transpiler:
         nome_c, args = risolvi_chiamata(self,node)
         self.indentazione(f"{nome_c}({', '.join(args)});")
 
+    def visit_Arape_a_vocca(self, node: Arape_a_vocca):
+        """ Genera un UNICO printf in C unendo le stringhe fisse """
 
+        stringa_formato = ""
+        argomenti_c = []
+
+        # 1. Prendiamo il primo pezzo di testo (se presente)
+        if getattr(node, 'valore', None) is not None:
+            # Puliamo i punti interrogativi
+            testo_pulito = str(node.valore).replace("??", "")
+            stringa_formato += testo_pulito
+
+        # 2. Iteriamo su tutti gli altri elementi (variabili o altre stringhe)
+        if getattr(node, 'variabili', None):
+            for var in node.variabili:
+                # Otteniamo come si scriverebbe in C (es. "d", oppure '"valore di test "')
+                valore_c = self.espr(var)
+
+                # TRUCCO: Se il valore valutato è racchiuso tra virgolette, è una stringa fissa!
+                if valore_c.startswith('"') and valore_c.endswith('"'):
+                    # Togliamo le virgolette " " all'inizio e alla fine
+                    testo_fisso = valore_c[1:-1]
+                    # In C, se il testo contiene un %, va raddoppiato in %% per non confondere la printf
+                    testo_fisso = testo_fisso.replace("%", "%%")
+
+                    # Lo uniamo direttamente alla stringa di formato! Nessun %s.
+                    stringa_formato += testo_fisso
+
+                else:
+                    # È una VERA variabile, usiamo la tabella dei tipi
+                    tipo = self.print_types.get(id(var))
+
+                    if tipo == "numr":
+                        stringa_formato += "%d"
+                        argomenti_c.append(valore_c)
+
+                    elif tipo == "nbruogglio":
+                        stringa_formato += "%s"
+                        argomenti_c.append(valore_c)
+
+                    elif tipo == "lettr":
+                        stringa_formato += "%c"
+                        argomenti_c.append(valore_c)
+
+                    elif tipo == "lota":
+                        stringa_formato += "%s"
+                        # Traduciamo in true/false letterale come in Java
+                        argomenti_c.append(f"({valore_c}) ? \"true\" : \"false\"")
+
+                    elif tipo == "burdell":
+                        stringa_formato += "%s"
+                        argomenti_c.append(f"burdell_a_stringa({valore_c})")
+
+                    else:
+                        # Fallback di sicurezza
+                        stringa_formato += "%s"
+                        argomenti_c.append(valore_c)
+
+        # Aggiungiamo il rinvio a capo finale
+        stringa_formato += "\\n"
+
+        # 3. Generiamo la riga C finale
+        if argomenti_c:
+            tutti_gli_argomenti = ", ".join(argomenti_c)
+            self.indentazione(f'printf("{stringa_formato}", {tutti_gli_argomenti});')
+        else:
+            # Stampa puramente testuale se alla fine non ci sono variabili
+            self.indentazione(f'printf("{stringa_formato}");')
     # ══════════════════════════════════════════════════════════════
     #   ESPRESSIONI
     # ══════════════════════════════════════════════════════════════
