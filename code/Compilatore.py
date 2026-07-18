@@ -8,7 +8,7 @@ from code.AnalisiSemantica.PatternVisitor import AnalisiSemantica
 import subprocess
 import shutil
 
-from code.AnalisiSemantica.Transpiler import *
+from code.AnalisiSemantica.Transpiler import  *
 
 
 def trova_gcc():
@@ -30,6 +30,7 @@ def trova_gcc():
                 return c
 
     return None
+
 
 
 def generatore(analisiSemantica):
@@ -148,5 +149,5 @@ Uè)( }
     {
     jamm_ja : stampa_saluto ) guagliuni : x ( !
 {
-
+    
     """)
