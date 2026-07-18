@@ -67,6 +67,9 @@ class AST_Transformer(Transformer):
         operatore = self.filtra(figli)[1]
         return OpBin(op=str(operatore), left=variabile, right=None)
 
+    def maggiore(self,figli):
+        return OpBin(op=">", left=figli[0], right=figli[2])
+
     def minore(self, figli):
         return OpBin(op="<", left=figli[0], right=figli[2])
 
@@ -144,6 +147,7 @@ class AST_Transformer(Transformer):
         var2 = self.filtra(figli)[1]
         return OpBin(op='=', left=var1, right=var2)
 
+
     def aspe(self,figli):
         condition , corpo = self.filtra(figli)
         return Aspe(condition, corpo)
@@ -178,17 +182,25 @@ class AST_Transformer(Transformer):
         return Parametro(tipo=tipo, nome = value)
 
     def main(self, figli):
+
         nodi = self.filtra(figli)
-        print("FIGLI MAIN_DEF")
-        for i, f in enumerate(figli):
-            print(f"  [{i}] {type(f).__name__} → {f!r}")
-        ritorno,nome,corpo =nodi
-        return Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri="",corpo=corpo,is_array=False)
+        print("FIGLI MAIN_DEF", flush=True)
+        for i, f in enumerate(figli) :
+            print(f"  [{i}] {type(f).__name__} → {f!r}", flush=True)
+
+        if len(nodi) == 2:
+            nome,corpo =nodi
+            ritorno= "vacant"
+            return  Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
+        else:
+            ritorno,nome, corpo = nodi
+        return  Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
 
 
     def funzione_semplice(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier(ritorno=tipo.nome, nome=nome,parametri=parametri,corpo=blocco,is_array=False)
+        lista = [parametri]
+        return Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco,is_array=False)
 
     def funzione_array(self, figli):
 
@@ -196,11 +208,13 @@ class AST_Transformer(Transformer):
         print("FIGLI func array")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
-        return Mestier(ritorno=tipo.nome, nome=nome,parametri=parametri,corpo=blocco, is_array=True)
+        lista = [parametri]
+        return Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco, is_array=True)
 
     def funzione_void(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        return Mestier (ritorno=str(tipo), nome=nome,parametri=parametri,corpo=blocco,is_array=False)
+        lista = [parametri]
+        return Mestier (ritorno=str(tipo), nome=nome,parametri=lista,corpo=blocco,is_array=False)
 
     def costruttore(self, figli):
         parametri , corpo = self.filtra(figli)

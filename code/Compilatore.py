@@ -120,11 +120,12 @@ def compilatore(source: str) -> CompileResult:
         print(f"Errore lessicale: {e.char!r}")
         return CompileResult(False, [f"Errore lessicale: carattere inatteso {e.char!r}"])
 
-    try:
-        analisiSemantica = AnalisiSemantica()
-        analisiSemantica.visit(ast)
-    except SemanticError as e:
-        e.with_traceback()
+
+    analisiSemantica = AnalisiSemantica()
+    analisiSemantica.visit(ast)
+
+    if analisiSemantica.getErrori():
+        return CompileResult(False,analisiSemantica.getErrori())
 
     generatore(analisiSemantica)
     return CompileResult(True)

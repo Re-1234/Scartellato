@@ -43,7 +43,7 @@ FLUSSO per ogni programma richiesto:
 # GRAMMATICA (invariata rispetto all'originale)
 # ============================================================
 
-GRAMMAR_L = r"""
+GRAMMAR_L = r"""//tipo di dati
         BOOLEAN.2 : "sasicchj"|"friariell"
         LOTA_TK: "lota"                 // token per boolean
         NUMERO: /\d+(\.\d+)?e?/
@@ -105,6 +105,8 @@ GRAMMAR_L = r"""
         CHIAMATA: "jamm_ja"    // keyword per chiamata a funzione
         SWAP: "<->"           //swap dei valori
         PARAMETRI_TK: "guagliuni" // elenco di parametri
+        PRINT: "arape_a_vocca"
+
 
         %ignore /\s+/
         %ignore /\/\/[^\n]*/
@@ -115,10 +117,7 @@ GRAMMAR_L = r"""
         start:  top_level* main_def top_level*
              |  top_level+
 
-        main_def: main_opzione MAIN TONDASINISTRA TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> main
-
-        ?main_opzione: VOID |
-
+        main_def: [VOID] MAIN TONDASINISTRA TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> main
 
         ?top_level: funzione
                   | classe
@@ -132,18 +131,26 @@ GRAMMAR_L = r"""
                    | for_stmt
                    | while_stmt
                    | if_stmt
+                   | break_stmt
                    | return_stmt
                    | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
                    | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
                    | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
                    | nome_var SWAP nome_var TERMINATORE  -> swap
-                   | CHIAMATA ":" nome_var ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
+                   | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
+                   | PRINT TONDASINISTRA STRINGA (ADDIZIONE expr_primary)* TONDADESTRA TERMINATORE -> stampante
+                   | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
+                   | nome_var_semplice "." nome_var_semplice -> accesso_campo
+
+
+
 
         // RETURN E BREAK
 
-        return_stmt: BREAK TERMINATORE
-                   | CCASTA  nome_var TERMINATORE ->returnstatement
+        return_stmt: CCASTA  nome_var TERMINATORE ->returnstatement
                    | CCASTA TERMINATORE   ->returnstatement
+
+        break_stmt: BREAK TERMINATORE             -> break_statement
 
         // DICHIARAZIONI DI VARIABILI
 
@@ -155,14 +162,18 @@ GRAMMAR_L = r"""
             | NUMR_TK -> tipo
             | NBRUOGGLIO_TK -> tipo
             | LETTER_TK -> tipo
+            | ID -> tipo
 
         ?nome_var: ID -> variabile_semplice
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
                 | QUADRATASINISTRA NUMERO QUADRATADESTRA ID  -> variabile_array
 
+        ?nome_var_semplice: ID -> variabile_semplice
+
+
         //CLASSI
 
-        ?classe: ROBA nome_var GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
+        ?classe: ROBA nome_var_semplice GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
 
         ?membro: campi
                | metodi
@@ -181,9 +192,9 @@ GRAMMAR_L = r"""
 
         // FUNZIONI
 
-        funzione: tipo MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
-                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
-                | VOID MESTIER  nome_var TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
+        funzione: tipo MESTIER  nome_var_semplice TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_semplice
+                | tipo QUADRATASINISTRA QUADRATADESTRA MESTIER  nome_var_semplice TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_array
+                | VOID MESTIER  nome_var_semplice TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> funzione_void
 
 
         ?sezione_parametri: "guagliuni" ":" parametro ("," parametro)*
@@ -271,6 +282,8 @@ GRAMMAR_L = r"""
                     | STRINGA -> stringa
                     | CARATTERE -> carattere
                     | ID       -> variabile_semplice
+                    | nome_var_semplice "." O_MAST TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA -> chiamata_costruttore
+                    | nome_var_semplice "." nome_var_semplice -> accesso_campo
 """
 
 PRODUCTIONS = [
@@ -368,10 +381,7 @@ jamm_ja : saluta ) guagliuni : 5 ( !
 
 
 def _valida_few_shot() -> None:
-    """Verifica che tutti gli esempi few-shot siano sintatticamente validi
-    rispetto alla grammatica. Va chiamata all'avvio della pipeline: se un
-    esempio e' rotto e' molto meglio scoprirlo subito che scoprirlo dopo
-    100 generazioni fallite per colpa di un few-shot sbagliato."""
+    log_step("valida_few_shot:start", n_esempi=len(_FEW_SHOT_PROGRAMS))
     problemi = []
     for i, prog in enumerate(_FEW_SHOT_PROGRAMS, start=1):
         try:
@@ -379,12 +389,14 @@ def _valida_few_shot() -> None:
         except Exception as e:
             problemi.append(f"Esempio {i}: {e}")
     if problemi:
+        log_step("valida_few_shot:errore", problemi=problemi)
         raise RuntimeError(
             "Uno o piu' esempi few-shot NON sono validi rispetto alla grammatica "
             "(erano stati scritti a mano senza poter eseguire Lark). Correggili "
             "in FEW_SHOT_EXAMPLES / _FEW_SHOT_PROGRAMS prima di lanciare la "
             "pipeline:\n" + "\n".join(problemi)
         )
+    log_step("valida_few_shot:ok")
 
 
 # ============================================================
@@ -401,29 +413,56 @@ def _valida_few_shot() -> None:
 OUTPUT_FUNCTION_NAME = "arape_a_vocca"
 
 
+import os
+import platform
+import subprocess
+
+
 def esegui_programma(programma: str, timeout: float = 5.0) -> str:
-    """Esegue `programma` (gia' compilato con successo) e ne restituisce lo
-    stdout come stringa. Esempi di come collegarla al motore reale:
+    import code.Compilatore as Compilatore
 
-        # 1) se avete un eseguibile/interprete a riga di comando:
-        risultato = subprocess.run(
-            ["scartellato-run", "-"],
-            input=programma, capture_output=True, text=True, timeout=timeout,
+    log_step("esegui_programma:start", programma=programma, timeout=timeout)
+
+    cartella_eseguibile = os.path.dirname(os.path.abspath(Compilatore.__file__))
+    sistema = platform.system()
+    nome_eseguibile = "scartellato.exe" if sistema == "Windows" else "scartellato"
+    percorso_eseguibile = os.path.join(cartella_eseguibile, nome_eseguibile)
+
+    if not os.path.exists(percorso_eseguibile):
+        log_step("esegui_programma:eseguibile_non_trovato", percorso=percorso_eseguibile)
+        raise RuntimeError(
+            f"Eseguibile non trovato in '{percorso_eseguibile}'. "
+            "esegui_programma() presuppone che compilatore(programma) sia "
+            "gia' stata chiamata con successo (e' generatore() a creare "
+            "l'eseguibile); se manca vuol dire che la compilazione C/gcc "
+            "e' fallita silenziosamente (vedi nota sotto)."
         )
-        if risultato.returncode != 0:
-            raise RuntimeError(risultato.stderr)
-        return risultato.stdout
 
-        # 2) se Compilatore espone anche un esecutore Python:
-        from Compilatore import esegui
-        return esegui(programma)
-    """
-    raise NotImplementedError(
-        "esegui_programma() non e' ancora collegata a un motore di esecuzione "
-        "reale per Scartellato. Compilatore.compilatore() fa solo il check "
-        "sintattico/semantico: qui serve la funzione che ESEGUE il programma "
-        "e ne cattura lo stdout. Vedi il docstring per due esempi di adapter."
-    )
+    comando = [percorso_eseguibile] if sistema == "Windows" else [f"./{nome_eseguibile}"]
+
+    try:
+        risultato = subprocess.run(
+            comando,
+            cwd=cartella_eseguibile,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as e:
+        log_step("esegui_programma:timeout", timeout=timeout)
+        raise RuntimeError(
+            f"Timeout ({timeout}s) durante l'esecuzione del programma"
+        ) from e
+
+    if risultato.returncode != 0:
+        log_step("esegui_programma:returncode_error", returncode=risultato.returncode, stderr=risultato.stderr)
+        raise RuntimeError(
+            f"Il programma e' terminato con codice di uscita "
+            f"{risultato.returncode}.\nstderr:\n{risultato.stderr}"
+        )
+
+    log_step("esegui_programma:end", stdout=risultato.stdout)
+    return risultato.stdout
 
 
 # ============================================================
@@ -483,21 +522,19 @@ FORMATO DI RISPOSTA ESATTO, niente altro testo:
 # ============================================================
 
 def extract_code(raw: str) -> str:
-    """Estrae il contenuto del primo blocco fenced ```...``` (con o senza
-    linguaggio dopo i backtick). Se non trova un blocco, ripiega sul testo
-    grezzo ripulito."""
     match = re.search(r"```(?:\w+)?\n(.*?)```", raw, re.DOTALL)
     if match:
-        return match.group(1).strip()
+        code = match.group(1).strip()
+        log_step("extract_code", found_block=True, code=code)
+        return code
+    log_step("extract_code", found_block=False, raw_fallback=raw.strip())
     return raw.strip()
 
 
 def extract_code_and_expected_output(raw: str):
-    """Estrae dal messaggio del tester sia il programma (primo blocco
-    fenced) sia la lista di output attesi (secondo blocco fenced, JSON).
-    Ritorna la tupla (programma: str, output_attesi: list[str])."""
     blocks = re.findall(r"```(?:\w+)?\n(.*?)```", raw, re.DOTALL)
     if len(blocks) < 2:
+        log_step("extract_code_and_expected_output:error", n_blocks=len(blocks), raw=raw)
         raise ValueError(
             "La risposta del tester non contiene i due blocchi attesi "
             "(programma + JSON con gli output attesi):\n" + raw
@@ -506,16 +543,18 @@ def extract_code_and_expected_output(raw: str):
     try:
         output_attesi = json.loads(blocks[1].strip())
     except json.JSONDecodeError as e:
+        log_step("extract_code_and_expected_output:json_error", error=str(e), raw_block=blocks[1])
         raise ValueError(f"Output atteso non e' JSON valido: {e}\n{blocks[1]}")
+    log_step("extract_code_and_expected_output:ok", programma=programma, output_attesi=output_attesi)
     return programma, output_attesi
 
 
 def confronta_output(reale: str, attesi: list[str]) -> bool:
-    """Confronto riga per riga fra stdout reale e output attesi generati
-    dal tester, ignorando spazi bianchi superflui a inizio/fine riga."""
     righe_reali = [r.strip() for r in reale.strip().splitlines()]
     righe_attese = [r.strip() for r in attesi]
-    return righe_reali == righe_attese
+    esito = righe_reali == righe_attese
+    log_step("confronta_output", righe_reali=righe_reali, righe_attese=righe_attese, esito=esito)
+    return esito
 
 
 # ============================================================
@@ -523,21 +562,26 @@ def confronta_output(reale: str, attesi: list[str]) -> bool:
 # ============================================================
 
 def generate_code(feedback: str | None = None) -> str:
+    log_step("generate_code:start", feedback=feedback)
     user = "Scrivi un programma in Scartellato di 8-15 righe."
     if feedback:
         user += f"\n\nFEEDBACK sul tentativo precedente (da correggere):\n{feedback}"
     raw = call_llm(system=SYSTEM_GENERATOR, user=user, temperature=0.7)
-    return extract_code(raw)
-
+    code = extract_code(raw)
+    log_step("generate_code:end", code=code)
+    return code
 
 # ============================================================
 # AGENTE 2 - ruolo REPAIR
 # ============================================================
 
 def repair_program(program: str, errors: list[str]) -> str:
+    log_step("repair_program:start", program=program, errors=errors)
     user = f"PROGRAMMA:\n{program}\n\nERRORI:\n" + "\n".join(errors)
     raw = call_llm(system=SYSTEM_AGENT2_REPAIR, user=user, temperature=0.2)
-    return extract_code(raw)
+    fixed = extract_code(raw)
+    log_step("repair_program:end", fixed_program=fixed)
+    return fixed
 
 
 # ============================================================
@@ -545,9 +589,12 @@ def repair_program(program: str, errors: list[str]) -> str:
 # ============================================================
 
 def test_code(program: str) -> tuple[str, list[str]]:
+    log_step("test_code:start", program=program)
     user = f"PROGRAMMA (gia' compilato con successo):\n{program}"
     raw = call_llm(system=SYSTEM_AGENT2_TESTER, user=user, temperature=0.2)
-    return extract_code_and_expected_output(raw)
+    program_con_test, output_attesi = extract_code_and_expected_output(raw)
+    log_step("test_code:end", program_con_test=program_con_test, output_attesi=output_attesi)
+    return program_con_test, output_attesi
 
 
 # ============================================================
@@ -564,22 +611,24 @@ def new_state() -> dict:
 
 
 def update_coverage(state: dict, program: str) -> None:
-    """Coverage precisa al 100%: parsa il programma e conta ogni
-    produzione realmente usata nell'albero (tree.data)."""
     try:
         tree = _parser.parse(program)
-    except Exception:
+    except Exception as e:
+        log_step("update_coverage:parse_error", error=str(e), program=program)
         return
+    used = []
     for subtree in tree.iter_subtrees():
         prod = subtree.data
         if prod in state["coverage"]:
             state["coverage"][prod] += 1
+            used.append(prod)
+    log_step("update_coverage:ok", produzioni_usate=used)
 
 
 def compute_metrics(state: dict, n_requested: int) -> dict:
     valid = state["valid_programs"]
     coverage = state["coverage"]
-    return {
+    metrics = {
         "validity_rate": len(valid) / n_requested if n_requested else 0,
         "n_valid": len(valid),
         "coverage_pct": sum(1 for v in coverage.values() if v > 0) / len(coverage),
@@ -587,7 +636,8 @@ def compute_metrics(state: dict, n_requested: int) -> dict:
         "diversity_unique": len(set(valid)) / len(valid) if valid else 0,
         "avg_attempts_per_valid": state["all_attempts"] / len(valid) if valid else float("inf"),
     }
-
+    log_step("compute_metrics", metrics=metrics)
+    return metrics
 
 # ============================================================
 # PIPELINE PRINCIPALE
@@ -716,31 +766,43 @@ from time import time
 import anthropic
 from dotenv import load_dotenv
 
-client = anthropic.Anthropic()
 
-print("ANTHROPIC_API_KEY presente?", "ANTHROPIC_API_KEY" in os.environ)
-print("Tutte le chiavi che contengono ANTHROPIC:", [k for k in os.environ if "ANTHROPIC" in k.upper()])
+from dotenv import load_dotenv
+import os
+
+load_dotenv("C:\\Users\\raffa\\PycharmProjects\\Scartellato\\.env")
+client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 
 def call_llm(system: str, user: str, temperature: float = 0.7) -> str:
-    """Una chiamata LLM , ritorna solo la stringa del testo ."""
-    import os
-
-    LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.md")
-    log = open(LOG_PATH, "a", encoding="utf-8")
+    log_step("call_llm:start", system_preview=system[:200], user=user, temperature=temperature)
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=2048,
-        cache_control={"type": "ephemeral"},
         system=system,
         messages=[{"role": "user", "content": user}],
         temperature=temperature,
     )
-    log.write(json.dumps({"Step": "create d'agent", "Response": response.content[0].text, "Time": time()}))
-    log.close()
-    return response.content[0].text
+    text = response.content[0].text
+    log_step("call_llm:end", response=text)
+    return text
+
+
+
+def log_step(step: str, **data) -> None:
+    """Scrive una riga di log JSON con lo step corrente + dati extra.
+    Stesso formato usato in call_llm, ma centralizzato per non ripetere
+    apertura/chiusura del file in ogni funzione."""
+    LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.md")
+    entry = {"step": step, "time": time()}
+    entry.update(data)
+    with open(LOG_PATH, "a", encoding="utf-8") as log:
+        log.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
 
 
 if __name__ == "__main__":
-    load_dotenv()
-    print(os.environ.get("ANTHROPIC_API_KEY"))
+    final_state = run_pipeline(n_programs=50)
+    metrics = compute_metrics(final_state, n_requested=100)
+    print(json.dumps(metrics, indent=2))
