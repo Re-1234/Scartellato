@@ -1,7 +1,9 @@
 from dataclasses import is_dataclass, fields
 
-from lark import Transformer, Token, Tree
+from lark import Transformer, Token, Tree, v_args
 from code.AnalisiSintattica.Transformer import *
+
+righe_nodi: dict[int, int] = {}
 
 class AST_Transformer(Transformer):
     TOKEN_DA_SCARTARE = {
@@ -12,176 +14,265 @@ class AST_Transformer(Transformer):
         'PARAMETRI_TK', 'CCASTA',  'SCCASCIA','ASPE','PRINT'
     }
 
+
+
     def filtra(self, figli): #funzione per filtrare i token non necessari
         return [c for c in figli
                 if not (hasattr(c, 'type') and c.type in self.TOKEN_DA_SCARTARE)]
 
 
-    #RADICE DELL ALBERO
-    def start(self,figli):
-        return Start(program=figli)
+
 
     # TIPI PRIMITIVI
-    def numero (self,figli):
+    @v_args(meta=True)
+    def numero (self,figli,meta):
         token = figli[0]
-        return Numr(value=float(token))
+        nodo =Numr(value=float(token))
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def stringa (self,figli):
+    @v_args(meta=True)
+    def stringa (self,figli,meta):
         token =figli[0]
-        return Stringa(value=str(token[2:-2]))
+        nodo=Stringa(value=str(token[2:-2]))
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def boolean (self,figli):
+    @v_args(meta=True)
+    def boolean (self,figli,meta):
         token = figli[0]
-        return Boolean(value=token)
+        nodo=Boolean(value=token)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def carattere (self,figli):
+    @v_args(meta=True)
+    def carattere (self,figli,meta):
         token = figli[0]
-        return Carattr(value=str(token[1:-1]))
+        nodo=Carattr(value=str(token[1:-1]))
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def swap(self, figli):
+    @v_args(meta=True)
+    def swap(self, figli,meta):
         left,swap, right = self.filtra(figli)
-        return OpBin(op=str(swap),left=left ,right=right)
+        nodo=OpBin(op=str(swap),left=left ,right=right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def tipo(self, figli):
+    @v_args(meta=True)
+    def tipo(self, figli,meta):
         token = figli[0]  # Il token grezzo (es. Token('NUMR_TK', 'numr'))
-        return TipoDato(
-            nome=token.value,
-            linea=token.line,
-            colonna=token.column
-        )
+        nodo = TipoDato(nome=token.value,linea=token.line,colonna=token.column)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
     #OPERAZIONI BINARIE
-    def somma (self,figli):
+    @v_args(meta=True)
+    def somma (self,figli,meta):
         var1 = figli[0]
         operatore = figli[1]
         var2 = figli[2]
-        return OpBin(op=str(operatore), left=var1, right=var2)
+        nodo=OpBin(op=str(operatore), left=var1, right=var2)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def incremento_destro(self,figli):
+    @v_args(meta=True)
+    def incremento_destro(self,figli,meta):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
-        return OpBin(op=str(operatore), left=variabile, right=None)
+        nodo=OpBin(op=str(operatore), left=variabile, right=None)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def menmen(self,figli):
+    @v_args(meta=True)
+    def menmen(self,figli,meta):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
-        return OpBin(op=str(operatore), left=variabile, right=None)
+        nodo=OpBin(op=str(operatore), left=variabile, right=None)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def maggiore(self,figli):
-        return OpBin(op=">", left=figli[0], right=figli[2])
+    @v_args(meta=True)
+    def maggiore(self,figli,meta):
+        nodo= OpBin(op=">", left=figli[0], right=figli[2])
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def minore(self, figli):
-        return OpBin(op="<", left=figli[0], right=figli[2])
+    @v_args(meta=True)
+    def minore(self, figli,meta):
+        nodo = OpBin(op="<", left=figli[0], right=figli[2])
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def uguale(self,figli):
+    @v_args(meta=True)
+    def uguale(self,figli,meta):
         variabile1 = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         variabile2 = self.filtra(figli)[2]
         print("FIGLI equals:")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
-        return OpBin(op= str(operatore),left=variabile1,right=variabile2)
 
-    def addizioneuguale(self,figli):
+        nodo=OpBin(op= str(operatore),left=variabile1,right=variabile2)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def addizioneuguale(self,figli,meta):
         left , op1 , right = self.filtra(figli)
-        return OpBin(op = str(op1),left = left , right = right)
+        nodo=OpBin(op = str(op1),left = left , right = right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def menouguale(self,figli):
+    @v_args(meta=True)
+    def menouguale(self,figli,meta):
         left , op1 , right = self.filtra(figli)
-        return OpBin(op = str(op1),left = left , right = right)
+        nodo=OpBin(op = str(op1),left = left , right = right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-
-    def and_exp(self,figli):
+    @v_args(meta=True)
+    def and_exp(self,figli,meta):
          left , op1 , right = self.filtra(figli)
-         return OpBin(op = str(op1),left = left,right = right)
+         nodo=OpBin(op = str(op1),left = left , right = right)
+         righe_nodi[id(nodo)] = meta.line
+         return nodo
 
-    def or_exp(self,figli):
+    @v_args(meta=True)
+    def or_exp(self,figli,meta):
         left,op1,right = self.filtra(figli)
-        return OpBin(op = str(op1),left = left,right = right)
+        nodo=OpBin(op = str(op1),left = left , right = right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def sottrazione (self,figli):
+    @v_args(meta=True)
+    def sottrazione (self,figli,meta):
         var1 = figli[0]
         operatore = self.filtra(figli)[1]
         var3 = self.filtra(figli)[2]
-        return OpBin(op= str(operatore), left=var1, right=var3)
+        nodo=OpBin(op = str(operatore),left = var1, right = var3)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def moltiplicazione(self, figli):
+    @v_args(meta=True)
+    def moltiplicazione(self, figli,meta):
         var1 = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         var3 = self.filtra(figli)[2]
-        return OpBin(op=operatore, left=var1, right=var3)
+        nodo=OpBin(op=str(operatore), left=var1, right=var3)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def divisione(self, figli):
+    @v_args(meta=True)
+    def divisione(self, figli,meta):
        var1,operatore, var3 = self.filtra(figli)
-       return OpBin(op=operatore, left=var1, right=var3)
+       nodo=OpBin(op=str(operatore), left = var1, right = var3)
+       righe_nodi[id(nodo)] = meta.line
+       return nodo
 
-
-    def resto(self,figli):
+    @v_args(meta=True)
+    def resto(self,figli,meta):
         var1 = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         var3 = self.filtra(figli)[2]
-        return OpBin(op=operatore, left=var1, right=var3)
+        nodo = OpBin(op = str(operatore), left = var1, right = var3)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def variabile_semplice(self, figli):
+    @v_args(meta=True)
+    def variabile_semplice(self, figli,meta):
         id_token = self.filtra(figli)[0]
-        return Variabile(nome=str(id_token), index=-1, is_array=False)
+        nodo= Variabile(nome=str(id_token), index=-1, is_array=False)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def variabile_array(self, figli):
+    @v_args(meta=True)
+    def variabile_array(self, figli,meta):
         nodi = self.filtra(figli)
         if len(nodi) == 2:
             index_tok, id_token = nodi  # [NUMERO, ID]
-            return Variabile(nome=str(id_token), index=int(index_tok), is_array=True)
+            nodo=Variabile(nome=str(id_token), index=int(index_tok), is_array=True)
+            righe_nodi[id(nodo)] = meta.line
+            return nodo
         else:
             id_token = nodi[0]  # solo [ID], array senza dimensione
-            return Variabile(nome=str(id_token), index=-1, is_array=True)
+            nodo= Variabile(nome=str(id_token), index=-1, is_array=True)
+            righe_nodi[id(nodo)] = meta.line
+            return nodo
 
-    def dichiarazione(self, figli):
+    @v_args(meta=True)
+    def dichiarazione(self, figli,meta):
         nodi = self.filtra(figli)
         tipo = nodi[0]
         nome = nodi[1]
         valore = nodi[2] if len(nodi) > 2 else None
-        return Dichiarazione(tipo=tipo, nome=nome, valore=valore)
+        nodo =Dichiarazione(tipo=tipo, nome=nome, valore=valore)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def assegnazione(self,figli):
+    @v_args(meta=True)
+    def assegnazione(self,figli,meta):
         var1 = self.filtra(figli)[0]
         var2 = self.filtra(figli)[1]
-        return OpBin(op='=', left=var1, right=var2)
+        nodo=OpBin(op='=', left=var1, right=var2)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-
-    def aspe(self,figli):
+    @v_args(meta=True)
+    def aspe(self,figli,meta):
         condition , corpo = self.filtra(figli)
-        return Aspe(condition, corpo)
+        nodo=Aspe(condition, corpo)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def mettimca_completo(self,figli):
+    @v_args(meta=True)
+    def mettimca_completo(self,figli,meta):
         print("METTIMCA figli:")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
         op, allora, altrimenti = self.filtra(figli)
-        return Mettimmca(op,allora,altrimenti)
+        nodo=Mettimmca(op,allora,altrimenti)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def mettimca_senzaelse(self,figli):
+    @v_args(meta=True)
+    def mettimca_senzaelse(self,figli,meta):
         op , allora = self.filtra(figli)
-        return Mettimmca(op,allora,altrimenti=None)
+        nodo= Mettimmca(op,allora,altrimenti=None)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-
-    def ritornaStatem(self,figli):
+    @v_args(meta=True)
+    def ritornaStatem(self,figli,meta):
         valor = self.filtra(figli)
-        return ReturnStatement(valor)
+        nodo= ReturnStatement(valor)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def blocco(self, figli):
-        return Block(statements=figli)
+    @v_args(meta=True)
+    def blocco(self, figli,meta):
+        nodo= Block(statements=figli)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def sezione_parametri(self, figli):
-        return [f for f in figli if isinstance(f, Parametro)]
+    @v_args(meta=True)
+    def sezione_parametri(self, figli,meta):
+        nodo=[f for f in figli if isinstance(f, Parametro)]
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def parametro(self, figli):
+    @v_args(meta=True)
+    def parametro(self, figli,meta):
         tipo, value = self.filtra(figli)
         print("parametri figli:")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
-        return Parametro(tipo=tipo, nome = value)
+        nodo=Parametro(tipo=tipo, nome = value)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def main(self, figli):
+    @v_args(meta=True)
+    def main(self, figli,meta):
 
         nodi = self.filtra(figli)
         print("FIGLI MAIN_DEF", flush=True)
@@ -191,14 +282,17 @@ class AST_Transformer(Transformer):
         if len(nodi) == 2:
             nome,corpo =nodi
             ritorno= "vacant"
-            return  Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
+            nodo= Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
+            righe_nodi[id(nodo)] = meta.line
+            return  nodo
         elif len(nodi) == 3:
             ritorno, nome, corpo = nodi
+            nodo=Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
+            righe_nodi[id(nodo)] = meta.line
+            return  nodo
 
-        return  Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
-
-
-    def funzione_semplice(self, figli):
+    @v_args(meta=True)
+    def funzione_semplice(self, figli,meta):
         tipo, nome, parametri, blocco = self.filtra(figli)
         if parametri is None:
             lista = []
@@ -207,9 +301,12 @@ class AST_Transformer(Transformer):
             lista = parametri
         else:
             lista = [parametri]
-        return Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco,is_array=False)
+        nodo =Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco,is_array=False)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def funzione_array(self, figli):
+    @v_args(meta=True)
+    def funzione_array(self, figli,meta):
 
         tipo, nome, parametri, blocco = self.filtra(figli)
         print("FIGLI func array")
@@ -222,9 +319,12 @@ class AST_Transformer(Transformer):
             lista = parametri
         else:
             lista = [parametri]
-        return Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco, is_array=True)
+        nodo=Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco, is_array=True)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def funzione_void(self, figli):
+    @v_args(meta=True)
+    def funzione_void(self, figli,meta):
         tipo, nome, parametri, blocco = self.filtra(figli)
         if parametri is None:
             lista = []
@@ -233,9 +333,12 @@ class AST_Transformer(Transformer):
             lista = parametri
         else:
             lista = [parametri]
-        return Mestier (ritorno=str(tipo), nome=nome,parametri=lista,corpo=blocco,is_array=False)
+        nodo=Mestier (ritorno=str(tipo), nome=nome,parametri=lista,corpo=blocco,is_array=False)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def costruttore(self, figli):
+    @v_args(meta=True)
+    def costruttore(self, figli,meta):
         parametri , corpo = self.filtra(figli)
         print("FIGLI COSTRUTTORE:")
         for i, f in enumerate(figli):
@@ -247,9 +350,12 @@ class AST_Transformer(Transformer):
             lista = parametri
         else:
             lista = [parametri]
-        return Costruttore(parametri=lista, corpo=corpo)
+        nodo=Costruttore(parametri=lista, corpo=corpo)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def robba(self , figli):
+    @v_args(meta=True)
+    def robba(self , figli,meta):
         nodi= self.filtra(figli)
 
         print("CLASSE FIGLI")
@@ -273,9 +379,12 @@ class AST_Transformer(Transformer):
             elif tipo_nodo == "list":
                 variabili.extend(nodo)
 
-        return Robba(nome=nome, costruttore=costruttore, variabili=variabili, funzioni=funzioni)
+        nodo=Robba(nome=nome, costruttore=costruttore, variabili=variabili, funzioni=funzioni)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def campi(self, figli):
+    @v_args(meta=True)
+    def campi(self, figli,meta):
         risultato = []
         for f in figli:
             tipo_nodo = type(f).__name__
@@ -283,28 +392,39 @@ class AST_Transformer(Transformer):
                 risultato.extend(f)
             else:
                 risultato.append(f)
-        return risultato
+        nodo=risultato
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-
-    def ambress_ambress(self,figli):
+    @v_args(meta=True)
+    def ambress_ambress(self,figli,meta):
         declaration, condizione , varOp, corpo = self.filtra(figli)
-        return Ambress_Ambress(declaration, condizione, varOp,corpo )
+        nodo=Ambress_Ambress(declaration, condizione, varOp,corpo )
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def call_stmt(self, figli):
+    @v_args(meta=True)
+    def call_stmt(self, figli,meta):
         nodi = self.filtra(figli)
         nomefunc = nodi[0]  # Variabile con il nome della funzione
         args = nodi[1:]  # lista di tutti gli argomenti dopo il nome
-        return CallStmt(nome_func=nomefunc , args=args)
+        nodo=CallStmt(nome_func=nomefunc , args=args)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def returnstatement(self, figli):
+    @v_args(meta=True)
+    def returnstatement(self, figli,meta):
         nodi = self.filtra(figli)
         valore = nodi[0] if len(nodi) > 0 else None
-        return ReturnStatement(valore)
+        nodo=ReturnStatement(valore)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
     def break_statement(self, figli):
         return Break()
 
-    def chiamata_oggetto(self,figli):
+    @v_args(meta=True)
+    def chiamata_oggetto(self,figli,meta):
 
         print("CHIAMATA oggetto figli:")
         for i, f in enumerate(figli):
@@ -313,9 +433,12 @@ class AST_Transformer(Transformer):
         nome = nodi[0]
         variabili = nodi[1]
         parametri1 = nodi[2:] if len(nodi) > 2 else None
-        return ChiamataOggetto(nome = nome , variabile = variabili , Parametri = parametri1)
+        nodo=  ChiamataOggetto(nome = nome , variabile = variabili , Parametri = parametri1)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def chiamata_costruttore(self,figli):
+    @v_args(meta=True)
+    def chiamata_costruttore(self,figli,meta):
 
         print("CHIAMATA COSTRUTTORE figli:")
         for i, f in enumerate(figli):
@@ -323,23 +446,31 @@ class AST_Transformer(Transformer):
         nodi = self.filtra(figli)
         nomevar =nodi[0]
         parametri = nodi[1:] if len(nodi) > 2 else None
-        return ChiamataCostruttore(nome=nomevar,parametri=parametri)
+        nodo=ChiamataCostruttore(nome=nomevar,parametri=parametri)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-    def accesso_campo(self,figli):
+    @v_args(meta=True)
+    def accesso_campo(self,figli,meta):
         variabile,campo = self.filtra(figli)
-        return AccessoCampo(variabile=variabile, campo=campo)
+        nodo=AccessoCampo(variabile=variabile, campo=campo)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-
-    def start(self, figli):
+    # RADICE DELL ALBERO
+    @v_args(meta=True)
+    def start(self, figli,meta):
         """La regola 'start' ha un solo figlio: l'espressione intera."""
         nodi = self.filtra(figli)
         print(" FIGLI START")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
+        nodo=Start(program=nodi)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
-        return Start(program=nodi)
-
-    def stampante(self, figli):
+    @v_args(meta=True)
+    def stampante(self, figli,meta):
         print(" FIGLI stampa ")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
@@ -354,7 +485,9 @@ class AST_Transformer(Transformer):
         # 3. Estrai i dati dalla lista pulita locale
         valore1 = str(elementi_puliti[0])
         variabili1 = elementi_puliti[1:]
-        return Arape_a_vocca(valore = valore1,variabili = variabili1)
+        nodo=Arape_a_vocca(valore = valore1,variabili = variabili1)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
 
 

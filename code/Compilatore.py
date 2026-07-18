@@ -130,6 +130,9 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore("""
+
+nbruogglio d = ??5??!
+
 vacant mestier stampa_saluto ) guagliuni : numr n ( }
     numr risultato = n!
 {
@@ -143,9 +146,9 @@ robba Persona }
 
 Uè)( }
     numr x = 10!
-    numr y = 3!
+    numr y = d!
     mettimcà) x > y ( }
-        x = x - 1!
+        x = x - d!
     {
     jamm_ja : stampa_saluto ) guagliuni : x ( !
 {
