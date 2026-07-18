@@ -130,21 +130,24 @@ def compilatore(source: str) -> CompileResult:
     return CompileResult(True)
 
 compilatore("""
-    vacant mestier stampa ) guagliuni : numr x ( }
-        numr doppio = x!
+vacant mestier stampa_saluto ) guagliuni : numr n ( }
+    numr risultato = n!
+{
+
+robba Persona } 
+    numr eta!
+    o_mast ) guagliuni : numr e ( }
+        eta = e!
     {
-    
-    Uè)( }
-        numr a = 10!
-        numr b = 3!
-            mettimcà) a > b ( }
-                numr risultato = a!
-            {
-            aspe) b < a ( }
-                b += 1!
-            {
-        jamm_ja : stampa ) guagliuni : a ( !
-        
+{
+
+Uè)( }
+    numr x = 10!
+    numr y = 3!
+    mettimcà) x > y ( }
+        x = x - 1!
     {
+    jamm_ja : stampa_saluto ) guagliuni : x ( !
+{
     
     """)
