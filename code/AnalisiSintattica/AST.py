@@ -192,14 +192,21 @@ class AST_Transformer(Transformer):
             nome,corpo =nodi
             ritorno= "vacant"
             return  Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
-        else:
-            ritorno,nome, corpo = nodi
+        elif len(nodi) == 3:
+            ritorno, nome, corpo = nodi
+
         return  Mestier(ritorno=str(ritorno), nome=Variabile(nome=str(nome),index = -1,is_array=False),parametri=[],corpo=corpo,is_array=False)
 
 
     def funzione_semplice(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        lista = [parametri]
+        if parametri is None:
+            lista = []
+        elif isinstance(parametri, list):
+            # Se è già una lista (es. [P1, P2]), la teniamo così com'è!
+            lista = parametri
+        else:
+            lista = [parametri]
         return Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco,is_array=False)
 
     def funzione_array(self, figli):
@@ -208,12 +215,24 @@ class AST_Transformer(Transformer):
         print("FIGLI func array")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
-        lista = [parametri]
+        if parametri is None:
+            lista = []
+        elif isinstance(parametri, list):
+            # Se è già una lista (es. [P1, P2]), la teniamo così com'è!
+            lista = parametri
+        else:
+            lista = [parametri]
         return Mestier(ritorno=tipo.nome, nome=nome,parametri=lista,corpo=blocco, is_array=True)
 
     def funzione_void(self, figli):
         tipo, nome, parametri, blocco = self.filtra(figli)
-        lista = [parametri]
+        if parametri is None:
+            lista = []
+        elif isinstance(parametri, list):
+            # Se è già una lista (es. [P1, P2]), la teniamo così com'è!
+            lista = parametri
+        else:
+            lista = [parametri]
         return Mestier (ritorno=str(tipo), nome=nome,parametri=lista,corpo=blocco,is_array=False)
 
     def costruttore(self, figli):
@@ -221,7 +240,14 @@ class AST_Transformer(Transformer):
         print("FIGLI COSTRUTTORE:")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
-        return Costruttore(parametri, corpo)
+        if parametri is None:
+            lista = []
+        elif isinstance(parametri, list):
+            # Se è già una lista (es. [P1, P2]), la teniamo così com'è!
+            lista = parametri
+        else:
+            lista = [parametri]
+        return Costruttore(parametri=lista, corpo=corpo)
 
     def robba(self , figli):
         nodi= self.filtra(figli)

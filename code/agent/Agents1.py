@@ -376,7 +376,8 @@ numr doppio = n!
 
 Uè)( }
 jamm_ja : saluta ) guagliuni : 5 ( !
-{""",
+{
+""",
 ]
 
 
@@ -644,121 +645,68 @@ def compute_metrics(state: dict, n_requested: int) -> dict:
 # ============================================================
 
 def run_pipeline(n_programs: int, max_repairs: int = 5, max_regenerations: int = 3) -> dict:
-    """
-    Per ogni programma richiesto:
-      - il Generator (Agente 1) genera un programma, eventualmente guidato
-        da un feedback sull'esito del tentativo precedente;
-      - l'Agente 2 fa da REPAIR finche' il programma non compila (fino a
-        max_repairs tentativi);
-      - una volta che compila, l'Agente 2 fa da TESTER: inserisce i test
-        nel programma e produce l'output atteso;
-      - il programma con i test viene eseguito davvero e il suo stdout
-        confrontato con l'output atteso;
-      - se coincidono il programma e' valido e viene salvato; altrimenti
-        si torna al Generator con un feedback preciso su cosa non ha
-        funzionato (fino a max_regenerations rigenerazioni).
-    """
     _valida_few_shot()
     state = new_state()
+    log_step("run_pipeline:start", n_programs=n_programs)
 
-    import os
+    for i in range(n_programs):
+        feedback = None
+        successo = False
 
-    import os
+        for regen in range(max_regenerations + 1):
+            program = generate_code(feedback=feedback)
+            log_step("pipeline:generate_code", i=i, regen=regen, program=program)
 
-    LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.md")
-
-    with open(LOG_PATH, "w", encoding="utf-8") as log:
-        for i in range(n_programs):
-            feedback = None
-            successo = False
-
-            for regen in range(max_regenerations + 1):
-                # --- 1. AGENTE 1: GENERATOR ---
-                program = generate_code(feedback=feedback)
-                log.write(json.dumps({
-                    "step": "generate_code", "regen": regen, "program": program, "time": time(),
-                }) + "\n")
-
-                # --- 2. COMPILAZIONE + AGENTE 2 (repair) ---
-                compiled_ok = False
-                result = None
-                for attempt in range(max_repairs + 1):
-                    result = compilatore(program)
-                    log.write(json.dumps({
-                        "step": "compile", "attempt": attempt, "ok": result.ok,
-                        "errors": getattr(result, "errors", None), "time": time(),
-                    }) + "\n")
-                    if result.ok:
-                        compiled_ok = True
-                        break
-                    program = repair_program(program, result.errors)
-                    log.write(json.dumps({
-                        "step": "repair", "attempt": attempt, "program": program, "time": time(),
-                    }) + "\n")
-
-                if not compiled_ok:
-                    feedback = (
-                        f"Il programma non compila dopo {max_repairs} tentativi di repair. "
-                        f"Ultimi errori del compilatore: {result.errors if result else 'n/d'}"
-                    )
-                    continue  # richiedi una nuova generazione da zero
-
-                # --- 3. AGENTE 2: TESTER ---
-                try:
-                    program_con_test, output_attesi = test_code(program)
-                except ValueError as e:
-                    feedback = f"Il tester non ha prodotto una risposta valida: {e}"
-                    continue
-
-                # il programma con i test deve compilare a sua volta
-                result_test = compilatore(program_con_test)
-                log.write(json.dumps({
-                    "step": "compile_with_tests", "ok": result_test.ok,
-                    "errors": getattr(result_test, "errors", None), "time": time(),
-                }) + "\n")
-                if not result_test.ok:
-                    feedback = (
-                        "Il programma con i test inseriti dal tester non compila piu': "
-                        f"{result_test.errors}"
-                    )
-                    continue
-
-                # --- 4. ESECUZIONE E CONFRONTO STDOUT ---
-                try:
-                    stdout_reale = esegui_programma(program_con_test)
-                except NotImplementedError:
-                    raise  # errore di configurazione: va risolto, non "recuperato"
-                except Exception as e:
-                    feedback = f"Errore durante l'esecuzione del programma: {e}"
-                    log.write(json.dumps({"step": "run_error", "error": str(e), "time": time()}) + "\n")
-                    continue
-
-                log.write(json.dumps({
-                    "step": "run", "stdout": stdout_reale, "expected": output_attesi, "time": time(),
-                }) + "\n")
-
-                if confronta_output(stdout_reale, output_attesi):
-                    state["valid_programs"].append(program_con_test)
-                    update_coverage(state, program)
-                    log.write(json.dumps({"step": "test_passed", "time": time()}) + "\n")
-                    successo = True
+            compiled_ok = False
+            result = None
+            for attempt in range(max_repairs + 1):
+                result = compilatore(program)
+                log_step("pipeline:compile", i=i, regen=regen, attempt=attempt,
+                          ok=result.ok, errors=getattr(result, "errors", None))
+                if result.ok:
+                    compiled_ok = True
                     break
-                else:
-                    feedback = (
-                        "I test sono falliti. Output atteso:\n"
-                        f"{output_attesi}\nOutput ottenuto dall'esecuzione:\n{stdout_reale}"
-                    )
-                    log.write(json.dumps({"step": "test_failed", "feedback": feedback, "time": time()}) + "\n")
+                program = repair_program(program, result.errors)
 
-            state["all_attempts"] += 1
-            print(
-                f"[{i + 1}/{n_programs}] esito={'OK' if successo else 'FALLITO'} "
-                f"validi={len(state['valid_programs'])} "
-                f"coverage={sum(1 for v in state['coverage'].values() if v > 0)}/{len(PRODUCTIONS)}"
-            )
+            if not compiled_ok:
+                feedback = (f"Il programma non compila dopo {max_repairs} tentativi di repair. "
+                            f"Ultimi errori del compilatore: {result.errors if result else 'n/d'}")
+                continue
+
+            try:
+                program_con_test, output_attesi = test_code(program)
+            except ValueError as e:
+                feedback = f"Il tester non ha prodotto una risposta valida: {e}"
+                continue
+
+            result_test = compilatore(program_con_test)
+            log_step("pipeline:compile_with_tests", i=i, regen=regen, ok=result_test.ok,
+                      errors=getattr(result_test, "errors", None))
+            if not result_test.ok:
+                feedback = f"Il programma con i test non compila piu': {result_test.errors}"
+                continue
+
+            try:
+                stdout_reale = esegui_programma(program_con_test)
+            except Exception as e:
+                feedback = f"Errore durante l'esecuzione del programma: {e}"
+                continue
+
+            if confronta_output(stdout_reale, output_attesi):
+                state["valid_programs"].append(program_con_test)
+                update_coverage(state, program)
+                log_step("pipeline:test_passed", i=i, regen=regen)
+                successo = True
+                break
+            else:
+                feedback = (f"I test sono falliti. Output atteso:\n{output_attesi}\n"
+                            f"Output ottenuto:\n{stdout_reale}")
+
+        state["all_attempts"] += 1
+        log_step("pipeline:esito", i=i, successo=successo,
+                  n_validi=len(state["valid_programs"]))
 
     return state
-
 
 import json
 import os
