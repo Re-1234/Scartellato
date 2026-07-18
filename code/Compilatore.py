@@ -130,7 +130,7 @@ def compilatore(source: str) -> CompileResult:
     return CompileResult(True)
 
 compilatore("""
-            numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
+numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
                nbruogglio stringa = ??a + b??  !
                numr ][ s !
                burdell ][ g ! 
@@ -241,6 +241,4 @@ compilatore("""
               
               ccàsta ! 
             {
-             
-        
     """)
