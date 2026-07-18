@@ -20,12 +20,12 @@ def accesso_base(transpiler, nome):
         return f"self.{nome}" if transpiler.in_costruttore else f"self->{nome}"
     return nome
 
-def calcola_tipo(self, node):
+def calcola_tipo(transpiler, node):
     """Cerca il tipo nella symbol table, se non c'è lo deduce ricorsivamente."""
     if node is None:
         return None
     try:
-        return self.tipo_di(node)
+        return transpiler.tipo_di(node)
     except Exception:
         cls = node.__class__.__name__
         if cls == "Numr": return "numr"
@@ -33,8 +33,8 @@ def calcola_tipo(self, node):
         if cls == "Boolean": return "lota"
         if cls == "Carattr": return "lettr"
         if cls == "OpBin":
-            t_sx = self._calcola_tipo(node.left)
-            t_dx = self._calcola_tipo(node.right)
+            t_sx = transpiler._calcola_tipo(node.left)
+            t_dx = transpiler._calcola_tipo(node.right)
             # Nel tuo linguaggio string + something = string
             if t_sx == "nbruogglio" or t_dx == "nbruogglio":
                 return "nbruogglio"

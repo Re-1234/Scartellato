@@ -1,3 +1,4 @@
+from AnalisiSintattica.AST import righe_nodi
 from code.AnalisiSemantica.SemanticError import SemanticError
 from code.AnalisiSemantica.SymbolTable import SymbolTable
 
@@ -95,7 +96,8 @@ class AnalisiSemantica:
     def visit_Variabile(self, node: Variabile):
         info = self.symbolTable.lookup(node.nome)
         if info is None:
-            self.errori.append(f"Variabile '{node.nome}' non dichiarata")
+            riga = righe_nodi.get(id(node), "sconosciuta")
+            self.errori.append(f"riga {riga}: variabile '{node.nome}' non dichiarata")
         if isinstance(info, dict):
             self.burdell_info[id(node)] = info.get('is_burdell', False)
             return info.get('tipo', 'burdell')
