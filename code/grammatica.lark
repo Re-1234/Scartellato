@@ -72,10 +72,7 @@
         start:  top_level* main_def top_level*
              |  top_level+
 
-        main_def: main_opzione MAIN TONDASINISTRA TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> main
-
-        ?main_opzione: VOID |
-
+        main_def: [VOID] MAIN TONDASINISTRA TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> main
 
         ?top_level: funzione
                   | classe

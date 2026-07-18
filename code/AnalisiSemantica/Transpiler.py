@@ -737,22 +737,28 @@ class Transpiler:
 
                 # TRUCCO: Se il valore valutato è racchiuso tra virgolette, è una stringa fissa!
                 if valore_c.startswith('"') and valore_c.endswith('"'):
-                    # Togliamo le virgolette " " all'inizio e alla fine
                     testo_fisso = valore_c[1:-1]
-                    # In C, se il testo contiene un %, va raddoppiato in %% per non confondere la printf
                     testo_fisso = testo_fisso.replace("%", "%%")
 
-                    # Lo uniamo direttamente alla stringa di formato! Nessun %s.
+                    # CONTROLLO SPAZIATURE ---
+                    # Se la stringa di formato ha già qualcosa, non finisce con spazio,
+                    # e il nuovo testo non inizia con spazio, inseriamo uno spazio in mezzo.
+                    if stringa_formato and not stringa_formato.endswith(" ") and not testo_fisso.startswith(" "):
+                        stringa_formato += " "
+
                     stringa_formato += testo_fisso
 
                 else:
-                    # È una VERA variabile, usiamo la tabella dei tipi
+                    # È una VERA variabile
                     tipo = self.print_types.get(id(var))
+
+                    # --- NUOVO CONTROLLO SPAZIATURE PER LE VARIABILI ---
+                    if stringa_formato and not stringa_formato.endswith(" "):
+                        stringa_formato += " "
 
                     if tipo == "numr":
                         stringa_formato += "%d"
                         argomenti_c.append(valore_c)
-
                     elif tipo == "nbruogglio":
                         stringa_formato += "%s"
                         argomenti_c.append(valore_c)

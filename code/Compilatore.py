@@ -130,115 +130,21 @@ def compilatore(source: str) -> CompileResult:
     return CompileResult(True)
 
 compilatore("""
-numr ] [ mestier pippo ) guagliuni :  numr a , numr b ( } 
-               nbruogglio stringa = ??a + b??  !
-               numr ][ s !
-               burdell ][ g ! 
-               g -= stringa !
-               numr c1 = 4 +7 !
-               lota d = sasicchj !
-               nbruogglio x = ??2?? !
-               stringa -=  c1 + x !
-            
-                //controllo di burdell
-                burdell z !
-                z = a+b !
-                
-                aspe)2( }
-                    z = stringa !
-                    burdell p !
-                    p= z!
-                    z += stringa !
-                    stut_tutt !
-                {
-                s-= c1!
-               
-               //return 
-               ccàsta s!
+    vacant mestier stampa ) guagliuni : numr x ( }
+        numr doppio = x!
+    {
+    
+    Uè)( }
+        numr a = 10!
+        numr b = 3!
+            mettimcà) a > b ( }
+                numr risultato = a!
             {
-            
-             vacant mestier classeFunzioneMimmo )  ( }
-                    burdell a = ??ciao?? !
-                {
-            
-            
-             robba ciro }
-                numr c!
-                numr s!
-                nbruogglio apposo!    
-                nbruogglio r = ??sdfdaf?? !
-                burdell c1!  
-                lota d = sasicchj !
-                   
-                 o_mast ) ( }
-                    
-                    numr apposo !
-                    apposo = c !
-                    c1 = s!
-                    c1 -= r + c!  
-                    c=5+6+9!
-                   
-                    aspe)1(}
-                        jamm_ja : classeFunzioneMimmo)(!
-                        stut_tutt !
-                    {
-                               
-                    c1 = ??ciao??!
-                    
-                    c1 -= 1!
-                    c1= d !
-                    c1= s! 
-                {
-                 
-                 
-                 vacant mestier classeFunzioneMimmo )  ( }
-                    burdell a = ??ciao?? !
-                    c1 = 1!
-                {
-                        
+            aspe) b < a ( }
+                b += 1!
             {
-            
-             vacant Uè ) ( }
-                nbruogglio a = ??sifasf23?? !
-                nbruogglio v = ??sapposto?? !
-                numr s !
-                numr b!
-                
-                v -= s + a ! 
-                
-                numr ]1[ k! 
-                
-                jamm_ja : pippo ) guagliuni :  4 , 5 (  !
-                
-                
-                mettimcà ) 5<7( } 
-                    ciro c = c.o_mast)( !      //chiamata costruttore
-                    c.classeFunzioneMimmo)(!   //chiamata a oggetto 
-                    numr d = c.s!
-                     jamm_ja : classeFunzioneMimmo)(!
-                  
-                    numr s = 5 !
-                { allor_fa_accussi }
-                    burdell z = 9 !
-                {
-                
-                burdell c = a + v !
-                burdell test = 1!
-                test = ??ciao??!
-                test += 1!
-                
-                lota d = sasicchj!
-                d=friariell!
-                
-                arape_a_vocca)?? valore di d ?? -d -??valore di test ?? -test( !
-                
-              ambressAmbress ) numr c= 5 ! c<8 ! c++( }
-                mettimcà ) 3<4( }
-                    s = 4+2 !
-                    c <-> b !              
-                { 
-              {
-              
-              ccàsta ! 
-            {
+        jamm_ja : stampa ) guagliuni : a ( !
+        
+    {
+    
     """)
