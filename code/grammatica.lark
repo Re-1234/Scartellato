@@ -88,8 +88,10 @@
                    | if_stmt
                    | break_stmt
                    | return_stmt
-                   | oper_m nome_var_semplice TERMINATORE
-                   | nome_var_semplice oper_m TERMINATORE
+                   | nome_var_semplice MENMEN TERMINATORE -> menmen
+                   | nome_var_semplice PLUSPLUS TERMINATORE ->piupiu
+                   | PLUSPLUS nome_var_semplice TERMINATORE -> piupiu
+                   | MENMEN nome_var_semplice TERMINATORE -> menmen
                    | nome_var_semplice ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
                    | nome_var_semplice MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
                    | nome_var_semplice ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
@@ -98,10 +100,6 @@
                    | PRINT TONDASINISTRA STRINGA (ADDIZIONE expr_primary)* TONDADESTRA TERMINATORE -> stampante
                    | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
                    | nome_var_semplice "." nome_var_semplice -> accesso_campo
-
-
-        oper_m: PLUSPLUS -> piupiu
-               | MENMEN -> menmen
 
         // RETURN E BREAK
 
