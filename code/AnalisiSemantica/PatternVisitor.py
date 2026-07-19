@@ -181,7 +181,7 @@ class AnalisiSemantica:
 
             if funzione_vuole_array and not is_array_valore:
                 self.errori.append(f"La funzione '{self.funzione_corrente.nome.nome}' deve ritornare un array, "
-                    f"ma '{node.valore.nome}' non lo è ")
+                    f"ma '{node.valore.nome}' non lo è")
             if not funzione_vuole_array and is_array_valore:
                 self.errori.append(f"La funzione '{self.funzione_corrente.nome.nome}' ritorna uno scalare, "
                     f"ma '{node.valore.nome}' è un array")
@@ -274,7 +274,7 @@ class AnalisiSemantica:
         campo = next((v for v in classe.variabili if str(v.nome.nome) == nome_campo), None)
 
         if campo is None:
-            self.errori.append(f"Errore Campo '{nome_campo}' non esiste nella classe '{tipo_nome}'")
+            self.errori.append(f"Campo '{nome_campo}' non esiste nella classe '{tipo_nome}'")
 
         self.tipi_risolti[id(node)] = campo.tipo.nome
         return campo.tipo.nome
@@ -298,7 +298,7 @@ class AnalisiSemantica:
             self.errori.append(f"'{nome_funzione}' non è una funzione")
 
         if len(node.args) != len(funzione.parametri):
-            self.errori.append(f"Errore comparso nella riga {} e nella colonna {}  , '{nome_funzione}' si aspetta {len(funzione.parametri)} argomenti, "
+            self.errori.append(f"'{nome_funzione}' si aspetta {len(funzione.parametri)} argomenti, "
                                f"ricevuti {len(node.args)}"
                                )
 
@@ -329,7 +329,7 @@ class AnalisiSemantica:
     def visit_Aspe(self, node: Aspe):
         tipo_cond = self.visit(node.Condizione)
         if tipo_cond != "lota" and tipo_cond != "numr":
-            self.errori.append(f"Errore comparso nella riga {} e nella colonna {} La condizione del while deve essere booleana, o numr trovato '{tipo_cond}'")
+            self.errori.append(f"La condizione del while deve essere booleana, o numr trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
 
@@ -345,7 +345,7 @@ class AnalisiSemantica:
     def visit_Mettimmca(self, node: Mettimmca):
         tipo_cond = self.visit(node.condizione)
         if tipo_cond != "lota":
-            self.errori.append(f"Errore comparso nella riga {} e nella colonna {} , La condizione dell'if deve essere booleana, trovato '{tipo_cond}'")
+            self.errori.append(f"La condizione dell'if deve essere booleana, trovato '{tipo_cond}'")
 
         self.symbolTable.enterScope()
         self.visit(node.allora)
@@ -364,22 +364,36 @@ class AnalisiSemantica:
         if node.right is None:
             if node.op in ('++', '--'):
                 if lv != 'numr' and lv != 'burdell':
-                    self.errori.append(f"'Errore comparso nella riga {} e nella colonna {}, {node.op}' applicabile solo a numr e burdell ")
+                    self.errori.append(f"'{node.op}' applicabile solo a numr e burdell")
                 return 'numr'
 
         rv = self.visit(node.right)
 
-        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome):
+        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index == -1:
             if node.op not in ("-=", "+="):
-                self.errori.append(f"Errore comparso nella riga {} e nella colonna {} , Su un array puoi usare solo '-=' (aggiungi) o '+=' (rimuovi), non '{node.op} '")
+                self.errori.append(f"Su un array puoi usare solo '-=' (aggiungi) o '+=' (rimuovi), non '{node.op}'")
             info_array = self.symbolTable.lookup(node.left.nome)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
             tipo_valore = rv
 
             if tipo_array != "burdell" and tipo_array != tipo_valore:
-                self.errori.append(f"Errore comparso nella riga {} e nella colonna {} Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
+                self.errori.append(f"Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
                     f"da un array di '{tipo_array}'")
             return tipo_array
+
+
+        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
+            if node.op != "=" and node.op != "-" and node.op != "+":
+                self.errori.append(f"Su un array puoi usare solo = , non '{node.op}'")
+            info_array = self.symbolTable.lookup(node.left.nome)
+            tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
+            tipo_valore = rv
+
+            if tipo_array != "burdell" and tipo_array != tipo_valore:
+                self.errori.append(f"Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
+                    f"da un array di '{tipo_array}'")
+            return tipo_array
+
 
 
         if lv == "burdell" or rv == "burdell":
@@ -393,13 +407,13 @@ class AnalisiSemantica:
 
             if lv == "burdell" and node.op != '=':
                 nome = node.left.nome if isinstance(node.left, Variabile) else "?"
-                self.errori.append(f"'Errore comparso nella riga {} e nella colonna {} , {nome}' è 'burdell' non ancora inizializzata: "
+                self.errori.append(f"'{nome}' è 'burdell' non ancora inizializzata: "
                     f"il primo utilizzo deve essere un'assegnazione semplice '=', non '{node.op}'")
 
         # LOTA
         if lv == "lota" or rv == "lota":
             if node.op in ("+=", "-="):
-                self.errori.append(f"Errore comparso nella riga {} e nella colonna {} , Operatore '{node.op}' non applicabile a lota")
+                self.errori.append(f"Operatore '{node.op}' non applicabile a lota")
             if self.control_Ope_Bool(node.op):
                 return "lota"
 
@@ -414,7 +428,7 @@ class AnalisiSemantica:
             if node.op in ("+", "-=", "+="):
                 return 'nbruogglio'
             if self.control_Ope_Bool(node.op):
-                self.errori.append(f"BOTT_A_MUR: Ma che stai facenn!!!!!,Errore comparso nella riga {} e nella colonna {} non puoi fare operazioni booleane con tipo {lv}e tipo {rv}")
+                self.errori.append(f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {lv}e tipo {rv}")
 
 
         # NBRUOGGLIO con NUMR (prepend/append del numero come stringa)
@@ -438,7 +452,7 @@ class AnalisiSemantica:
                     self.tipi_risolti[id(node.left)] = lv  # ← era "nbruogglio", ora lv
                     self.symbolTable.update(node.left.nome, {'tipo': "nbruogglio", 'is_burdell': True})
                     return "nbruogglio"
-                self.errori.append(f"Errore comparso nella riga {} e nella colonna {} , Impossibile fare '{node.op}' tra  {lv}' e  {rv}: "
+                self.errori.append(f"Impossibile fare '{node.op}' tra  {lv}' e  {rv}: "
                     f"'{node.left.nome if isinstance(node.left, Variabile) else '?'}' "
                     f"è numr fisso e non può cambiare tipo")
 
@@ -459,22 +473,22 @@ class AnalisiSemantica:
                     return rv
                 else:
                     if not self._compatibili(tipo_attuale, rv):
-                        self.errori.append(f"Errore comparso nella riga {} e nella colonna {} Impossibile assegnare '{rv}' a '{nome}' "
+                        self.errori.append(f"Impossibile assegnare '{rv}' a '{nome}' "
                             f"che è di tipo '{tipo_attuale}'")
                     return tipo_attuale
 
         if rv == "burdell" and node.op != '=':
             nome = node.right.nome if isinstance(node.right, Variabile) else "?"
-            self.errori.append(f"'Errore comparso nella riga {} e nella colonna {} , {nome}' è 'burdell' non ancora inizializzata: "
+            self.errori.append(f"'{nome}' è 'burdell' non ancora inizializzata: "
                 f"il primo utilizzo deve essere un'assegnazione semplice '=', non '{node.op}'")
 
         # SWAP
         if node.op == '<->':
             if not self._compatibili(lv, rv):
-                self.errori.append(f"Errore comparso nella riga {} e nella colonna {} , Swap non valido: '{lv}' verso '{rv}'")
+                self.errori.append(f"Swap non valido: '{lv}' vs '{rv}'")
             return lv
 
-        self.errori.append(f"BOTT A MUR : Errore comparso nella riga {} e nella colonna {} , Tipi incompatibili: '{lv}' e '{rv}' con operatore '{node.op})
+        self.errori.append(f"BOTT A MUR : Tipi incompatibili: '{lv}' e '{rv}' con operatore '{node.op}'")
 
     def visit_Dichiarazione(self, node: Dichiarazione):
         tipo_dichiarato = node.tipo.nome
@@ -482,7 +496,7 @@ class AnalisiSemantica:
         is_array = node.nome.is_array
 
         if self.symbolTable.probe(nome_variabile):
-            self.errori.append(f"Errore comparso nella riga {} e nella colonna {} , Variabile '{nome_variabile}' già dichiarata")
+            self.errori.append(f"Variabile '{nome_variabile}' già dichiarata")
 
         tipo_finale = tipo_dichiarato
         if node.valore is not None:
@@ -498,7 +512,7 @@ class AnalisiSemantica:
                 tipo_finale = tipo_valore
             else:
                 if not self._compatibili(tipo_dichiarato, tipo_valore):
-                    self.errori.append(f"Errore comparso nella riga {node.tipo.linea} e nella col {node.tipo.colonna}): "
+                    self.errori.append(f"Errore (riga {node.tipo.linea}, col {node.tipo.colonna}): "
                         f"'{nome_variabile}' dichiarata come '{tipo_dichiarato}' "
                         f"ma assegnato '{tipo_valore}'")
                 self.symbolTable.addId(nome_variabile,

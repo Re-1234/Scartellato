@@ -123,6 +123,7 @@ def compilatore(source: str) -> CompileResult:
     analisiSemantica.visit(ast)
 
     if analisiSemantica.getErrori():
+        print(analisiSemantica.getErrori())
         return CompileResult(False,analisiSemantica.getErrori())
 
     generatore(analisiSemantica)
@@ -131,7 +132,7 @@ def compilatore(source: str) -> CompileResult:
 
 compilatore("""
 
-nbruogglio d = ??5??!
+    numr d = 5!
 
 vacant mestier stampa_saluto ) guagliuni : numr n ( }
     numr risultato = n!
@@ -147,10 +148,22 @@ robba Persona }
 Uè)( }
     numr x = 10!
     numr y = d!
+    burdell ][ ci!
+    ci]0[ = 4!
+    ci]0[ = ??ciao??!
+    ci]0[ = ci]0[ - 4!
+    ci]0[ = ci]0[ - ??cop??!
+    
     mettimcà) x > y ( }
-        x = x - d!
+        x = x + 1!
     {
     jamm_ja : stampa_saluto ) guagliuni : x ( !
 {
     
+vacant mestier aritmetic )guagliuni: nbruogglio f , numr c (}
+    numr k = 0!
+    aspe)sasicchj(}
+        --k!
+    {
+{    
     """)

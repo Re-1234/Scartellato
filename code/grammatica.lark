@@ -88,17 +88,20 @@
                    | if_stmt
                    | break_stmt
                    | return_stmt
-                   | nome_var ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
-                   | nome_var MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
-                   | nome_var ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
-                   | nome_var SWAP nome_var TERMINATORE  -> swap
+                   | oper_m nome_var_semplice TERMINATORE
+                   | nome_var_semplice oper_m TERMINATORE
+                   | nome_var_semplice ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
+                   | nome_var_semplice MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
+                   | nome_var_semplice ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
+                   | nome_var_semplice SWAP nome_var TERMINATORE  -> swap
                    | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
                    | PRINT TONDASINISTRA STRINGA (ADDIZIONE expr_primary)* TONDADESTRA TERMINATORE -> stampante
                    | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
                    | nome_var_semplice "." nome_var_semplice -> accesso_campo
 
 
-
+        oper_m: PLUSPLUS -> piupiu
+               | MENMEN -> menmen
 
         // RETURN E BREAK
 
@@ -121,9 +124,9 @@
 
         ?nome_var: ID -> variabile_semplice
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
-                | QUADRATASINISTRA NUMERO QUADRATADESTRA ID  -> variabile_array
 
         ?nome_var_semplice: ID -> variabile_semplice
+                           | ID QUADRATASINISTRA NUMERO QUADRATADESTRA ->variabile_array
 
 
         //CLASSI
@@ -225,8 +228,8 @@
                 | expr_unary
 
         ?expr_unary: NOT expr_unary
-                  | PLUSPLUS   expr_primary  -> incremento
-                  | MENMEN     expr_primary -> decremento
+                  | PLUSPLUS  expr_primary  -> incremento
+                  | MENMEN   expr_primary -> decremento
                   | expr_primary PLUSPLUS -> incremento_destro
                   | expr_primary MENMEN   -> decremento_destro
                   | expr_primary
@@ -236,6 +239,9 @@
                     | BOOLEAN -> boolean
                     | STRINGA -> stringa
                     | CARATTERE -> carattere
-                    | ID       -> variabile_semplice
+                    | nome_v
                     | nome_var_semplice "." O_MAST TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA -> chiamata_costruttore
                     | nome_var_semplice "." nome_var_semplice -> accesso_campo
+
+        nome_v: ID  -> variabile_semplice
+              | ID QUADRATASINISTRA NUMERO QUADRATADESTRA -> variabile_array

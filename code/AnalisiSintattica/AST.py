@@ -190,7 +190,7 @@ class AST_Transformer(Transformer):
     def variabile_array(self, figli,meta):
         nodi = self.filtra(figli)
         if len(nodi) == 2:
-            index_tok, id_token = nodi  # [NUMERO, ID]
+            id_token,index_tok  = nodi  # [NUMERO, ID]
             nodo=Variabile(nome=str(id_token), index=int(index_tok), is_array=True)
             righe_nodi[id(nodo)] = meta.line
             return nodo
