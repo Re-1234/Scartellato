@@ -55,7 +55,7 @@
         MAIN: "Uè"                  //main
         NULL: "Nuncsta_nient"      //null
         BREAK: "stut_tutt"      //break
-        CCASTA: "ccàsta"         //return
+        RETURN : "ccàsta"         //return
         TERMINATORE: "!"        //fine istruzione
         CHIAMATA: "jamm_ja"    // keyword per chiamata a funzione
         SWAP: "<->"           //swap dei valori
@@ -88,25 +88,17 @@
                    | if_stmt
                    | break_stmt
                    | return_stmt
-                   | nome_var_semplice MENMEN TERMINATORE -> menmen
-                   | nome_var_semplice PLUSPLUS TERMINATORE ->piupiu
-                   | PLUSPLUS nome_var_semplice TERMINATORE -> piupiu
-                   | MENMEN nome_var_semplice TERMINATORE -> menmen
-                   | nome_var_semplice ASSIGN assegnamento_composto TERMINATORE  -> assegnazione
-                   | nome_var_semplice MENOUGUALE assegnamento_composto TERMINATORE  -> menouguale
-                   | nome_var_semplice ADDIZIONEUGUALE assegnamento_composto TERMINATORE -> addizioneuguale
                    | nome_var_semplice SWAP nome_var TERMINATORE  -> swap
-                   | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" TERMINATORE -> call_stmt
                    | PRINT TONDASINISTRA STRINGA (ADDIZIONE expr_primary)* TONDADESTRA TERMINATORE -> stampante
-                   | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA TERMINATORE -> chiamata_oggetto
-                   | nome_var_semplice "." nome_var_semplice -> accesso_campo
+                   | assegnamento_composto "!"
+
 
         // RETURN E BREAK
 
-        return_stmt: CCASTA  nome_var TERMINATORE ->returnstatement
-                   | CCASTA TERMINATORE   ->returnstatement
+        return_stmt: RETURN  nome_var TERMINATORE ->returnstatement
+                   | RETURN TERMINATORE   ->returnstatement
 
-        break_stmt: BREAK TERMINATORE             -> break_statement
+        break_stmt: BREAK TERMINATORE      -> break_statement
 
         // DICHIARAZIONI DI VARIABILI
 
@@ -181,7 +173,7 @@
 
 
         valutazione :  nome_var PLUSPLUS -> incremento_destro
-                    |  PLUSPLUS  nome_var -> incremento_sinistra
+                    |  PLUSPLUS  nome_var -> incremento_sinistro
                     |  MENMEN  nome_var -> decremento_sinistro
                     |  nome_var MENMEN -> decremento_destro
                     |
@@ -194,10 +186,11 @@
 
         // ESPRESSIONI
 
-        ?assegnamento_composto: nome_var DIVISIONEUGUALE  expr_or
-                             | nome_var  MOLTIPLICAUGUALE expr_or
-                             | nome_var  ADDIZIONEUGUALE  expr_or
-                             | nome_var  MENOUGUALE       expr_or
+        ?assegnamento_composto: nome_var_semplice ASSIGN assegnamento_composto -> assegnazione
+                             | nome_var_semplice DIVISIONEUGUALE  expr_or -> divisioneuguale
+                             | nome_var_semplice MOLTIPLICAUGUALE expr_or -> moltiplicauguale
+                             | nome_var_semplice ADDIZIONEUGUALE  expr_or -> addizioneuguale
+                             | nome_var_semplice MENOUGUALE       expr_or -> menouguale
                              | expr_or
 
         ?expr_or: expr_or OR expr_and -> or_exp
@@ -226,20 +219,19 @@
                 | expr_unary
 
         ?expr_unary: NOT expr_unary
-                  | PLUSPLUS  expr_primary  -> incremento
-                  | MENMEN   expr_primary -> decremento
+                  | PLUSPLUS   expr_primary  -> incremento_sinistro
+                  | MENMEN     expr_primary -> decremento_sinistro
                   | expr_primary PLUSPLUS -> incremento_destro
                   | expr_primary MENMEN   -> decremento_destro
                   | expr_primary
 
-        ?expr_primary: TONDASINISTRA assegnamento_composto TONDADESTRA
+       ?expr_primary: TONDASINISTRA assegnamento_composto TONDADESTRA
                     | NUMERO  -> numero
                     | BOOLEAN -> boolean
                     | STRINGA -> stringa
                     | CARATTERE -> carattere
-                    | nome_v
+                    | nome_var_semplice  // <-- Sostituisce ID e l'accesso array singolo
                     | nome_var_semplice "." O_MAST TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA -> chiamata_costruttore
+                    | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" -> call_stmt
+                    | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA -> chiamata_oggetto
                     | nome_var_semplice "." nome_var_semplice -> accesso_campo
-
-        nome_v: ID  -> variabile_semplice
-              | ID QUADRATASINISTRA NUMERO QUADRATADESTRA -> variabile_array

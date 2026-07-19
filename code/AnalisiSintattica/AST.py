@@ -85,7 +85,15 @@ class AST_Transformer(Transformer):
         return nodo
 
     @v_args(meta=True)
-    def menmen(self,figli,meta):
+    def incremento_sinistro(self, figli,meta):
+        operatore  = self.filtra(figli)[0]
+        variabile= self.filtra(figli)[1]
+        nodo=OpBin(op=str(operatore), left=variabile, right=None)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def decremento_destro(self, figli,meta):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
         nodo=OpBin(op=str(operatore), left=variabile, right=None)
@@ -93,14 +101,38 @@ class AST_Transformer(Transformer):
         return nodo
 
     @v_args(meta=True)
+    def decremento_sinistro(self, figli,meta):
+        operatore = self.filtra(figli)[0]
+        variabile= self.filtra(figli)[1]
+        nodo=OpBin(op=str(operatore), left=variabile, right=None)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+
+    @v_args(meta=True)
     def maggiore(self,figli,meta):
+        print("maggiore figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
         nodo= OpBin(op=">", left=figli[0], right=figli[2])
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def maggioreuguale(self,figli,meta):
+        nodo =OpBin(op=">=", left=figli[0], right=figli[2])
         righe_nodi[id(nodo)] = meta.line
         return nodo
 
     @v_args(meta=True)
     def minore(self, figli,meta):
         nodo = OpBin(op="<", left=figli[0], right=figli[2])
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def minoreuguale(self, figli,meta):
+        nodo= OpBin(op="<=", left=figli[0], right=figli[2])
         righe_nodi[id(nodo)] = meta.line
         return nodo
 
@@ -130,6 +162,35 @@ class AST_Transformer(Transformer):
         nodo=OpBin(op = str(op1),left = left , right = right)
         righe_nodi[id(nodo)] = meta.line
         return nodo
+
+    @v_args(meta=True)
+    def divisioneuguale(self, figli,meta):
+        left, op1, right = self.filtra(figli)
+        nodo=OpBin(op=str(op1), left=left, right=right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def moltiplicauguale(self,figli,meta):
+        left, op1, right = self.filtra(figli)
+        nodo =OpBin(op=str(op1), left=left, right=right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def decremento_uguale(self, figli,meta):
+        left, op1, right = self.filtra(figli)
+        nodo=OpBin(op=str(op1), left=left, right=right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def incremento_uguale(self,figli,meta):
+        left, op1, right = self.filtra(figli)
+        nodo= OpBin(op=str(op1), left=left, right=right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
 
     @v_args(meta=True)
     def and_exp(self,figli,meta):
@@ -227,7 +288,7 @@ class AST_Transformer(Transformer):
 
     @v_args(meta=True)
     def mettimca_completo(self,figli,meta):
-        print("METTIMCA figli:")
+        print("METTIMCA completo figli:")
         for i, f in enumerate(figli):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
         op, allora, altrimenti = self.filtra(figli)
@@ -237,6 +298,9 @@ class AST_Transformer(Transformer):
 
     @v_args(meta=True)
     def mettimca_senzaelse(self,figli,meta):
+        print("METTIMCA no else figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
         op , allora = self.filtra(figli)
         nodo= Mettimmca(op,allora,altrimenti=None)
         righe_nodi[id(nodo)] = meta.line
