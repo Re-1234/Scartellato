@@ -717,6 +717,11 @@ class Transpiler:
         nome_c, args = risolvi_chiamata(self,node)
         self.indentazione(f"{nome_c}({', '.join(args)});")
 
+    #per le espressioni chiamata durante le assegnazioni
+    def espr_CallStmt(self, node: CallStmt):
+        nome_c, args = risolvi_chiamata(self, node)
+        return f"{nome_c}({', '.join(args)})"
+
     def visit_Arape_a_vocca(self, node: Arape_a_vocca):
         """ Genera un UNICO printf in C unendo le stringhe fisse """
 

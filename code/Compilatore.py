@@ -131,27 +131,33 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
+// Funzione definita alla fine, ma chiamata prima
+numr mestier fibonacci ) guagliuni : numr n ( }
+    mettimmcà ) n <= 1 ( }
+        ccàsta n !
+    {
+    jamm_ja : fibonacci ) guagliuni : n - 1 ( !
+    jamm_ja : fibonacci ) guagliuni : n - 2 ( !
+    numr somma!
+    ccàsta somma!
+{
+
 vacant Uè ) ( }
-    burdell mutante = 10 !                   // Nasce come numr
-    numr contatore = 0 !
-    lota condizione = sasicchj !
+    // CHIAMATA PENDING 1: Questa esiste e deve essere risolta alla fine
+    numr seq = jamm_ja : fibonacci ) guagliuni : 10 ( ! 
     
-    aspe ) condizione ( }
-        numr interno_while = 5 !
-        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
-        
-        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
-            burdell temporaneo = i + interno_while !  // Nasce come numr
-            
-            mettimcà ) temporaneo > 7 ( }
-               
-            { allor_fa_accussi }
-                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
-                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe
-            {
-        {
-        
-        condizione = friariell !
+
+    numr a = 5 !
+    nbruogglio testo = ??Valore: ?? !
+    
+    mettimmcà ) a<9 ( }                        
+        numr a = 10 !                        
+    {
+    
+    jamm_ja : fibonacci ) guagliuni : a ( ! // ✅ OK: concatenazione di una stringa con un numero ritornato dalla funzione
+    
+    aspe ) seq<9 ( }           
+        stut_tutt !
     {
 {
 """)
