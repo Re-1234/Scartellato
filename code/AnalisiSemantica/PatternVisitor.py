@@ -39,7 +39,12 @@ class AnalisiSemantica:
     #   ---PROGRAM---
     def visit_Start(self, node):
         self.symbolTable = SymbolTable()
+        # PASSO 1: Registriamo la firma di tutte le funzioni del file
+        for kid in node.program:
+            if isinstance(kid, Mestier):
+                self.symbolTable.addId(kid.nome.nome, kid)
 
+        # PASSO 2: Analisi semantica standard
         for kid in node.program:
             self.visit(kid)
 
@@ -113,52 +118,41 @@ class AnalisiSemantica:
         info = self.symbolTable.lookup(nome)
 
         if isinstance(info, dict) and info.get('pending'):
-            if getattr(self, 'classe_corrente', None) is not None:  #controllo che il metodo sia solo della classe
-                # È un metodo di classe: NON risolve i pending del main
-                pass
-            else:
-                # È una funzione globale: risolve il pending
-                self.symbolTable.resolve_pending(nome,node)
+            if getattr(self, 'classe_corrente', None) is None:
+                self.symbolTable.resolve_pending(nome, node)
                 self.symbolTable.addId(nome, node)
         else:
             self.symbolTable.addId(nome, node)
-
 
         self.symbolTable.enterScope()
         self.funzione_corrente = node
 
         for kid in node.parametri:
-            self.visit(kid)
-            self.tipi_risolti[id(kid.nome)] = str(kid.tipo)
-
-            #salviamo una struttura dati per i parametri
-            info_parametro = {
-                'tipo': str(kid.tipo.nome), #salviamo il nome ciè la stringa del tipo effettivo
-                'is_array': kid.nome.is_array  # Vero se ha ][, Falso se non ce l'ha
-            }
-            self.symbolTable.addId(kid.nome.nome, info_parametro)
+            self.visit(kid)  # visit_Parametro ora si occupa di tutto in modo completo
 
         self.visit(node.corpo)
         if node.ritorno != 'vacant' and not self._ha_return(node.corpo):
             self.errori.append(f"Funzione '{node.nome.nome}' deve avere un return di tipo '{node.ritorno}'")
-        self.symbolTable.printTable()
 
+        self.symbolTable.printTable()
         self.funzione_corrente = None
         self.symbolTable.exitScope()
 
 
-
     def visit_Parametro(self, node: Parametro):
-        # Recuperiamo il nome della variabile (visto che node.nome è un oggetto Variabile)
         nome_var = node.nome.nome
         tipo_var = node.tipo.nome
+        is_array = node.nome.is_array
 
-        # Controlla se il parametro è già stato dichiarato nello scope corrente (duplicato)
         if self.symbolTable.probe(nome_var):
             self.errori.append(f"NNNNNNNNNNOOOOOOOOOOOOO ma che è fatt!!!!!: Parametro duplicato '{nome_var}'")
 
-        # Inserisce il parametro nella Symbol Table come variabile valida in questo scope
-        self.symbolTable.addId(nome_var, tipo_var)
+        # Inseriamo il dizionario completo fin da subito
+        info_parametro = {
+            'tipo': tipo_var,
+            'is_array': is_array
+        }
+        self.symbolTable.addId(nome_var, info_parametro)
         self.tipi_risolti[id(node.nome)] = tipo_var
         self.burdell_info[id(node.nome)] = (tipo_var == 'burdell')
 
@@ -283,17 +277,13 @@ class AnalisiSemantica:
     def visit_CallStmt(self, node: CallStmt):
         nome_funzione = node.nome_func.nome
         funzione = self.symbolTable.lookup(nome_funzione)
-        if funzione is None:
-            # inserisco come pending
+
+        if funzione is None or (isinstance(funzione, dict) and funzione.get('pending')):
             self.symbolTable.declare_pending(nome_funzione, None)
             for arg in node.args:
                 self.visit(arg)
-            return None
+            return "sconosciuto"
 
-        if isinstance(funzione, dict) and funzione.get('pending'):
-            for arg in node.args:
-                self.visit(arg)
-            return None
 
         if not isinstance(funzione, Mestier):
             self.errori.append(f"'{nome_funzione}' non è una funzione")
@@ -428,22 +418,41 @@ class AnalisiSemantica:
 
         # LOTA
         if lv == "lota" or rv == "lota":
-            if node.op in ("+=", "-="):
-                self.errori.append(f"Operatore '{node.op}' non applicabile a lota")
-            if self.control_Ope_Bool(node.op):
+            if self.control_Ope_Logici(node.op):
+                # Se l'operatore è logico (and, or), pretenda rigorosamente Lota sia a sinistra che a destra!
+                if lv != "lota" or rv != "lota":
+                    self.errori.append(
+                        f"NOO MA CHE E FATT : L'operatore logico '{node.op}' richiede operandi booleani ('lota'), trovati '{lv}' e '{rv}'")
                 return "lota"
 
-        # NUMR
+            elif self.control_Ope_Confronto(node.op):
+                # Se è un confronto (==, !=), devono essere dello stesso tipo
+                if lv != rv:
+                    self.errori.append(f"BOTT_A_MUR: Impossibile confrontare '{lv}' e '{rv}' con '{node.op}'")
+                return "lota"
+
+            else:
+                self.errori.append(f"NOO MA CHE E FATT : Operatore '{node.op}' non applicabile con il tipo lota")
+                return "lota"
+
+            # NUMR (Numeri)
         if lv == "numr" and rv == "numr":
-            if self.control_Ope_Aritmetic(node.op): return 'numr'
-            if self.control_Ope_Bool(node.op):      return 'lota'
-            if self.control_Ope_Assign(node.op, "numr"): return 'numr'
+            if self.control_Ope_Aritmetic(node.op):
+                return 'numr'
+            if self.control_Ope_Confronto(node.op):
+                return 'lota'
+            if self.control_Ope_Assign(node.op, "numr"):
+                return 'numr'
+            if self.control_Ope_Logici(node.op):
+                self.errori.append(
+                    f"NOO MA CHE E FATT : L'operatore logico '{node.op}' non è applicabile a numeri ('numr')")
+                return 'lota'
 
         # NBRUOGGLIO
         if lv == "nbruogglio" and rv == "nbruogglio":
             if node.op in ("+", "-=", "+="):
                 return 'nbruogglio'
-            if self.control_Ope_Bool(node.op):
+            if self.control_Ope_Confronto(node.op):
                 self.errori.append(f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {lv}e tipo {rv}")
 
 
@@ -518,7 +527,6 @@ class AnalisiSemantica:
         if node.valore is not None:
             if isinstance(node.valore, ChiamataCostruttore):
                 self._tipo_atteso_costruttore = tipo_dichiarato
-                self.visit(node.valore)
                 tipo_valore = self.visit(node.valore)
             else:
                 tipo_valore = self.visit(node.valore)
@@ -555,38 +563,37 @@ class AnalisiSemantica:
                 self.print_types[id(variabile)] = tipo_rilevato
 
 
+    def control_Ope_Logici(self, oper: str) -> bool:
+        """Operatori strettamente logici (richiedono e restituiscono 'lota')"""
+        return oper in {"and", "or", "not", "!!"}
 
-
-    def control_Ope_Bool(self, oper: str):
-        if oper in {"<=", "<", ">=", ">", "==", "!=", "and", "or", "not"}:
+    def control_Ope_Confronto(self, oper: str):
+        if oper in {"<=", "<", ">=", ">", "==", "!="}:
             return True
         else:
             return False
 
-    def control_Ope_Aritmetic(self, oper: str):
-        if oper in {"+" , "-" , "*" ,"/" , "%"}:
-            return True
-        else:
-            return False
+    def control_Ope_Aritmetic(self, oper: str) -> bool:
+        """Operatori aritmetici (applicabili a 'numr')"""
+        return oper in {"+", "-", "*", "/", "%"}
 
-    def control_Ope_Assign(self , oper: str,tipe:str):
+    def control_Ope_Assign(self, oper: str, tipe: str) -> bool:
+        """Operatori di assegnamento validi per ciascun tipo"""
         if tipe == "numr":
-            if oper in {"=", "+=" , "-=" , "%=" , "*=" , "/="}:
-                return True
-            else:
-                return False
-        elif tipe == "str":
-            if oper == "=" or oper == "+=":
-                return True
-            else:
-                return False
-        return None
+            return oper in {"=", "+=", "-=", "%=", "*=", "/="}
+        elif tipe == "nbruogglio":  # Corretto: 'nbruogglio' al posto di 'str'
+            return oper in {"=", "+="}
+        elif tipe in ("lota", "lettr"):
+            return oper == "="
+        return False
 
     def visit_Break(self, node):
         if self.dentro_ciclo == 0:
               self.errori.append("Errore Semantico: Uè! O' 'stut_tutt' s'adda ausà sulo rint' a nu ciclo (aspe o ambress_ambress)! TRADOTTO : il token break si deve usare solamente nei cicli")
 
     def _compatibili(self, tipo_atteso, tipo_trovato):
+        if tipo_atteso == "sconosciuto" or tipo_trovato == "sconosciuto":
+            return True
         if tipo_atteso == "burdell":
             return True
         return tipo_atteso == tipo_trovato

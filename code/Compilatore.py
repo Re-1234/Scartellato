@@ -147,8 +147,6 @@ vacant Uè ) ( }
     // CHIAMATA PENDING 1: Questa esiste e deve essere risolta alla fine
     numr seq = jamm_ja : fibonacci ) guagliuni : 10 ( ! 
     
-    // CHIAMATA PENDING 2: Questa NON esiste in tutto il file!
-    //lota fantasma = jamm_ja : funzioneFantasma ) guagliuni : ??boh?? ( ! 
 
     numr a = 5 !
     nbruogglio testo = ??Valore: ?? !
@@ -157,9 +155,9 @@ vacant Uè ) ( }
         numr a = 10 !                        
     {
     
-    //testo -= jamm_ja : fibonacci ) guagliuni : a ( ! // ✅ OK: concatenazione di una stringa con un numero ritornato dalla funzione
+    testo -= jamm_ja : fibonacci ) guagliuni : a ( ! // ✅ OK: concatenazione di una stringa con un numero ritornato dalla funzione
     
-    aspe ) seq and !!friariell ( }           // ❌ ERRORE: 'seq' è numr. L'operatore 'and' accetta solo lota!
+    aspe ) seq<9 ( }           
         stut_tutt !
     {
 {
