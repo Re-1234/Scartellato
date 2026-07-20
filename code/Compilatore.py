@@ -130,16 +130,17 @@ def compilatore(source: str) -> CompileResult:
     return CompileResult(True)
 
 
-compilatore("""
+compilatore(""" 
 vacant Uè)( }
     numr a=2!
     numr b=3!
     numr c=4!
 
     lota risultato = )a+b(*c>10 and not)a==b(!
+    
     arape_a_vocca)??Risultato espressione complessa: ??-risultato(!
 
     lota risultato2 = )a<b( or )b<c( and not)a>c(!
     arape_a_vocca)??Risultato espressione 2: ??-risultato2(!
-{ 
+{
 """)
