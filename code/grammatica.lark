@@ -45,7 +45,7 @@
         QUADRATADESTRA: "["
 
         //Keyword
-        METTIMCA: "mettimcà"                    //if
+        METTIMCA: "mettimmcà"                    //if
         ALLORFAACCUSSI: "allor_fa_accussi"     //else
         ROBA: "robba"                         //classe
         O_MAST: "o_mast"               //costruttore
