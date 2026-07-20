@@ -419,16 +419,23 @@ class AnalisiSemantica:
         # LOTA
         if lv == "lota" or rv == "lota":
             if self.control_Ope_Logici(node.op):
-                # Se l'operatore è logico (and, or), pretenda rigorosamente Lota sia a sinistra che a destra!
+                # Operatori logici (and, or, !!)
                 if lv != "lota" or rv != "lota":
                     self.errori.append(
                         f"NOO MA CHE E FATT : L'operatore logico '{node.op}' richiede operandi booleani ('lota'), trovati '{lv}' e '{rv}'")
                 return "lota"
 
             elif self.control_Ope_Confronto(node.op):
-                # Se è un confronto (==, !=), devono essere dello stesso tipo
+                # Operatori di confronto (==, !=)
                 if lv != rv:
                     self.errori.append(f"BOTT_A_MUR: Impossibile confrontare '{lv}' e '{rv}' con '{node.op}'")
+                return "lota"
+
+            elif self.control_Ope_Assign(node.op, "lota"):
+                # Operatore di assegnamento (=)
+                if lv != rv:
+                    self.errori.append(
+                        f"NOO MA CHE E FATT : Impossibile assegnare '{rv}' a '{lv}' con l'operatore '{node.op}'")
                 return "lota"
 
             else:

@@ -131,16 +131,27 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-vacant Uè)( }
-    numr a=2!
-    numr b=3!
-    numr c=4!
-
-    lota risultato = )a+b(*c>10 and not)a==b(!
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
     
-    arape_a_vocca)??Risultato espressione complessa: ??-risultato(!
-
-    lota risultato2 = )a<b( or )b<c( and not)a>c(!
-    arape_a_vocca)??Risultato espressione 2: ??-risultato2(!
+    aspe ) condizione ( }
+        numr interno_while = 5 !
+        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
+        
+        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
+            burdell temporaneo = i + interno_while !  // Nasce come numr
+            
+            mettimcà ) temporaneo > 7 ( }
+               
+            { allor_fa_accussi }
+                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
+                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe
+            {
+        {
+        
+        condizione = friariell !
+    {
 {
 """)
