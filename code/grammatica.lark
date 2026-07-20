@@ -124,9 +124,17 @@
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
 
         ?nome_var_semplice: ID -> variabile_semplice
-                           | ID QUADRATASINISTRA assegnamento_composto QUADRATADESTRA ->variabile_array
+                           | ID QUADRATASINISTRA expr_adds QUADRATADESTRA ->variabile_array
 
+        ?expr_adds: expr_adds ADDIZIONE expr_mul -> somma
+                 | expr_adds MENO      expr_mul -> sottrazione
+                 | expr_muls
 
+       ?expr_muls: expr_muls MOLTIPLICA expr_unary  -> moltiplicazione
+                | expr_muls DIVISIONE  expr_unary  -> divisione
+                | expr_muls RESTO      expr_unary  -> resto
+                | NUMERO
+                | ID
         //CLASSI
 
         ?classe: ROBA nome_var_semplice GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
