@@ -125,7 +125,7 @@ class AnalisiSemantica:
                 pass
             else:
                 # È una funzione globale: risolve il pending
-                self.symbolTable.resolve_pending(nome)
+                self.symbolTable.resolve_pending(nome,node)
                 self.symbolTable.addId(nome, node)
         else:
             self.symbolTable.addId(nome, node)
@@ -383,8 +383,8 @@ class AnalisiSemantica:
 
 
         if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
-            if node.op != "=" and node.op != "-" and node.op != "+":
-                self.errori.append(f"Su un array puoi usare solo = , non '{node.op}'")
+            if node.op not in ("=", "-", "+", "<->"):
+                self.errori.append(f" NOO MA CHE E FATT : Con la notazione indice sull'array non puoi concatenare -= +=, non '{node.op}'")
             info_array = self.symbolTable.lookup(node.left.nome)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
             tipo_valore = rv
@@ -542,20 +542,20 @@ class AnalisiSemantica:
 
 
     def control_Ope_Bool(self, oper: str):
-        if oper == "<=" or oper == "<" or oper == ">=" or oper == ">" or oper == "==" or oper == "!=" or oper == "and" or oper == "or" or oper == "not":
+        if oper in {"<=", "<", ">=", ">", "==", "!=", "and", "or", "not"}:
             return True
         else:
             return False
 
     def control_Ope_Aritmetic(self, oper: str):
-        if oper == "+" or oper == "-" or oper == "*" or oper == "/" or oper == "%":
+        if oper in {"+" , "-" , "*" ,"/" , "%"}:
             return True
         else:
             return False
 
     def control_Ope_Assign(self , oper: str,tipe:str):
         if tipe == "numr":
-            if oper == "=" or oper == "+=" or oper == "-=" or oper == "%=" or oper == "*=" or oper == "/=":
+            if oper in {"=", "+=" , "-=" , "%=" , "*=" , "/="}:
                 return True
             else:
                 return False

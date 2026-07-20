@@ -11,7 +11,7 @@ class AST_Transformer(Transformer):
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
         'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'O_MAST', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
-        'PARAMETRI_TK', 'CCASTA',  'SCCASCIA','ASPE','PRINT'
+        'PARAMETRI_TK', 'CCASTA',  'SCCASCIA','ASPE','PRINT','RETURN'
     }
 
 
@@ -146,6 +146,15 @@ class AST_Transformer(Transformer):
             print(f"  [{i}] {type(f).__name__} → {f!r}")
 
         nodo=OpBin(op= str(operatore),left=variabile1,right=variabile2)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
+    @v_args(meta=True)
+    def diverso(self,figli,meta):
+        variabile1 = self.filtra(figli)[0]
+        operatore = self.filtra(figli)[1]
+        variabile2 = self.filtra(figli)[2]
+        nodo = OpBin(op=str(operatore), left=variabile1, right=variabile2)
         righe_nodi[id(nodo)] = meta.line
         return nodo
 
@@ -316,13 +325,15 @@ class AST_Transformer(Transformer):
     @v_args(meta=True)
     def blocco(self, figli,meta):
         nodo= Block(statements=figli)
-        righe_nodi[id(nodo)] = meta.line
+        if hasattr(meta, 'line'):
+            righe_nodi[id(nodo)] = meta.line
         return nodo
 
     @v_args(meta=True)
     def sezione_parametri(self, figli,meta):
         nodo=[f for f in figli if isinstance(f, Parametro)]
-        righe_nodi[id(nodo)] = meta.line
+        if hasattr(meta, 'line'):
+            righe_nodi[id(nodo)] = meta.line
         return nodo
 
     @v_args(meta=True)
@@ -478,9 +489,13 @@ class AST_Transformer(Transformer):
 
     @v_args(meta=True)
     def returnstatement(self, figli,meta):
+        print("RETURNSTATEMENT FIGLI")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+
         nodi = self.filtra(figli)
         valore = nodi[0] if len(nodi) > 0 else None
-        nodo=ReturnStatement(valore)
+        nodo=ReturnStatement(valore=valore)
         righe_nodi[id(nodo)] = meta.line
         return nodo
 

@@ -112,30 +112,44 @@ def compilatore(source: str) -> CompileResult:
         print(f"Token inatteso: {e.token!r}")
         print(f"Token attesi: {e.expected}")
         print(e.get_context(source))
-        return CompileResult(False,
-                             [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {e.expected}"])
+        #return CompileResult(False,
+         #                    [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {e.expected}"])
     except UnexpectedCharacters as e:
         print(f"Errore lessicale: {e.char!r}")
-        return CompileResult(False, [f"Errore lessicale: carattere inatteso {e.char!r}"])
+        #return CompileResult(False, [f"Errore lessicale: carattere inatteso {e.char!r}"])
 
 
     analisiSemantica = AnalisiSemantica()
     analisiSemantica.visit(ast)
 
-    if analisiSemantica.getErrori():
-        print(analisiSemantica.getErrori())
-        return CompileResult(False,analisiSemantica.getErrori())
+    #if analisiSemantica.getErrori():
+     #   print(analisiSemantica.getErrori())
+      #  return CompileResult(False,analisiSemantica.getErrori())
+    if analisiSemantica.errori:
+        print("Errori semantici:")
+        for e in analisiSemantica.errori:
+            print(f"  - {e}")
+        return
 
     generatore(analisiSemantica)
-    return CompileResult(True)
+   # return CompileResult(True)
 
 
 compilatore("""
 
-    numr d = 5!
+numr ] [ k!
 
-vacant mestier stampa_saluto ) guagliuni : numr n ( }
-    numr risultato = n!
+vacant mestier test ) ( }
+    k -= 5 !
+    k ] 0 [ = k]0[ - 5 !
+    nbruogglio s = ??ciao?come va??  !
+
+{
+robba ciro }
+    numr c !
+    o_mast ) ( } c = 5 ! {
+    numr apposo = c !
+    nbruogglio r = ??sdfdaf?? !
 {
 
 robba Persona } 
@@ -147,12 +161,21 @@ robba Persona }
 
 Uè)( }
     numr x = 10!
-    numr y = d!
+    numr y = 5!
     burdell ][ ci!
     ci]0[ = 4!
     ci]0[ = ??ciao??!
     ci]0[ = ci]0[ - 4!
     ci]0[ = ci]0[ - ??cop??!
+    
+    ambressAmbress ) numr i = 0 ! i < 5 ! i++ ( 
+         mettimcà ) i == 2 ( }  ccàsta !  {
+    
+    numr ] [ arr!
+    lota flag = sasicchj !
+    
+    
+    numr risultato = jamm_ja : somma ) guagliuni : 4 , 5 ( - 10 !
     
     mettimcà) x > y ( }
         x = x + 1!

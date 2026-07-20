@@ -2,6 +2,7 @@ class SymbolTable:
     def __init__(self):
         self.table = {}
         self.stack = []
+        self.pending_globali = {}
 
     def enterScope(self):
         self.stack.append(self.table)
@@ -30,26 +31,22 @@ class SymbolTable:
     def getScope(self):
         return self.table
 
-    def declare_pending(self, symbol, firma):
-        # inserisce con flag pending=True
+    def declare_pending(self, symbol, firma=None):
         self.table[symbol] = {'firma': firma, 'pending': True}
+        self.pending_globali[symbol] = True
 
-    def resolve_pending(self, symbol):
-        # trova il simbolo e toglie il flag
+    def resolve_pending(self, symbol, nodo_funzione):
         if symbol in self.table:
-            self.table[symbol] = self.table[symbol]['firma']
-            return
-        for scope in reversed(self.stack):
-            if symbol in scope:
-                scope[symbol] = scope[symbol]['firma']
-                return
+            self.table[symbol] = nodo_funzione
+        else:
+            for scope in reversed(self.stack):
+                if symbol in scope:
+                    scope[symbol] = nodo_funzione
+                    break
+        self.pending_globali.pop(symbol, None)
 
     def check_pending(self):
-        # restituisce lista di nomi ancora pending nello scope corrente
-        return [
-            name for name, info in self.table.items()
-            if isinstance(info, dict) and info.get('pending')
-        ]
+        return list(self.pending_globali.keys())
 
     def getStack(self):
         return self.stack
