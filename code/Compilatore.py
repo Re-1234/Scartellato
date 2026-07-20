@@ -131,4 +131,27 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
+    
+    aspe ) condizione ( }
+        numr interno_while = 5 !
+        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
+        
+        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
+            burdell temporaneo = i + interno_while !  // Nasce come numr
+            
+            mettimcà ) temporaneo > 7 ( }
+               
+            { allor_fa_accussi }
+                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
+                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe
+            {
+        {
+        
+        condizione = friariell !
+    {
+{
 """)
