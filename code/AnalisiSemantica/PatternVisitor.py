@@ -104,13 +104,6 @@ class AnalisiSemantica:
         self.burdell_info[id(node)] = False
         return info
 
-
-    def _compatibili(self, tipo_atteso, tipo_trovato):
-            if tipo_atteso == "burdell":
-                return True
-            return tipo_atteso == tipo_trovato
-
-
     #   ---FUNZIONI-----
     def visit_Mestier(self, node: Mestier):
         """inserisce il nome della funzione nello scope precendente e
@@ -137,6 +130,13 @@ class AnalisiSemantica:
         for kid in node.parametri:
             self.visit(kid)
             self.tipi_risolti[id(kid.nome)] = str(kid.tipo)
+
+            #salviamo una struttura dati per i parametri
+            info_parametro = {
+                'tipo': str(kid.tipo.nome), #salviamo il nome ciè la stringa del tipo effettivo
+                'is_array': kid.nome.is_array  # Vero se ha ][, Falso se non ce l'ha
+            }
+            self.symbolTable.addId(kid.nome.nome, info_parametro)
 
         self.visit(node.corpo)
         if node.ritorno != 'vacant' and not self._ha_return(node.corpo):
@@ -360,12 +360,12 @@ class AnalisiSemantica:
 
     #   ---VALUTAZIONE E ASSEGNAMENTO---
     def visit_OpBin(self, node: OpBin):
-        #vedo se non ci stanno gli operatori di sinistra se non ci stanno facciamo il controllo se è un operazione di negazione
+        #controllo se mancano gli operatori di sinistra in caso positivo controllo se è un operazione di negazione
         if node.left is None:
             rv = self.visit(node.right)
             if node.op in ('not', '!!'):
                 if rv != 'lota':
-                    self.errori.append(f"'{node.op}' è applicabile solo a un valore di tipo lota")
+                    self.errori.append(f"NOO MA CHE E FATT :'{node.op}' è applicabile solo a un valore di tipo lota")
                 return 'lota'
             return rv
 
@@ -374,21 +374,26 @@ class AnalisiSemantica:
         if node.right is None:
             if node.op in ('++', '--'):
                 if lv != 'numr' and lv != 'burdell':
-                    self.errori.append(f"'{node.op}' applicabile solo a numr e burdell")
+                    self.errori.append(f"NOO MA CHE E FATT : '{node.op}' applicabile solo a numr e burdell")
                 return 'numr'
 
 
         rv = self.visit(node.right)
 
+        #gestione array
         if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index == -1:
+            #caso operatore array erroneo
             if node.op not in ("-=", "+="):
-                self.errori.append(f"Su un array puoi usare solo '-=' (aggiungi) o '+=' (rimuovi), non '{node.op}'")
+                self.errori.append(f"NOO MA CHE E FATT : Su un array puoi usare solo '-=' (aggiungi) o '+=' (rimuovi), non '{node.op}'")
             info_array = self.symbolTable.lookup(node.left.nome)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
             tipo_valore = rv
+            #caso variabile destra array: non posso assegnare un array a un altro array senza usare l'indice
+            if isinstance(node.right, Variabile) and self.symbolTable.is_array(node.right.nome) and node.right.index == -1:
+                self.errori.append(f"BOTT A MUR : Non puoi usare la notazione {node.op} , sulla variabile destra di tipo array no index")
 
             if tipo_array != "burdell" and tipo_array != tipo_valore:
-                self.errori.append(f"Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
+                self.errori.append(f"NOO MA CHE E FATT : Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
                     f"da un array di '{tipo_array}'")
             return tipo_array
 
@@ -401,7 +406,7 @@ class AnalisiSemantica:
             tipo_valore = rv
 
             if tipo_array != "burdell" and tipo_array != tipo_valore:
-                self.errori.append(f"Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
+                self.errori.append(f"NOO MA CHE E FATT: Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
                     f"da un array di '{tipo_array}'")
             return tipo_array
 
@@ -502,11 +507,11 @@ class AnalisiSemantica:
         self.errori.append(f"BOTT A MUR : Tipi incompatibili: '{lv}' e '{rv}' con operatore '{node.op}'")
 
     def visit_Dichiarazione(self, node: Dichiarazione):
-        tipo_dichiarato = node.tipo.nome
-        nome_variabile = node.nome.nome
-        is_array = node.nome.is_array
+        tipo_dichiarato = node.tipo.nome #tipo var
+        nome_variabile = node.nome.nome  #nome var
+        is_array = node.nome.is_array    #controllo per determinare se una variabile è una array
 
-        if self.symbolTable.probe(nome_variabile):
+        if self.symbolTable.probe(nome_variabile): # controllo sullo scope corrente
             self.errori.append(f"Variabile '{nome_variabile}' già dichiarata")
 
         tipo_finale = tipo_dichiarato
@@ -579,7 +584,12 @@ class AnalisiSemantica:
 
     def visit_Break(self, node):
         if self.dentro_ciclo == 0:
-              self.errori.append("Errore Semantico: Uè! O' 'stut_tutt' s'adda ausà sulo rint' a nu ciclo (aspe o ambress_ambress)!")
+              self.errori.append("Errore Semantico: Uè! O' 'stut_tutt' s'adda ausà sulo rint' a nu ciclo (aspe o ambress_ambress)! TRADOTTO : il token break si deve usare solamente nei cicli")
+
+    def _compatibili(self, tipo_atteso, tipo_trovato):
+        if tipo_atteso == "burdell":
+            return True
+        return tipo_atteso == tipo_trovato
 
     def getErrori(self):
         return self.errori

@@ -95,8 +95,9 @@
 
         // RETURN E BREAK
 
-        return_stmt: RETURN  nome_var TERMINATORE ->returnstatement
+        return_stmt: RETURN  tipi_ritorno TERMINATORE ->returnstatement
                    | RETURN TERMINATORE   ->returnstatement
+
 
         break_stmt: BREAK TERMINATORE      -> break_statement
 
@@ -111,6 +112,13 @@
             | NBRUOGGLIO_TK -> tipo
             | LETTER_TK -> tipo
             | ID -> tipo
+
+        ?tipi_ritorno : ID -> variabile_semplice
+                | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
+                | NUMERO  -> numero
+                | BOOLEAN -> boolean
+                | STRINGA -> stringa
+                | CARATTERE -> carattere
 
         ?nome_var: ID -> variabile_semplice
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
@@ -226,6 +234,6 @@
                     | CARATTERE -> carattere
                     | nome_var_semplice  // <-- Sostituisce ID e l'accesso array singolo
                     | nome_var_semplice "." O_MAST TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA -> chiamata_costruttore
-                    | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" expr_primary ("," expr_primary)*)? "(" -> call_stmt
+                    | CHIAMATA ":" nome_var_semplice ")" ("guagliuni" ":" assegnamento_composto ("," assegnamento_composto)*)? "(" -> call_stmt
                     | nome_var_semplice "." nome_var_semplice TONDASINISTRA (expr_primary ("," expr_primary)*)? TONDADESTRA -> chiamata_oggetto
                     | nome_var_semplice "." nome_var_semplice -> accesso_campo

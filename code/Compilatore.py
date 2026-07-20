@@ -131,30 +131,37 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore("""
-robba Contatore}
-    numr valore!
- 
-    o_mast)guagliuni:numr iniziale( }
-        valore=iniziale!
+
+// Funzione definita alla fine, ma chiamata prima
+numr mestier fibonacci ) guagliuni : numr n ( }
+    mettimcà ) n <= 1 ( }
+        ccàsta n !
     {
- 
-    vacant mestier incrementa)( }
-        valore+=1!
+    numr val1 = jamm_ja : fibonacci ) guagliuni : n - 1 ( !
+    numr val2 = jamm_ja : fibonacci ) guagliuni : n - 2 ( !
+    numr somma=val1 + val2 !
+    ccàsta somma!
+{
+
+vacant Uè ) ( }
+    // CHIAMATA PENDING 1: Questa esiste e deve essere risolta alla fine
+    numr seq = jamm_ja : fibonacci ) guagliuni : 10 ( ! 
+    
+    // CHIAMATA PENDING 2: Questa NON esiste in tutto il file!
+    //lota fantasma = jamm_ja : funzioneFantasma ) guagliuni : ??boh?? ( ! 
+
+    numr a = 5 !
+    nbruogglio testo = ??Valore: ?? !
+    
+    mettimcà ) a<9 ( }                        
+        numr a = 10 !                        
     {
- 
-    numr mestier leggi)( }
-        ccàsta valore!
+    
+    //testo -= jamm_ja : fibonacci ) guagliuni : a ( ! // ✅ OK: concatenazione di una stringa con un numero ritornato dalla funzione
+    
+    aspe ) seq and !!friariell ( }           // ❌ ERRORE: 'seq' è numr. L'operatore 'and' accetta solo lota!
+        stut_tutt !
     {
 {
- 
-vacant Uè)( }
-    Contatore c = Contatore.o_mast)0(!
-    c.incrementa)(!
-    c.incrementa)(!
-    c.incrementa)(!
-    numr v = c.leggi)(!
-    numr diretto = c.valore!
-    arape_a_vocca)??Valore via metodo: ??-v-??  valore via campo diretto: ??-diretto(!
-{
- 
+
 """)
