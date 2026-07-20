@@ -11,7 +11,7 @@ class AST_Transformer(Transformer):
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA','QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
         'ROBA' , 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'O_MAST', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
-        'PARAMETRI_TK', 'CCASTA',  'SCCASCIA','ASPE','PRINT'
+        'PARAMETRI_TK', 'RETURN',  'SCCASCIA','ASPE','PRINT'
     }
 
 
@@ -336,10 +336,12 @@ class AST_Transformer(Transformer):
         righe_nodi[id(nodo)] = meta.line
         return nodo
 
+
     @v_args(meta=True)
-    def sezione_parametri(self, figli,meta):
-        nodo=[f for f in figli if isinstance(f, Parametro)]
-        righe_nodi[id(nodo)] = meta.line
+    def sezione_parametri(self, figli, meta):
+        nodo = [f for f in figli if isinstance(f, Parametro)]
+        if not meta.empty:
+           righe_nodi[id(nodo)] = meta.line
         return nodo
 
     @v_args(meta=True)

@@ -131,37 +131,30 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore("""
-vacant Uè)( }
-    numr a = 5!
-    numr b = 3!
+robba Contatore}
+    numr valore!
  
-    numr somma = a+b!
-    numr diff = a-b!
-    numr prod = a*b!
-    numr quoz = a/b!
-    numr resto = a%b!
+    o_mast)guagliuni:numr iniziale( }
+        valore=iniziale!
+    {
  
-    lota c1 = a>b!
-    lota c2 = a<b!
-    lota c3 = a>=b!
-    lota c4 = a<=b!
-    lota c5 = a==b!
-    lota c6 = a!=b!
-    lota c7 = c1 and c2!
-    lota c8 = c1 or c2!
-    lota c9 = !! c1!
+    vacant mestier incrementa)( }
+        valore+=1!
+    {
  
-    a+=1!
-    a-=1!
-    a*=2!
-    a/=2!
-    a++!
-    a--!
-    ++a!
-    --a!
- 
-    a<->b!
- 
-    arape_a_vocca)??a=??-a-??  b=??-b(!
+    numr mestier leggi)( }
+        ccàsta valore!
+    {
 {
-    """)
+ 
+vacant Uè)( }
+    Contatore c = Contatore.o_mast)0(!
+    c.incrementa)(!
+    c.incrementa)(!
+    c.incrementa)(!
+    numr v = c.leggi)(!
+    numr diretto = c.valore!
+    arape_a_vocca)??Valore via metodo: ??-v-??  valore via campo diretto: ??-diretto(!
+{
+ 
+""")
