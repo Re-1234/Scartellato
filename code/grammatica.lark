@@ -123,18 +123,12 @@
 
         ?classe: ROBA nome_var_semplice GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba
 
-        ?membro: campi
-               | metodi
+        ?membro: dichiarazione
+               | funzione
 
         // COSTRUTTORE
         costruttore: O_MAST TONDASINISTRA sezione_parametri TONDADESTRA GRAFFASINISTRA blocco GRAFFADESTRA -> costruttore
 
-        ?campi: dichiarazione
-             | campi dichiarazione
-
-
-        ?metodi: funzione
-              | metodi funzione
 
 
 
