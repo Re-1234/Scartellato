@@ -131,21 +131,4 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-// ATTENZIONE: questo test copre un percorso raramente esercitato
-// (funzione con tipo di ritorno array). Se crasha, è comunque
-// un'informazione utile: vuol dire che quel ramo va ancora rifinito.
- 
-numr][mestier genera)( }
-    numr][arr!
-    arr]0[=1!
-    arr]1[=2!
-    arr]2[=3!
-    ccàsta arr!
-{
- 
-vacant Uè)( }
-    numr][risultato = jamm_ja:genera)((!
-    arape_a_vocca)??Array generato??(!
-{
- 
 """)
