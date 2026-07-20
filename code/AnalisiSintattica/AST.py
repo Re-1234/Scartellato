@@ -448,31 +448,30 @@ class AST_Transformer(Transformer):
         return nodo
 
     @v_args(meta=True)
-    def robba(self , figli,meta):
-        nodi= self.filtra(figli)
-
-        print("CLASSE FIGLI")
-        for i, f in enumerate(figli):
-            print(f"  [{i}] {type(f).__name__} → {f!r}")
-
-        nome =nodi[0]
+    def robba(self, figli, meta):
+        nodi = self.filtra(figli)
+        nome = nodi[0]
         costruttore = None
         variabili = []
         funzioni = []
 
         for nodo in nodi[1:]:
-            tipo_nodo = type(nodo).__name__   #uso reflection per vedere il tipo del nodo
+            if isinstance(nodo, Tree):  # <-- questo pezzo manca nella versione attuale
+                nodo = list(nodo.children)
 
-            if tipo_nodo == "Costruttore":
+            if isinstance(nodo, Costruttore):
                 costruttore = nodo
-            elif tipo_nodo == 'Dichiarazione':
+            elif isinstance(nodo, Dichiarazione):
                 variabili.append(nodo)
-            elif tipo_nodo == 'Mestier':
+            elif isinstance(nodo, Mestier):
                 funzioni.append(nodo)
-            elif tipo_nodo == "list":
-                variabili.extend(nodo)
+            elif isinstance(nodo, list):
+                if nodo and isinstance(nodo[0], Mestier):  # <-- e questo smistamento
+                    funzioni.extend(nodo)
+                else:
+                    variabili.extend(nodo)
 
-        nodo=Robba(nome=nome, costruttore=costruttore, variabili=variabili, funzioni=funzioni)
+        nodo = Robba(nome=nome, costruttore=costruttore, variabili=variabili, funzioni=funzioni)
         righe_nodi[id(nodo)] = meta.line
         return nodo
 

@@ -131,30 +131,15 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore("""
-robba Contatore}
-    numr valore!
- 
-    o_mast)guagliuni:numr iniziale( }
-        valore=iniziale!
-    {
- 
-    vacant mestier incrementa)( }
-        valore+=1!
-    {
- 
-    numr mestier leggi)( }
-        ccàsta valore!
-    {
-{
- 
 vacant Uè)( }
-    Contatore c = Contatore.o_mast)0(!
-    c.incrementa)(!
-    c.incrementa)(!
-    c.incrementa)(!
-    numr v = c.leggi)(!
-    numr diretto = c.valore!
-    arape_a_vocca)??Valore via metodo: ??-v-??  valore via campo diretto: ??-diretto(!
-{
- 
+    numr a=2!
+    numr b=3!
+    numr c=4!
+
+    lota risultato = )a+b(*c>10 and not)a==b(!
+    arape_a_vocca)??Risultato espressione complessa: ??-risultato(!
+
+    lota risultato2 = )a<b( or )b<c( and not)a>c(!
+    arape_a_vocca)??Risultato espressione 2: ??-risultato2(!
+{ 
 """)
