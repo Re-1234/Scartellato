@@ -452,10 +452,15 @@ class AnalisiSemantica:
                 return "lota"
 
             elif self.control_Ope_Assign(node.op, "lota"):
-                # Operatore di assegnamento (=)
+                if node.op == '=' and isinstance(node.left, Variabile):
+                    info_var = self.symbolTable.lookup(node.left.nome)
+                    is_dinamica = isinstance(info_var, dict) and info_var.get('is_burdell')
+                    if is_dinamica:
+                        self.symbolTable.update(node.left.nome, {'tipo': rv, 'is_burdell': True})
+                        self.tipi_risolti[id(node.left)] = rv
+                        return rv
                 if lv != rv:
-                    self.errori.append(
-                        f"NOO MA CHE E FATT : Impossibile assegnare '{rv}' a '{lv}' con l'operatore '{node.op}'")
+                    self.errori.append(f"Impossibile assegnare '{rv}' a '{lv}' con l'operatore '{node.op}'")
                 return "lota"
 
             else:

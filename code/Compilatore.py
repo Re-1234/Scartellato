@@ -131,30 +131,27 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-vacant Uè)( }
-    // Dichiarazione array (notare le quadre invertite ] [ )
-    numr ][ arr!
-    arr]0[ = 10!
-    arr]1[ = 3!
-    arr]2[ = 8!
-    arr]3[ = 5!
-
-    // Ciclo for annidato per fare un Bubble Sort decrescente
-    // Sintassi: ambressAmbress ) dichiarazione! condizione! step ( } blocco {
-    ambressAmbress ) numr i = 0! i < 4! i++ ( }
-        ambressAmbress ) numr j = 0! j < 3! j++ ( }
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
+    
+    aspe ) condizione ( }
+        numr interno_while = 5 !
+        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
+        
+        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
+            burdell temporaneo = i + interno_while !  // Nasce come numr
             
-            // Selezioniamo con j e j - 1 (ricorda che '-' in Scartellato è l'ADDIZIONE, quindi j+1)
-            mettimcà ) arr]j[ < arr]j - 1[ ( }
-                
-                // Usiamo il tuo magnifico operatore nativo di SWAP
-                arr]j[ <-> arr]j - 1[!
-                
+            mettimcà ) temporaneo > 7 ( }
+               
+            { allor_fa_accussi }
+                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
+                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe
             {
         {
+        
+        condizione = friariell !
     {
-    
-    // Stampiamo il risultato maggiore (alla prima posizione dopo l'ordinamento)
-    arape_a_vocca) ??Il numero più piccolo è: ?? - arr]3[ (!
 {
 """)
