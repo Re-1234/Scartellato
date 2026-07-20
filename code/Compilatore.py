@@ -130,36 +130,17 @@ def compilatore(source: str) -> CompileResult:
     return CompileResult(True)
 
 
-compilatore("""
+compilatore(""" 
+vacant Uè)( }
+    numr a=2!
+    numr b=3!
+    numr c=4!
 
-// Funzione definita alla fine, ma chiamata prima
-numr mestier fibonacci ) guagliuni : numr n ( }
-    mettimcà ) n <= 1 ( }
-        ccàsta n !
-    {
-    numr val1 = jamm_ja : fibonacci ) guagliuni : n - 1 ( !
-    numr val2 = jamm_ja : fibonacci ) guagliuni : n - 2 ( !
-    numr somma=val1 + val2 !
-    ccàsta somma!
+    lota risultato = )a+b(*c>10 and not)a==b(!
+    
+    arape_a_vocca)??Risultato espressione complessa: ??-risultato(!
+
+    lota risultato2 = )a<b( or )b<c( and not)a>c(!
+    arape_a_vocca)??Risultato espressione 2: ??-risultato2(!
 {
-
-vacant Uè ) ( }
-    // CHIAMATA PENDING 1: Questa esiste e deve essere risolta alla fine
-    numr seq = jamm_ja : fibonacci ) guagliuni : 10 ( ! 
-    
-
-    numr a = 5 !
-    nbruogglio testo = ??Valore: ?? !
-    
-    mettimcà ) a<9 ( }                        
-        numr a = 10 !                        
-    {
-    
-    testo -= jamm_ja : fibonacci ) guagliuni : a ( ! // ✅ OK: concatenazione di una stringa con un numero ritornato dalla funzione
-    
-    aspe ) seq<9 ( }           
-        stut_tutt !
-    {
-{
-
 """)
