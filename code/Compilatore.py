@@ -131,16 +131,21 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-vacant Uè)( }
-    numr a=2!
-    numr b=3!
-    numr c=4!
-
-    lota risultato = )a+b(*c>10 and not)a==b(!
-    
-    arape_a_vocca)??Risultato espressione complessa: ??-risultato(!
-
-    lota risultato2 = )a<b( or )b<c( and not)a>c(!
-    arape_a_vocca)??Risultato espressione 2: ??-risultato2(!
+// ATTENZIONE: questo test copre un percorso raramente esercitato
+// (funzione con tipo di ritorno array). Se crasha, è comunque
+// un'informazione utile: vuol dire che quel ramo va ancora rifinito.
+ 
+numr][mestier genera)( }
+    numr][arr!
+    arr]0[=1!
+    arr]1[=2!
+    arr]2[=3!
+    ccàsta arr!
 {
+ 
+vacant Uè)( }
+    numr][risultato = jamm_ja:genera)((!
+    arape_a_vocca)??Array generato??(!
+{
+ 
 """)

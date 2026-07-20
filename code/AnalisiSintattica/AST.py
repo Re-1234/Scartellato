@@ -482,6 +482,11 @@ class AST_Transformer(Transformer):
         righe_nodi[id(nodo)] = meta.line
         return nodo
 
+    @v_args(meta = True)
+    def exp_primary(self,figli,meta):
+        nodi = self.filtra(figli)
+        return nodi[0]
+
     @v_args(meta=True)
     def ambress_ambress(self, figli, meta):
         declaration, condizione, varOp, corpo = self.filtra(figli)

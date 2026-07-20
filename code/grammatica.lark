@@ -227,7 +227,7 @@
                   | expr_primary MENMEN   -> decremento_destro
                   | expr_primary
 
-       ?expr_primary: TONDASINISTRA assegnamento_composto TONDADESTRA
+       ?expr_primary: TONDASINISTRA assegnamento_composto TONDADESTRA -> exp_primary
                     | NUMERO  -> numero
                     | BOOLEAN -> boolean
                     | STRINGA -> stringa
