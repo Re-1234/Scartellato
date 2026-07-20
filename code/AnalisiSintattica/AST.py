@@ -521,16 +521,13 @@ class AST_Transformer(Transformer):
         return nodo
 
     @v_args(meta=True)
-    def chiamata_costruttore(self,figli,meta):
-
-        print("CHIAMATA COSTRUTTORE figli:")
-        for i, f in enumerate(figli):
-            print(f"  [{i}] {type(f).__name__} → {f!r}")
+    def chiamata_costruttore(self, figli, meta):
         nodi = self.filtra(figli)
-        nomevar =nodi[0]
-        parametri = nodi[1:] if len(nodi) > 2 else None
-        nodo=ChiamataCostruttore(nome=nomevar,parametri=parametri)
-        righe_nodi[id(nodo)] = meta.line
+        nomevar = nodi[0]
+        parametri = nodi[1:] if len(nodi) > 1 else []  # >1, non >2; e [] invece di None per uniformità
+        nodo = ChiamataCostruttore(nome=nomevar, parametri=parametri)
+        if not meta.empty:
+            righe_nodi[id(nodo)] = meta.line
         return nodo
 
     @v_args(meta=True)

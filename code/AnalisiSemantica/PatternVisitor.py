@@ -248,6 +248,7 @@ class AnalisiSemantica:
 
         if metodo is None:
             self.errori.append(f"Metodo '{nome_metodo}' non esiste nella classe '{tipo_nome}'")
+            return None
 
         args = node.Parametri or []
         if len(args) != len(metodo.parametri):
