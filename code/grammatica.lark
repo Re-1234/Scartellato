@@ -28,7 +28,7 @@
         //operazioni logiche
         OR: "or" | "||"
         AND: "and" | "&&"
-        NOT: "not" | "!!"
+        NOT.2: "not" | "!!"
         EQUALS: "=="
         DIVERSO: "!="
         MAGGIORE: ">"
@@ -218,7 +218,7 @@
                 | expr_mul RESTO      expr_unary  -> resto
                 | expr_unary
 
-        ?expr_unary: NOT expr_unary
+        ?expr_unary: NOT expr_unary    -> negato
                   | PLUSPLUS   expr_primary  -> incremento_sinistro
                   | MENMEN     expr_primary -> decremento_sinistro
                   | expr_primary PLUSPLUS -> incremento_destro

@@ -359,6 +359,15 @@ class AnalisiSemantica:
 
     #   ---VALUTAZIONE E ASSEGNAMENTO---
     def visit_OpBin(self, node: OpBin):
+        #vedo se non ci stanno gli operatori di sinistra se non ci stanno facciamo il controllo se è un operazione di negazione
+        if node.left is None:
+            rv = self.visit(node.right)
+            if node.op in ('not', '!!'):
+                if rv != 'lota':
+                    self.errori.append(f"'{node.op}' è applicabile solo a un valore di tipo lota")
+                return 'lota'
+            return rv
+
         lv = self.visit(node.left)
 
         if node.right is None:
@@ -366,6 +375,7 @@ class AnalisiSemantica:
                 if lv != 'numr' and lv != 'burdell':
                     self.errori.append(f"'{node.op}' applicabile solo a numr e burdell")
                 return 'numr'
+
 
         rv = self.visit(node.right)
 
