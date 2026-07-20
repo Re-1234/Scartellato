@@ -124,7 +124,7 @@
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
 
         ?nome_var_semplice: ID -> variabile_semplice
-                           | ID QUADRATASINISTRA NUMERO QUADRATADESTRA ->variabile_array
+                           | ID QUADRATASINISTRA assegnamento_composto QUADRATADESTRA ->variabile_array
 
 
         //CLASSI
