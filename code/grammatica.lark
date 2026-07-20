@@ -3,7 +3,7 @@
         LOTA_TK: "lota"                 // token per boolean
         NUMERO: /\d+(\.\d+)?e?/
         NUMR_TK: "numr"
-        STRINGA: /\?\?[^?]*\?\?/
+        STRINGA: /\?\?[\s\S]*?\?\?/
         NBRUOGGLIO_TK: "nbruogglio"
         ID: /[a-zA-Z_]\w*/
         CARATTERE:  /\?[^?]\?/
