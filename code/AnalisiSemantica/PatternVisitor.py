@@ -51,6 +51,7 @@ class AnalisiSemantica:
         errori = self.symbolTable.check_pending()
         if errori:
             self.errori.append(f"Funzioni usate ma mai dichiarate: {errori}")
+            return
 
     #   ---CLASSE---
     def visit_Robba(self, node: Robba):
@@ -69,6 +70,7 @@ class AnalisiSemantica:
         errori = self.symbolTable.check_pending()
         if errori:
             self.errori.append(f"Funzioni usate ma mai dichiarate: {errori}")
+            return
 
         self.symbolTable.exitScope()
 
@@ -103,6 +105,7 @@ class AnalisiSemantica:
         if info is None:
             riga = righe_nodi.get(id(node), "sconosciuta")
             self.errori.append(f"riga {riga}: variabile '{node.nome}' non dichiarata")
+            return
         if isinstance(info, dict):
             self.burdell_info[id(node)] = info.get('is_burdell', False)
             return info.get('tipo', 'burdell')
@@ -146,7 +149,7 @@ class AnalisiSemantica:
 
         if self.symbolTable.probe(nome_var):
             self.errori.append(f"NNNNNNNNNNOOOOOOOOOOOOO ma che è fatt!!!!!: Parametro duplicato '{nome_var}'")
-
+            return
         # Inseriamo il dizionario completo fin da subito
         info_parametro = {
             'tipo': tipo_var,
@@ -176,10 +179,11 @@ class AnalisiSemantica:
             if funzione_vuole_array and not is_array_valore:
                 self.errori.append(f"La funzione '{self.funzione_corrente.nome.nome}' deve ritornare un array, "
                     f"ma '{node.valore.nome}' non lo è")
+                return
             if not funzione_vuole_array and is_array_valore:
                 self.errori.append(f"La funzione '{self.funzione_corrente.nome.nome}' ritorna uno scalare, "
                     f"ma '{node.valore.nome}' è un array")
-
+                return
         return tipo_valore
 
     def _ha_return(self, block: Block):
@@ -211,12 +215,13 @@ class AnalisiSemantica:
         classe = self.symbolTable.lookup(nome_classe_attesa)
         if classe is None or not isinstance(classe, Robba):
             self.errori.append(f"'{nome_classe_attesa}' non è una classe valida")
-
+            return
         parametri_attesi = classe.costruttore.parametri if classe.costruttore else []
         args = node.parametri or []
 
         if len(args) != len(parametri_attesi):
             self.errori.append(f"MMMMMMMMMMMMMMAAAAAAAAAAAAAAAA CCCHHHHEEE SSSTTTTTAAAAIIIII FFFFFACCCCCENEEEENNNN: il numero di argomenti pasati{args.__str__()} è diverso da quanto si aspetta il costruttore {parametri_attesi.__str__()}")
+            return
         for arg in args:
             self.visit(arg)
 
@@ -232,11 +237,11 @@ class AnalisiSemantica:
 
         if tipo_nome is None:
             self.errori.append(f"Variabile '{nome_var}' non dichiarata")
-
+            return
         classe = self.symbolTable.lookup(tipo_nome)
         if not isinstance(classe, Robba):
             self.errori.append(f"'{nome_var}' non è un'istanza di una classe")
-
+            return
         nome_metodo = node.variabile.nome if hasattr(node.nome, 'nome') else str(node.nome)
         metodo = next((f for f in classe.funzioni if str(f.nome.nome) == nome_metodo), None)
 
@@ -247,6 +252,7 @@ class AnalisiSemantica:
         args = node.Parametri or []
         if len(args) != len(metodo.parametri):
             self.errori.append(f"'{nome_metodo}' si aspetta {len(metodo.parametri)} argomenti, ricevuti {len(args)}")
+            return None
 
         for arg in args:
             self.visit(arg)
@@ -260,10 +266,11 @@ class AnalisiSemantica:
 
         if tipo_nome is None:
             self.errori.append(f"Variabile '{nome_var}' non dichiarata")
-
+            return
         classe = self.symbolTable.lookup(tipo_nome)
         if not isinstance(classe, Robba):
             self.errori.append(f"'{nome_var}' non è un'istanza di una classe")
+            return
 
         nome_campo = node.campo.nome
         campo = next((v for v in classe.variabili if str(v.nome.nome) == nome_campo), None)
@@ -287,11 +294,12 @@ class AnalisiSemantica:
 
         if not isinstance(funzione, Mestier):
             self.errori.append(f"'{nome_funzione}' non è una funzione")
-
+            return
         if len(node.args) != len(funzione.parametri):
             self.errori.append(f"'{nome_funzione}' si aspetta {len(funzione.parametri)} argomenti, "
                                f"ricevuti {len(node.args)}"
                                )
+            return
 
         for arg in node.args:
             self.visit(arg)
@@ -307,6 +315,7 @@ class AnalisiSemantica:
         tipo_cond = self.visit(node.condizione)
         if tipo_cond != "lota":
             self.errori.append(f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da boolean")
+            return
 
         if node.VarOperation is not None:
             self.visit(node.VarOperation)
@@ -321,6 +330,7 @@ class AnalisiSemantica:
         tipo_cond = self.visit(node.Condizione)
         if tipo_cond != "lota" and tipo_cond != "numr":
             self.errori.append(f"La condizione del while deve essere booleana, o numr trovato '{tipo_cond}'")
+            return
 
         self.symbolTable.enterScope()
 
@@ -337,6 +347,8 @@ class AnalisiSemantica:
         tipo_cond = self.visit(node.condizione)
         if tipo_cond != "lota":
             self.errori.append(f"La condizione dell'if deve essere booleana, trovato '{tipo_cond}'")
+            return
+
 
         self.symbolTable.enterScope()
         self.visit(node.allora)
@@ -356,6 +368,7 @@ class AnalisiSemantica:
             if node.op in ('not', '!!'):
                 if rv != 'lota':
                     self.errori.append(f"NOO MA CHE E FATT :'{node.op}' è applicabile solo a un valore di tipo lota")
+                    return
                 return 'lota'
             return rv
 
@@ -365,6 +378,7 @@ class AnalisiSemantica:
             if node.op in ('++', '--'):
                 if lv != 'numr' and lv != 'burdell':
                     self.errori.append(f"NOO MA CHE E FATT : '{node.op}' applicabile solo a numr e burdell")
+                    return
                 return 'numr'
 
 
@@ -375,22 +389,26 @@ class AnalisiSemantica:
             #caso operatore array erroneo
             if node.op not in ("-=", "+="):
                 self.errori.append(f"NOO MA CHE E FATT : Su un array puoi usare solo '-=' (aggiungi) o '+=' (rimuovi), non '{node.op}'")
+                return
             info_array = self.symbolTable.lookup(node.left.nome)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
             tipo_valore = rv
             #caso variabile destra array: non posso assegnare un array a un altro array senza usare l'indice
             if isinstance(node.right, Variabile) and self.symbolTable.is_array(node.right.nome) and node.right.index == -1:
                 self.errori.append(f"BOTT A MUR : Non puoi usare la notazione {node.op} , sulla variabile destra di tipo array no index")
+                return
 
             if tipo_array != "burdell" and tipo_array != tipo_valore:
                 self.errori.append(f"NOO MA CHE E FATT : Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
                     f"da un array di '{tipo_array}'")
+                return
             return tipo_array
 
 
         if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
             if node.op not in ("=", "-", "+", "<->"):
                 self.errori.append(f" NOO MA CHE E FATT : Con la notazione indice sull'array non puoi concatenare -= +=, non '{node.op}'")
+                return
             info_array = self.symbolTable.lookup(node.left.nome)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
             tipo_valore = rv
@@ -398,6 +416,7 @@ class AnalisiSemantica:
             if tipo_array != "burdell" and tipo_array != tipo_valore:
                 self.errori.append(f"NOO MA CHE E FATT: Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
                     f"da un array di '{tipo_array}'")
+                return
             return tipo_array
 
 
@@ -415,6 +434,7 @@ class AnalisiSemantica:
                 nome = node.left.nome if isinstance(node.left, Variabile) else "?"
                 self.errori.append(f"'{nome}' è 'burdell' non ancora inizializzata: "
                     f"il primo utilizzo deve essere un'assegnazione semplice '=', non '{node.op}'")
+                return
 
         # LOTA
         if lv == "lota" or rv == "lota":

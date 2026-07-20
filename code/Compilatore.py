@@ -151,8 +151,6 @@ vacant Uè ) ( }
             {
         {
         
-        burdell x = ??ciao?? !
-        x = sasicchj!
         condizione = friariell !
     {
 {
