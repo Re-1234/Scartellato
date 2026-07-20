@@ -131,39 +131,37 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore("""
-
-    numr d = 5!
-
-vacant mestier stampa_saluto ) guagliuni : numr n ( }
-    numr risultato = n!
+vacant Uè)( }
+    numr a = 5!
+    numr b = 3!
+ 
+    numr somma = a+b!
+    numr diff = a-b!
+    numr prod = a*b!
+    numr quoz = a/b!
+    numr resto = a%b!
+ 
+    lota c1 = a>b!
+    lota c2 = a<b!
+    lota c3 = a>=b!
+    lota c4 = a<=b!
+    lota c5 = a==b!
+    lota c6 = a!=b!
+    lota c7 = c1 and c2!
+    lota c8 = c1 or c2!
+    lota c9 = !! c1!
+ 
+    a+=1!
+    a-=1!
+    a*=2!
+    a/=2!
+    a++!
+    a--!
+    ++a!
+    --a!
+ 
+    a<->b!
+ 
+    arape_a_vocca)??a=??-a-??  b=??-b(!
 {
-
-robba Persona } 
-    numr eta!
-    o_mast ) guagliuni : numr e ( }
-        eta = e!
-    {
-{
-
-Uè)( }
-    numr x = 10!
-    numr y = d!
-    burdell ][ ci!
-    ci]0[ = 4!
-    ci]0[ = ??ciao??!
-    ci]0[ = ci]0[ - 4!
-    ci]0[ = ci]0[ - ??cop??!
-    
-    mettimcà) x > y ( }
-        x = x + 1!
-    {
-    jamm_ja : stampa_saluto ) guagliuni : x ( !
-{
-    
-vacant mestier aritmetic )guagliuni: nbruogglio f , numr c (}
-    numr k = 0!
-    aspe)sasicchj(}
-        --k!
-    {
-{    
     """)

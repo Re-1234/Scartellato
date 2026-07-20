@@ -77,6 +77,15 @@ class AST_Transformer(Transformer):
         return nodo
 
     @v_args(meta=True)
+    def negato (self ,figli,meta):
+        operatore = self.filtra(figli)[0]
+        variabile = self.filtra(figli)[1]
+        nodo = OpBin(op = str(operatore),left = None,right = variabile)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+    
+    
+    @v_args(meta=True)
     def incremento_destro(self,figli,meta):
         variabile = self.filtra(figli)[0]
         operatore = self.filtra(figli)[1]
@@ -162,6 +171,14 @@ class AST_Transformer(Transformer):
         nodo=OpBin(op = str(op1),left = left , right = right)
         righe_nodi[id(nodo)] = meta.line
         return nodo
+
+    @v_args(meta=True)
+    def diverso(self,figli,meta):
+        left , op1 , right = self.filtra(figli)
+        nodo = OpBin(op = str(op1),left = left , right = right)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
+
 
     @v_args(meta=True)
     def divisioneuguale(self, figli,meta):
