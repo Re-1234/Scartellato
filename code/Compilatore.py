@@ -131,33 +131,30 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-// Funzione definita alla fine, ma chiamata prima
-numr mestier fibonacci ) guagliuni : numr n ( }
-    mettimmcà ) n <= 1 ( }
-        ccàsta n !
+vacant mestier bubbleSort ) guagliuni : numr ][ arr, numr dim ( }
+    numr i = 0 !
+    aspe ) i < dim ( }
+        numr j = 0 !
+        aspe ) j < dim + i + 1 ( }
+            mettimmcà ) arr]j[ > arr]j - 1[ ( }
+                // Swap tra elementi dell'array
+                arr]j[ <-> arr]j - 1[ !
+            {
+            j-- !
+        {
+        i-- !
     {
-    jamm_ja : fibonacci ) guagliuni : n - 1 ( !
-    jamm_ja : fibonacci ) guagliuni : n - 2 ( !
-    numr somma!
-    ccàsta somma!
 {
 
-vacant Uè ) ( }
-    // CHIAMATA PENDING 1: Questa esiste e deve essere risolta alla fine
-    numr seq = jamm_ja : fibonacci ) guagliuni : 10 ( ! 
-    
+ Uè )( }
+    numr ][ numeri = 0 !
+    numeri -= 45 !
+    numeri -= 12 !
+    numeri -= 89 !
+    numeri -= 3 !
 
-    numr a = 5 !
-    nbruogglio testo = ??Valore: ?? !
+    jamm_ja : bubbleSort ) guagliuni : numeri, 4 ( !
     
-    mettimmcà ) a<9 ( }                        
-        numr a = 10 !                        
-    {
-    
-    jamm_ja : fibonacci ) guagliuni : a ( ! // ✅ OK: concatenazione di una stringa con un numero ritornato dalla funzione
-    
-    aspe ) seq<9 ( }           
-        stut_tutt !
-    {
+    arape_a_vocca ) ??Array ordinato: ?? - numeri]0[( !
 {
 """)

@@ -385,29 +385,31 @@ class AnalisiSemantica:
         rv = self.visit(node.right)
 
         #gestione array
-        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index == -1:
-            #caso operatore array erroneo
-            if node.op not in ("-=", "+="):
-                self.errori.append(f"NOO MA CHE E FATT : Su un array puoi usare solo '-=' (aggiungi) o '+=' (rimuovi), non '{node.op}'")
-                return
+        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
             info_array = self.symbolTable.lookup(node.left.nome)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
             tipo_valore = rv
-            #caso variabile destra array: non posso assegnare un array a un altro array senza usare l'indice
-            if isinstance(node.right, Variabile) and self.symbolTable.is_array(node.right.nome) and node.right.index == -1:
-                self.errori.append(f"BOTT A MUR : Non puoi usare la notazione {node.op} , sulla variabile destra di tipo array no index")
-                return
 
             if tipo_array != "burdell" and tipo_array != tipo_valore:
-                self.errori.append(f"NOO MA CHE E FATT : Impossibile aggiungere/rimuovere un valore di tipo '{tipo_valore}' "
-                    f"da un array di '{tipo_array}'")
+                self.errori.append(
+                    f"NOO MA CHE E FATT: Tipi incompatibili tra l'elemento dell'array '{tipo_array}' e valore '{tipo_valore}'")
                 return
+
+            # Confronti tra elementi (>, <, ==, !=, >=, <=) -> restituiscono "lota"
+            if self.control_Ope_Confronto(node.op):
+                return "lota"
+
+            # Operazioni aritmetiche, assegnamento o swap -> restituiscono il tipo dell'elemento (es. "numr")
+            if self.control_Ope_Aritmetic(node.op) or node.op in ("=", "<->"):
+                return tipo_array
+
+            self.errori.append(f"NOO MA CHE E FATT : Operatore '{node.op}' non supportato sull'elemento dell'array")
             return tipo_array
 
 
         if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
-            if node.op not in ("=", "-", "+", "<->"):
-                self.errori.append(f" NOO MA CHE E FATT : Con la notazione indice sull'array non puoi concatenare -= +=, non '{node.op}'")
+            if node.op not in ("=", "-", "+", "<->","<",">"):
+                self.errori.append(f" NOO MA CHE E FATT : Con la notazione indice sull'array non puoi concatenare , hai usato '{node.op}'")
                 return
             info_array = self.symbolTable.lookup(node.left.nome)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array

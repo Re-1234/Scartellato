@@ -224,6 +224,24 @@ class Transpiler:
             self.indentazione(f"{tipo_c} {nome} = {default};")
 
 
+    def _genera_prototipo_mestier(self, node: Mestier):
+        nome = str(node.nome.nome)
+
+        if node.is_array:
+            tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
+        else:
+            tipo_ritorno = self.tipo_c(node.ritorno)
+
+        parametri = node.parametri or []
+        if isinstance(parametri, str):
+            parametri = []
+
+        params_parts = [f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}" for p in parametri]
+        params = ", ".join(params_parts)
+
+        self.indentazione(f"{tipo_ritorno} {nome}({params});")
+
+
     def visit_Mestier(self, node: Mestier):
         nome = str(node.nome.nome)  # nome della funzione
 
@@ -395,6 +413,11 @@ class Transpiler:
     def espr_OpBin(self, node: OpBin):
         if node.op in ("=", "<->"):
             raise Exception(f"'{node.op}' non può comparire dentro un'espressione")
+
+        if node.left is None:  # operatore prefisso unario (es. !!, not)
+            dx = self.espr(node.right)
+            op_c = {"not": "!", "!!": "!"}.get(node.op, node.op)
+            return f"{op_c}({dx})"
 
         tipo_sx = self.tipo_di(node.left)
         tipo_dx = self.tipo_di(node.right) if node.right is not None else None
@@ -646,6 +669,11 @@ class Transpiler:
     
     
                    """)
+
+        for decl in node.program:
+            if isinstance(decl, Mestier) and str(decl.nome.nome) != "Uè":
+                self._genera_prototipo_mestier(decl)
+        self.indentazione("")
 
         for decl in node.program:
             self.visit(decl)
