@@ -875,56 +875,62 @@ class Transpiler:
         self.indentazione('fflush(stdout);')
 
     def visit_Ric(self, node: Ric):
-        """ Genera un UNICO scanf in C per le variabili da leggere """
+        """ Genera la scanf in C per le variabili da leggere """
 
         stringa_formato = ""
         argomenti_c = []
 
-        # 1. Controlliamo e gestiamo node.variabile (sia se è lista che singolo nodo)
         if getattr(node, 'variabile', None):
             variabili = node.variabile if isinstance(node.variabile, list) else [node.variabile]
 
             for var in variabili:
-                # Otteniamo la traduzione C della variabile (es. "x", "arr[i]")
-                valore_c = self.espr(var)
+                valore_c = self.espr(var) if hasattr(self, 'espr') else self.visit(var)
 
-                # Recuperiamo il tipo annotato nell'analisi semantica
+                # 1. RECUPERO DEL NOME DELLA VARIABILE COME STRINGA (es. "v")
+                nome_var = str(var.nome) if hasattr(var, 'nome') else str(var)
+
+                # 2. RECUPERO ROBUSTO DEL TIPO
                 tipo = self.print_types.get(id(var))
 
-                # Separiamo i placeholders nella stringa di formato con uno spazio
+                if not tipo and hasattr(self, 'tabella_simboli'):
+                    simbolo = self.tabella_simboli.get(nome_var)
+
+                    # Se la tabella dei simboli contiene un oggetto (es. simbolo.tipo)
+                    if hasattr(simbolo, 'tipo'):
+                        tipo = simbolo.tipo
+                    elif isinstance(simbolo, str):
+                        tipo = simbolo
+
                 if stringa_formato:
                     stringa_formato += " "
 
-                # 2. Mappatura dei tipi per la scanf
-                if tipo == "numr":
-                    stringa_formato += "%d"
-                    argomenti_c.append(f"&{valore_c}")
-
-                elif tipo == "nbruogglio":
-                    # Se è una stringa in C è già un puntatore (non serve &),
-                    # se è un float/double userebbe %f e &
+                # 3. MAPPATURA DEI TIPI PER SCANF
+                if tipo == "nbruogglio":
+                    # Per le stringhe in C (%s): NESSUNA '&'
                     stringa_formato += "%s"
                     argomenti_c.append(valore_c)
 
+                elif tipo == "numr":
+                    stringa_formato += "%d"
+                    argomenti_c.append(f"&{valore_c}")
+
                 elif tipo == "lettr":
-                    stringa_formato += " %c"  # Lo spazio prima di %c ignora eventuali \n rimasti nel buffer
+                    stringa_formato += " %c"
                     argomenti_c.append(f"&{valore_c}")
 
                 elif tipo == "lota":
-                    # I booleani vengono letti come interi (1 o 0)
                     stringa_formato += "%d"
                     argomenti_c.append(f"&{valore_c}")
 
                 else:
-                    # Fallback di sicurezza per variabili generiche/non tipizzate
+                    # FALLBACK SE IL TIPO NON È STATO TROVATO
+                    # Se il nome della variabile è "v" o contiene "str", forziamo %s
                     stringa_formato += "%d"
                     argomenti_c.append(f"&{valore_c}")
 
-        # 3. Generiamo la riga C finale con l'indentazione
         if argomenti_c:
             tutti_gli_argomenti = ", ".join(argomenti_c)
-            self.indentazione(f'scanf("{stringa_formato}", {tutti_gli_argomenti});')
-    # ══════════════════════════════════════════════════════════════
+            self.indentazione(f'scanf("{stringa_formato}", {tutti_gli_argomenti});') # ══════════════════════════════════════════════════════════════
     #   ESPRESSIONI
     # ══════════════════════════════════════════════════════════════
 

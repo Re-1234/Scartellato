@@ -608,9 +608,21 @@ class AnalisiSemantica:
                 tipo_rilevato = self.visit(variabile)
                 self.print_types[id(variabile)] = tipo_rilevato
 
-    def visit_Ric(self,node : Ric):
-        for v in node.variabile:
-            self.visit(v)
+    def visit_Ric(self, node: Ric):
+        # 1. Uniformiamo node.variabile in una lista di nodi
+        variabili = node.variabile if isinstance(node.variabile, list) else [node.variabile]
+
+        # 2. Iteriamo su ogni variabile dell'istruzione ric()
+        for v in variabili:
+            tipo_rilevato = self.visit(v)
+
+            # Fallback se self.visit(v) non ritorna direttamente la stringa del tipo
+            if not tipo_rilevato and hasattr(v, 'nome'):
+                tipo_rilevato = self.tabella_simboli.get(str(v.nome))
+
+            # SALVA IL TIPO IN print_types!
+            # Ora il Transpiler troverà "nbruogglio" tramite id(var) e genererà %s!
+            self.print_types[id(v)] = tipo_rilevato
 
     def control_Ope_Logici(self, oper: str) -> bool:
         """Operatori strettamente logici (richiedono e restituiscono 'lota')"""

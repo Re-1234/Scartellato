@@ -131,12 +131,53 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-
 vacant Uè ) ( }
-   nbruogglio s = ??ciao?? !
-   nbruogglio c2= ??ciao??!
-   s= s + ??ciao?? !
-    arape_a_vocca)????- s( !
+    nbruogglio v=??ciao??!
+    v= v + ??s??!
+    arape_a_vocca)??scegli tra :??(!
+    arape_a_vocca)??-=??(!
+    arape_a_vocca)??+=??(!
+    arape_a_vocca)??*=??(!
+    arape_a_vocca)??/=??(!
+    arape_a_vocca)??-??(!
+    arape_a_vocca)??+??(!
+    arape_a_vocca)??/??(!
+    arape_a_vocca)??%??(!    
+
+    ric)v(!
+    arape_a_vocca)??v = ??-v(!
+    numr b!
+    numr n!
+    arape_a_vocca)??scegli 2 numeri a cui applicare l'operazione: ??(!
+    ric)b(!
+    ric)n(!
+    arape_a_vocca)??b = ??-b - ??n = ?? - n(!
+    mettimmcà)v == ??-=??(
+        b -= n!
+    
+    mettimmcà)v == ??+=??(
+        b += n!
+    
+    mettimmcà)v == ??/=??(
+        b /= n!
+    
+    mettimmcà)v == ??*=??(
+        b *= n!
+    
+    mettimmcà)v == ??+??(
+        b = b + n!    
+    
+    mettimmcà)v == ??-??(
+        b = b - n!
+    
+    mettimmcà)v == ??%??(
+        b = b % n!
+    
+    mettimmcà)v == ??/??(
+        b = b / n!
+    
+    
+    arape_a_vocca)???? - b(!
 {
-    """)
+""")
 

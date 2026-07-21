@@ -33,9 +33,9 @@ def calcola_tipo(transpiler, node):
         if cls == "Boolean": return "lota"
         if cls == "Carattr": return "lettr"
         if cls == "OpBin":
-            t_sx = transpiler._calcola_tipo(node.left)
-            t_dx = transpiler._calcola_tipo(node.right)
-            # Nel tuo linguaggio string + something = string
+            # CORRETTO: chiamata alla funzione locale calcola_tipo
+            t_sx = calcola_tipo(transpiler, node.left)
+            t_dx = calcola_tipo(transpiler, node.right)
             if t_sx == "nbruogglio" or t_dx == "nbruogglio":
                 return "nbruogglio"
             return t_sx
