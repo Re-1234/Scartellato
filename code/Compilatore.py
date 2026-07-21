@@ -133,14 +133,10 @@ def compilatore(source: str) -> CompileResult:
 compilatore(""" 
 
 vacant Uè ) ( }
-    numr c =4!
-    aspe)3(}
-        c--! 
-        mettimmcà)c==0(
-            ccàsta !
-            
-    {
-    arape_a_vocca)????- c( !
+   nbruogglio s = ??ciao?? !
+   nbruogglio c2= ??ciao??!
+   s= s + ??ciao?? !
+    arape_a_vocca)????- s( !
 {
     """)
 

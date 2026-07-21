@@ -30,6 +30,208 @@ class Transpiler:
         "!!": "!",
     }
 
+    HEADER = """
+                #define MAX_ALLOCS 10000
+               static void* _mem_tracker[MAX_ALLOCS];
+               static int _mem_count = 0;
+
+               static inline void* b_malloc(size_t size) {
+                   void* ptr = malloc(size);
+                   if (!ptr) { fprintf(stderr, "Errore fatale: Memoria esaurita!\\n"); exit(1); }
+                   if (_mem_count < MAX_ALLOCS) {
+                       _mem_tracker[_mem_count++] = ptr;
+                   }
+                   return ptr;
+               }
+
+               static inline void* b_realloc(void* old_ptr, size_t size) {
+                   void* new_ptr = realloc(old_ptr, size);
+                   if (!new_ptr && size > 0) { fprintf(stderr, "Errore fatale: Memoria esaurita!\\n"); exit(1); }
+
+                   if (!old_ptr) {
+                       // Se il vecchio puntatore era NULL, si comporta come una malloc
+                       if (_mem_count < MAX_ALLOCS) _mem_tracker[_mem_count++] = new_ptr;
+                   } else {
+                       // Cerca il vecchio puntatore nel tracker e aggiornalo con la nuova posizione
+                       for (int i = 0; i < _mem_count; i++) {
+                           if (_mem_tracker[i] == old_ptr) {
+                               _mem_tracker[i] = new_ptr;
+                               return new_ptr;
+                           }
+                       }
+                       // Se non l'ha trovato (strano ma possibile), lo aggiunge come nuovo
+                       if (_mem_count < MAX_ALLOCS) _mem_tracker[_mem_count++] = new_ptr;
+                   }
+                   return new_ptr;
+               }
+
+               static inline void b_free(void* ptr) {
+                   if (!ptr) return;
+                   // Cerca il puntatore nel tracker, liberalo e setta a NULL per b_free_all
+                   for (int i = 0; i < _mem_count; i++) {
+                       if (_mem_tracker[i] == ptr) {
+                           free(ptr);
+                           _mem_tracker[i] = NULL; 
+                           return;
+                       }
+                   }
+               }
+
+               static inline void b_free_all(void) {
+                   for (int i = 0; i < _mem_count; i++) {
+                       if (_mem_tracker[i]) {
+                           free(_mem_tracker[i]);
+                           _mem_tracker[i] = NULL;
+                       }
+                   }
+                   _mem_count = 0;
+               }
+
+
+
+               #define ARRAY_CHUNK 50                                                
+               #define DEFINE_ARRAY(TYPE, NAME, EQ)                                  \\
+               typedef struct {                                                      \\
+                   TYPE *data;                                                       \\
+                   int size;                                                         \\
+                   int capacity;                                                     \\
+               } NAME##_array;                                                       \\
+                                                                                       \\
+               static inline void NAME##_array_init(NAME##_array *a) {               \\
+                   a->data = NULL; a->size = 0; a->capacity = 0;                     \\
+               }                                                                     \\
+                                                                                       \\
+               static inline void NAME##_array_append(NAME##_array *a, TYPE val) {   \\
+                if (a->size >= a->capacity) {                                     \\
+                       int new_capacity = a->capacity + ARRAY_CHUNK;                 \\
+                       TYPE *temp = b_realloc(a->data, new_capacity * sizeof(TYPE));   \\
+                       if (!temp) {                                                  \\
+                           fprintf(stderr, "Errore: realloc fallita in %s_array!\\n", #NAME); \\
+                           exit(1);                                                  \\
+                       }                                                             \\
+                       a->data = temp;                                               \\
+                       a->capacity = new_capacity;                                   \\
+                   }                                                                 \\
+                   a->data[a->size++] = val;                                         \\
+               }                                                                       \\
+                                                                                       \\
+                                                                                       \\
+              static inline void NAME##_array_free(NAME##_array *a) {               \\
+                   if (a->data) b_free(a->data);                                       \\
+                   a->data = NULL; a->size = 0; a->capacity = 0;                     \\
+               }                                                                      \\
+                                                                                       \\
+              static inline bool NAME##_array_contains(NAME##_array *a, TYPE val) {  \\
+                   for (int i = 0; i < a->size; i++) {                                 \\
+                       if (EQ(a->data[i], val))                                        \\
+                           return true;                                                \\
+                   }                                                                   \\
+                   return false;                                                       \\
+              }                                                                        
+
+               #define EQ_NUM(a,b)  ((a) == (b))                                       
+               #define EQ_STR(a,b)  (strcmp((a),(b)) == 0)                             
+               #define EQ_BOOL(a,b) ((a) == (b))                                       
+
+               DEFINE_ARRAY(int, numr, EQ_NUM)                                         
+               DEFINE_ARRAY(char*, nbruogglio, EQ_STR)                                 
+               DEFINE_ARRAY(bool, lota, EQ_BOOL)                                       
+
+
+           typedef enum { TIPO_NUMR, TIPO_LOTA, TIPO_NBRUOGGLIO, TIPO_LETTR } TagBurdell;
+                   typedef struct {
+                       TagBurdell tag;
+                       union {
+                           int numr;
+                           bool lota;
+                           char* nbruogglio;
+                           char lettr;
+                       } val;
+                   } Burdell;
+
+                   typedef struct {
+                       Burdell* dati;
+                       int len;
+                       int cap;
+                   } ArrayDinamico;
+
+
+           Burdell burdell_da_numr(int v) {
+                       Burdell b; b.tag = TIPO_NUMR; b.val.numr = v; return b;
+                   }
+                   Burdell burdell_da_lota(bool v) {
+                       Burdell b; b.tag = TIPO_LOTA; b.val.lota = v; return b;
+                   }
+                   Burdell burdell_da_nbruogglio(char* v) {
+                       Burdell b; b.tag = TIPO_NBRUOGGLIO; b.val.nbruogglio = v; return b;
+                   }
+                   Burdell burdell_da_lettr(char v) {
+                       Burdell b; b.tag = TIPO_LETTR; b.val.lettr = v; return b;
+                   }
+
+                   char* burdell_concat(const char* s1, const char* s2) {
+                       if(!s1) s1 = ""; if(!s2) s2 = "";
+                       char* res = (char*)b_malloc(strlen(s1) + strlen(s2) + 1);
+                       strcpy(res, s1); strcat(res, s2);
+                       return res;
+                   }
+                   char* burdell_concat_str_num(const char* s, int n) {
+                       if(!s) s = "";
+                       char* res = (char*)b_malloc(strlen(s) + 32);
+                       sprintf(res, "%s%d", s, n);
+                       return res;
+                   }
+                   char* burdell_concat_num_str(int n, const char* s) {
+                       if(!s) s = "";
+                       char* res = (char*)b_malloc(strlen(s) + 32);
+                       sprintf(res, "%d%s", n, s);
+                       return res;
+                   }
+                  int burdell_equals(Burdell a, Burdell b) {
+                       if (a.tag != b.tag) return 0;
+                       switch (a.tag) {
+                           case TIPO_NUMR: return a.val.numr == b.val.numr;
+                           case TIPO_LOTA: return a.val.lota == b.val.lota;
+                           case TIPO_NBRUOGGLIO: return strcmp(a.val.nbruogglio, b.val.nbruogglio) == 0;
+                           case TIPO_LETTR: return a.val.lettr == b.val.lettr;
+                       }
+                       return 0;
+                   }
+
+
+                      void arr_init(ArrayDinamico* a) {
+                          a->dati = NULL; a->len = 0; a->cap = 0;
+                      }
+
+                      void arr_append(ArrayDinamico* a, Burdell v) {
+                        if (a->len >= a->cap) {
+                              int new_cap = a->cap == 0 ? 4 : a->cap * 2;
+                              Burdell* temp = b_realloc(a->dati, new_cap * sizeof(Burdell));
+                              if (!temp) {
+                                  fprintf(stderr, "Errore: realloc fallita in ArrayDinamico!\\n");
+                                  exit(1);
+                              }
+                              a->dati = temp;
+                              a->cap = new_cap;
+                          }
+                          a->dati[a->len++] = v;
+                      }
+
+                       bool arr_contains(ArrayDinamico* a, Burdell v) {
+                          for (int i = 0; i < a->len; i++)
+                              if (burdell_equals(a->dati[i], v)) return true;
+                          return false;
+                      }
+
+                      void arr_free(ArrayDinamico* a) {
+                          if (a->dati) b_free(a->dati);
+                          a->dati = NULL; a->len = 0; a->cap = 0;
+                      }
+
+
+                      """
+
+
 
     def __init__(self, tipi_risolti: dict, burdell_info: dict, print_types: dict):
             self.tipi_risolti = tipi_risolti
@@ -474,19 +676,19 @@ class Transpiler:
                 return f"(strcmp({sx}, {dx}) == 0)"
             elif node.op == "!=":
                 return f"(strcmp({sx}, {dx}) != 0)"
-            elif node.op == "-":  # In Scartellato '-' è l'addizione/concatenazione
+            elif node.op == "+":  # In Scartellato '+' è l'addizione/concatenazione
                 return f"burdell_concat({sx}, {dx})"
 
         if tipo_sx == "nbruogglio" and tipo_dx == "numr":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
-            if node.op == "-":
+            if node.op == "+":
                 return f"burdell_concat_str_num({sx}, {dx})"
 
         if tipo_sx == "numr" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
-            if node.op == "-":
+            if node.op == "+":
                 return f"burdell_concat_num_str({sx}, {dx})"
 
         # GESTIONE OPERATORI BASE CON TRADUZIONE IN C
@@ -512,207 +714,8 @@ class Transpiler:
         self.indentazione("#include <stdlib.h>")
         self.indentazione("")
 
-        self.indentazione("""
-             #define MAX_ALLOCS 10000
-            static void* _mem_tracker[MAX_ALLOCS];
-            static int _mem_count = 0;
-    
-            static inline void* b_malloc(size_t size) {
-                void* ptr = malloc(size);
-                if (!ptr) { fprintf(stderr, "Errore fatale: Memoria esaurita!\\n"); exit(1); }
-                if (_mem_count < MAX_ALLOCS) {
-                    _mem_tracker[_mem_count++] = ptr;
-                }
-                return ptr;
-            }
-    
-            static inline void* b_realloc(void* old_ptr, size_t size) {
-                void* new_ptr = realloc(old_ptr, size);
-                if (!new_ptr && size > 0) { fprintf(stderr, "Errore fatale: Memoria esaurita!\\n"); exit(1); }
-    
-                if (!old_ptr) {
-                    // Se il vecchio puntatore era NULL, si comporta come una malloc
-                    if (_mem_count < MAX_ALLOCS) _mem_tracker[_mem_count++] = new_ptr;
-                } else {
-                    // Cerca il vecchio puntatore nel tracker e aggiornalo con la nuova posizione
-                    for (int i = 0; i < _mem_count; i++) {
-                        if (_mem_tracker[i] == old_ptr) {
-                            _mem_tracker[i] = new_ptr;
-                            return new_ptr;
-                        }
-                    }
-                    // Se non l'ha trovato (strano ma possibile), lo aggiunge come nuovo
-                    if (_mem_count < MAX_ALLOCS) _mem_tracker[_mem_count++] = new_ptr;
-                }
-                return new_ptr;
-            }
-    
-            static inline void b_free(void* ptr) {
-                if (!ptr) return;
-                // Cerca il puntatore nel tracker, liberalo e setta a NULL per b_free_all
-                for (int i = 0; i < _mem_count; i++) {
-                    if (_mem_tracker[i] == ptr) {
-                        free(ptr);
-                        _mem_tracker[i] = NULL; 
-                        return;
-                    }
-                }
-            }
-    
-            static inline void b_free_all(void) {
-                for (int i = 0; i < _mem_count; i++) {
-                    if (_mem_tracker[i]) {
-                        free(_mem_tracker[i]);
-                        _mem_tracker[i] = NULL;
-                    }
-                }
-                _mem_count = 0;
-            }
-            """)
+        self.indentazione(self.HEADER)
 
-        self.indentazione(""" 
-            #define ARRAY_CHUNK 50                                                
-            #define DEFINE_ARRAY(TYPE, NAME, EQ)                                  \\
-            typedef struct {                                                      \\
-                TYPE *data;                                                       \\
-                int size;                                                         \\
-                int capacity;                                                     \\
-            } NAME##_array;                                                       \\
-                                                                                    \\
-            static inline void NAME##_array_init(NAME##_array *a) {               \\
-                a->data = NULL; a->size = 0; a->capacity = 0;                     \\
-            }                                                                     \\
-                                                                                    \\
-            static inline void NAME##_array_append(NAME##_array *a, TYPE val) {   \\
-             if (a->size >= a->capacity) {                                     \\
-                    int new_capacity = a->capacity + ARRAY_CHUNK;                 \\
-                    TYPE *temp = b_realloc(a->data, new_capacity * sizeof(TYPE));   \\
-                    if (!temp) {                                                  \\
-                        fprintf(stderr, "Errore: realloc fallita in %s_array!\\n", #NAME); \\
-                        exit(1);                                                  \\
-                    }                                                             \\
-                    a->data = temp;                                               \\
-                    a->capacity = new_capacity;                                   \\
-                }                                                                 \\
-                a->data[a->size++] = val;                                         \\
-            }                                                                       \\
-                                                                                    \\
-                                                                                    \\
-           static inline void NAME##_array_free(NAME##_array *a) {               \\
-                if (a->data) b_free(a->data);                                       \\
-                a->data = NULL; a->size = 0; a->capacity = 0;                     \\
-            }                                                                      \\
-                                                                                    \\
-           static inline bool NAME##_array_contains(NAME##_array *a, TYPE val) {  \\
-                for (int i = 0; i < a->size; i++) {                                 \\
-                    if (EQ(a->data[i], val))                                        \\
-                        return true;                                                \\
-                }                                                                   \\
-                return false;                                                       \\
-           }                                                                        
-    
-            #define EQ_NUM(a,b)  ((a) == (b))                                       
-            #define EQ_STR(a,b)  (strcmp((a),(b)) == 0)                             
-            #define EQ_BOOL(a,b) ((a) == (b))                                       
-    
-            DEFINE_ARRAY(int, numr, EQ_NUM)                                         
-            DEFINE_ARRAY(char*, nbruogglio, EQ_STR)                                 
-            DEFINE_ARRAY(bool, lota, EQ_BOOL)                                       
-            """)
-        self.indentazione("")
-        self.indentazione("typedef enum { TIPO_NUMR, TIPO_LOTA, TIPO_NBRUOGGLIO, TIPO_LETTR } TagBurdell;")
-        self.indentazione("""
-                typedef struct {
-                    TagBurdell tag;
-                    union {
-                        int numr;
-                        bool lota;
-                        char* nbruogglio;
-                        char lettr;
-                    } val;
-                } Burdell;
-    
-                typedef struct {
-                    Burdell* dati;
-                    int len;
-                    int cap;
-                } ArrayDinamico;
-    
-            """)
-        self.indentazione("""Burdell burdell_da_numr(int v) {
-                    Burdell b; b.tag = TIPO_NUMR; b.val.numr = v; return b;
-                }
-                Burdell burdell_da_lota(bool v) {
-                    Burdell b; b.tag = TIPO_LOTA; b.val.lota = v; return b;
-                }
-                Burdell burdell_da_nbruogglio(char* v) {
-                    Burdell b; b.tag = TIPO_NBRUOGGLIO; b.val.nbruogglio = v; return b;
-                }
-                Burdell burdell_da_lettr(char v) {
-                    Burdell b; b.tag = TIPO_LETTR; b.val.lettr = v; return b;
-                }
-    
-                char* burdell_concat(const char* s1, const char* s2) {
-                    if(!s1) s1 = ""; if(!s2) s2 = "";
-                    char* res = (char*)b_malloc(strlen(s1) + strlen(s2) + 1);
-                    strcpy(res, s1); strcat(res, s2);
-                    return res;
-                }
-                char* burdell_concat_str_num(const char* s, int n) {
-                    if(!s) s = "";
-                    char* res = (char*)b_malloc(strlen(s) + 32);
-                    sprintf(res, "%s%d", s, n);
-                    return res;
-                }
-                char* burdell_concat_num_str(int n, const char* s) {
-                    if(!s) s = "";
-                    char* res = (char*)b_malloc(strlen(s) + 32);
-                    sprintf(res, "%d%s", n, s);
-                    return res;
-                }
-               int burdell_equals(Burdell a, Burdell b) {
-                    if (a.tag != b.tag) return 0;
-                    switch (a.tag) {
-                        case TIPO_NUMR: return a.val.numr == b.val.numr;
-                        case TIPO_LOTA: return a.val.lota == b.val.lota;
-                        case TIPO_NBRUOGGLIO: return strcmp(a.val.nbruogglio, b.val.nbruogglio) == 0;
-                        case TIPO_LETTR: return a.val.lettr == b.val.lettr;
-                    }
-                    return 0;
-                }
-            """)
-        self.indentazione("""
-                   void arr_init(ArrayDinamico* a) {
-                       a->dati = NULL; a->len = 0; a->cap = 0;
-                   }
-    
-                   void arr_append(ArrayDinamico* a, Burdell v) {
-                     if (a->len >= a->cap) {
-                           int new_cap = a->cap == 0 ? 4 : a->cap * 2;
-                           Burdell* temp = b_realloc(a->dati, new_cap * sizeof(Burdell));
-                           if (!temp) {
-                               fprintf(stderr, "Errore: realloc fallita in ArrayDinamico!\\n");
-                               exit(1);
-                           }
-                           a->dati = temp;
-                           a->cap = new_cap;
-                       }
-                       a->dati[a->len++] = v;
-                   }
-    
-                    bool arr_contains(ArrayDinamico* a, Burdell v) {
-                       for (int i = 0; i < a->len; i++)
-                           if (burdell_equals(a->dati[i], v)) return true;
-                       return false;
-                   }
-    
-                   void arr_free(ArrayDinamico* a) {
-                       if (a->dati) b_free(a->dati);
-                       a->dati = NULL; a->len = 0; a->cap = 0;
-                   }
-    
-    
-                   """)
 
         for decl in node.program:
             if isinstance(decl, Mestier) and str(decl.nome.nome) != "Uè":
