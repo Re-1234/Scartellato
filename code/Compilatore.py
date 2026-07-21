@@ -133,12 +133,14 @@ def compilatore(source: str) -> CompileResult:
 compilatore(""" 
 
 vacant Uè ) ( }
-    burdell mutante = 10 !                   // Nasce come numr
-    numr contatore = 0 !
-    lota condizione = sasicchj !
-    arape_a_vocca)??dimmi cosa vuoi stronzo:??(!
-    ric)contatore(!
-    arape_a_vocca)????-contatore(!
+    numr c =4!
+    aspe)3(}
+        c--! 
+        mettimmcà)c==0(
+            ccàsta !
+            
+    {
+    arape_a_vocca)????- c( !
 {
     """)
 
