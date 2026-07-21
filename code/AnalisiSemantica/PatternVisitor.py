@@ -489,6 +489,17 @@ class AnalisiSemantica:
             if self.control_Ope_Confronto(node.op):
                 return 'lota'
 
+        if lv == "nbruogglio" and rv == "lettr" :
+            if node.op in ("+", "-=", "+="):
+                return 'nbruogglio'
+            if self.control_Ope_Confronto(node.op):
+                return 'lota'
+
+        if lv == "lettr" and rv == "nbruogglio" :
+            if node.op in ("+", "-=", "+="):
+                return 'nbruogglio'
+            if self.control_Ope_Confronto(node.op):
+                return 'lota'
 
         # NBRUOGGLIO con NUMR (prepend/append del numero come stringa)
         if lv == "nbruogglio" and rv == "numr":
