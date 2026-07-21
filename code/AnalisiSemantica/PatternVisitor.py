@@ -487,7 +487,7 @@ class AnalisiSemantica:
             if node.op in ("+", "-=", "+="):
                 return 'nbruogglio'
             if self.control_Ope_Confronto(node.op):
-                self.errori.append(f"BOTT_A_MUR: Ma che stai facenn!!!!! non puoi fare operazioni booleane con tipo {lv}e tipo {rv}")
+                return 'lota'
 
 
         # NBRUOGGLIO con NUMR (prepend/append del numero come stringa)

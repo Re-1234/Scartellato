@@ -429,29 +429,24 @@ class Transpiler:
             sx = self.espr(node.left)  # se burdell: già "z.val.nbruogglio" grazie alla nuova espr_Variabile
             dx = self.espr(node.right)
 
-            if tipo_sx == "nbruogglio" or tipo_dx == "nbruogglio":
-
-                if node.op == "-=":
-                    if tipo_sx == "nbruogglio" and tipo_dx == "numr":
-                        risultato = f"burdell_concat_str_num({sx}, {dx})"
-                    elif tipo_sx == "numr" and tipo_dx == "nbruogglio":
-                        risultato = f"burdell_concat_num_str({sx}, {dx})"
-                    else:
-                        risultato = f"burdell_concat({sx}, {dx})"
-                else:  # +=
-                    if tipo_sx == "nbruogglio" and tipo_dx == "numr":
-                        risultato = f"burdell_concat_num_str({dx}, {sx})"
-                    elif tipo_sx == "numr" and tipo_dx == "nbruogglio":
-                        risultato = f"burdell_concat_str_num({dx}, {sx})"
-                    else:
-                        risultato = f"burdell_concat({dx}, {sx})"
-
-                sx_assign =accesso_base(self,str(node.left.nome)) if isinstance(node.left, Variabile) else sx
-                if sx_is_burdell:
-                    self.indentazione(f"{sx_assign} = burdell_da_nbruogglio({risultato});")
-                else:
-                    self.indentazione(f"{sx_assign} = {risultato};")
-                return
+            # GESTIONE STRINGHE
+            if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
+                sx = self.espr(node.left)
+                dx = self.espr(node.right)
+                if node.op == "==":
+                    return f"(strcmp({sx}, {dx}) == 0)"
+                elif node.op == "!=":
+                    return f"(strcmp({sx}, {dx}) != 0)"
+                elif node.op == "<":
+                    return f"(strcmp({sx}, {dx}) < 0)"
+                elif node.op == ">":
+                    return f"(strcmp({sx}, {dx}) > 0)"
+                elif node.op == "<=":
+                    return f"(strcmp({sx}, {dx}) <= 0)"
+                elif node.op == ">=":
+                    return f"(strcmp({sx}, {dx}) >= 0)"
+                elif node.op == "-":  # In Scartellato '-' è l'addizione/concatenazione
+                    return f"burdell_concat({sx}, {dx})"
 
             # Caso base (es. numr += numr)
             op_c = self.operatore_c(node.op)
