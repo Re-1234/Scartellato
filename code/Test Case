@@ -1,0 +1,609 @@
+Categori Partion:
+	
+Programmi che testano mettimmcà:
+(DA FIXARE , ERRORE: non mostra l'output del programma.)
+Primo programma:		
+numr mestier fattoriale)guagliuni:numr n( }
+    mettimmcà)n<=1( }
+        ccàsta n!
+    {allor_fa_accussi}
+        numr temp = n-1!
+        numr parziale = jamm_ja:fattoriale)guagliuni:temp(!
+        numr risultato = n*parziale!
+        ccàsta risultato!
+    {
+{
+
+vacant Uè)( }
+    numr n = 5!
+    numr risultato = jamm_ja:fattoriale)guagliuni:n(!
+    arape_a_vocca)??Fattoriale di 5: ??-risultato(!
+{
+
+
+
+ORACOLO: 120
+FINE
+(FUNZIONA)
+Secondo Programma:
+vacant mestier saluta)( }
+    arape_a_vocca)??Ciao a tutti??(!
+{
+ 
+vacant mestier salutaDiNuovo)( }
+    jamm_ja:saluta)(!
+    arape_a_vocca)??...e ancora ciao??(!
+{
+ 
+vacant Uè)( }
+    jamm_ja:salutaDiNuovo)(!
+{
+
+ORACOLO: Stampato su schermo: "Ciao a tutti...e ancora ciao"
+FINE
+(FUNZIONA)
+terza Programma:
+vacant mestier op)(}
+	numr c = 2 + 3!
+	ccàsta c
+{
+
+vacant Uè}
+	arape_a_vocca)???? + jamm_ja:op)((
+{
+
+ORACOLO: Errore (non si puo fare il return di un elemento se si è dichiarato che non restituisce nulla)
+FINE
+quarto Programma: 
+numr ][arr !
+
+vacant mestier riempi )( }
+    arr -= 8 !
+    arr -= 3 !
+    arr -= 5 !
+    arr -= 1 !
+    arr -= 9 !
+    arr -= 2 !
+    arr -= 7 !
+    arr -= 4 !
+{
+
+vacant mestier merge ) guagliuni : numr sinistra, numr centro, numr destra ( }
+    numr ][temp !
+    numr i = sinistra !
+    numr j = centro + 1 !
+
+    aspe ) i <= centro ( }
+        temp -= arr]i[ !
+        i++ !
+    {
+    aspe ) j <= destra ( }
+        temp -= arr]j[ !
+        j++ !
+    {
+
+    numr metaSinistra = centro - sinistra !
+    numr totale = destra - sinistra !
+    numr p1 = 0 !
+    numr p2 = metaSinistra + 1 !
+    numr k = sinistra !
+
+    aspe ) p1 <= metaSinistra and p2 <= totale ( }
+        mettimmcà ) temp]p1[ <= temp]p2[ ( }
+            arr]k[ = temp]p1[ !
+            p1++ !
+        { allor_fa_accussi }
+            arr]k[ = temp]p2[ !
+            p2++ !
+        {
+        k++ !
+    {
+
+    aspe ) p1 <= metaSinistra ( }
+        arr]k[ = temp]p1[ !
+        p1++ !
+        k++ !
+    {
+
+    aspe ) p2 <= totale ( }
+        arr]k[ = temp]p2[ !
+        p2++ !
+        k++ !
+    {
+{
+
+vacant mestier mergeSort ) guagliuni : numr sinistra, numr destra ( }
+    mettimmcà ) sinistra < destra ( }
+        numr centro = )sinistra + destra( / 2 !
+        jamm_ja : mergeSort ) guagliuni : sinistra, centro ( !
+        jamm_ja : mergeSort ) guagliuni : centro + 1, destra ( !
+        jamm_ja : merge ) guagliuni : sinistra, centro, destra ( !
+    {
+{
+
+vacant mestier stampaArray ) guagliuni : numr n ( }
+    numr i = 0 !
+    aspe ) i <= n ( }
+        arape_a_vocca ) ??Elemento: ?? - arr]i[ ( !
+        i++ !
+    {
+{
+
+vacant Uè)( }
+    jamm_ja : riempi )( !
+    arape_a_vocca ) ??Array prima dell'ordinamento:?? ( !
+    jamm_ja : stampaArray ) guagliuni : 7 ( !
+    jamm_ja : mergeSort ) guagliuni : 0, 7 ( !
+    arape_a_vocca ) ??Array dopo l'ordinamento:?? ( !
+    jamm_ja : stampaArray ) guagliuni : 7 ( !
+{
+
+PROBLEMA:bug nel transpiler dichiarazione array crea una funzione globale , in C impossibile chiamare funzioni in scope globale.
+
+COREZIONE: eliminata la chiamata alla funzione
+
+ORACOLO: array da la lista da {8,3,5,1,9,2,7,4} a {1,2,3,4,5,7,8,9}
+FINE
+
+(FUNZIONA)
+Quinto Programma:
+vacant mestier stampaCiao)(}
+	arape_a_vocca)??ciao??(!
+{
+
+
+vacant Uè}
+	Jamm_ja : rimpi)(!
+{
+
+ORACOLO: ERRORE : la funzione non esiste 
+FINE
+
+Programmi che testano gli operatori matematici:
+
+primo Programma:
+vacant Uè )(}
+    nbruogglio v=??ciao??!
+    v= v + ??s??!
+    arape_a_vocca)??scegli tra :??(!
+    arape_a_vocca)??-=??(!
+    arape_a_vocca)??+=??(!
+    arape_a_vocca)??*=??(!
+    arape_a_vocca)??/=??(!
+    arape_a_vocca)??-??(!
+    arape_a_vocca)??+??(!
+    arape_a_vocca)??/??(!
+    arape_a_vocca)??%??(!    
+
+    ric)v(!
+    arape_a_vocca)??v = ??-v(!
+    numr b!
+    numr n!
+    arape_a_vocca)??scegli 2 numeri a cui applicare l'operazione: ??(!
+    ric)b(!
+    ric)n(!
+    arape_a_vocca)??b = ??-b - ??n = ?? - n(!
+    mettimmcà)v == ??-=??(
+        b -= n!
+    
+    mettimmcà)v == ??+=??(
+        b += n!
+    
+    mettimmcà)v == ??/=??(
+        b /= n!
+    
+    mettimmcà)v == ??*=??(
+        b *= n!
+    
+    mettimmcà)v == ??+??(
+        b = b + n!    
+    
+    mettimmcà)v == ??-??(
+        b = b - n!
+    
+    mettimmcà)v == ??%??(
+        b = b % n!
+    
+    mettimmcà)v == ??/??(
+        b = b / n!
+    
+    
+    arape_a_vocca)???? - b(!
+{
+
+FINE
+
+secondo Programmi:
+
+numr ][dati !
+
+vacant mestier riempiDati )( }
+    dati -= 12 !
+    dati -= 45 !
+    dati -= 7 !
+    dati -= 23 !
+    dati -= 89 !
+    dati -= 34 !
+{
+
+numr mestier sommaArray ) guagliuni : numr n ( }
+    numr somma = 0 !
+    numr i = 0 !
+    aspe ) i <= n ( }
+        somma = somma + dati]i[ !
+        i++ !
+    {
+    ccàsta somma !
+{
+
+numr mestier massimoArray ) guagliuni : numr n ( }
+    numr max = dati]0[ !
+    numr i = 1 !
+    aspe ) i <= n ( }
+        mettimmcà ) dati]i[ > max ( }
+            max = dati]i[ !
+        {
+        i++ !
+    {
+    ccàsta max !
+{
+
+numr mestier minimoArray ) guagliuni : numr n ( }
+    numr min = dati]0[ !
+    numr i = 1 !
+    aspe ) i <= n ( }
+        mettimmcà ) dati]i[ < min ( }
+            min = dati]i[ !
+        {
+        i++ !
+    {
+    ccàsta min !
+{
+
+vacant Uè)( }
+    jamm_ja : riempiDati )( !
+    numr totale = jamm_ja : sommaArray ) guagliuni : 5 ( !
+    numr media = totale / 6 !
+    numr massimo = jamm_ja : massimoArray ) guagliuni : 5 ( !
+    numr minimo = jamm_ja : minimoArray ) guagliuni : 5 ( !
+
+    arape_a_vocca ) ??Somma totale: ?? - totale ( !
+    arape_a_vocca ) ??Media: ?? - media ( !
+    arape_a_vocca ) ??Massimo: ?? - massimo ( !
+    arape_a_vocca ) ??Minimo: ?? - minimo ( !
+{
+
+ORACOLO: 
+Somma totale: 210
+Media: 35
+Massimo: 89
+Minimo: 7
+
+FINE
+
+
+Quarto Programma:
+
+numr ][vettoreA !
+numr ][vettoreB !
+numr ][vettoreSomma !
+
+vacant mestier riempiVettori )( }
+    vettoreA -= 2 !
+    vettoreA -= 4 !
+    vettoreA -= 6 !
+    vettoreA -= 8 !
+
+    vettoreB -= 1 !
+    vettoreB -= 3 !
+    vettoreB -= 5 !
+    vettoreB -= 7 !
+{
+
+vacant mestier sommaVettori ) guagliuni : numr n ( }
+    numr i = 0 !
+    aspe ) i <= n ( }
+        vettoreSomma -= vettoreA]i[ + vettoreB]i[ !
+        i++ !
+    {
+{
+
+numr mestier prodottoScalare ) guagliuni : numr n ( }
+    numr risultato = 0 !
+    numr i = 0 !
+    aspe ) i <= n ( }
+        risultato = risultato + vettoreA]i[ * vettoreB]i[ !
+        i++ !
+    {
+    ccàsta risultato !
+{
+
+vacant mestier stampaVettore ) guagliuni : numr n ( }
+    numr i = 0 !
+    aspe ) i <= n ( }
+        arape_a_vocca ) ??Componente: ?? - vettoreSomma]i[ ( !
+        i++ !
+    {
+{
+
+vacant Uè)( }
+    jamm_ja : riempiVettori )( !
+    jamm_ja : sommaVettori ) guagliuni : 3 ( !
+
+    arape_a_vocca ) ??Vettore somma:?? ( !
+    jamm_ja : stampaVettore ) guagliuni : 3 ( !
+
+    numr dot = jamm_ja : prodottoScalare ) guagliuni : 3 ( !
+    arape_a_vocca ) ??Prodotto scalare A . B: ?? - dot ( !
+{
+
+
+ORACOLO: 
+Vettore somma:
+Componente: 3
+Componente: 7
+Componente: 11
+Componente: 15
+Prodotto scalare A . B: 100
+
+FINE
+
+Quinto Programma:
+
+numr ][matrice !
+numr righe = 3 !
+numr colonne = 3 !
+
+vacant mestier riempiMatrice )( }
+    matrice -= 1 !
+    matrice -= 2 !
+    matrice -= 3 !
+    matrice -= 4 !
+    matrice -= 5 !
+    matrice -= 6 !
+    matrice -= 7 !
+    matrice -= 8 !
+    matrice -= 9 !
+{
+
+vacant mestier moltiplicaScalare ) guagliuni : numr scalare ( }
+    numr i = 0 !
+    numr totale = righe * colonne !
+    aspe ) i < totale ( }
+        matrice]i[ = matrice]i[ * scalare !
+        i++ !
+    {
+{
+
+numr mestier traccia )( }
+    numr somma = 0 !
+    numr i = 0 !
+    aspe ) i < righe ( }
+        somma = somma + matrice]i * colonne + i[ !
+        i++ !
+    {
+    ccàsta somma !
+{
+
+vacant mestier stampaMatrice )( }
+    numr riga = 0 !
+    numr colonna = 0 !
+    aspe ) riga < righe ( }
+        colonna = 0 !
+        aspe ) colonna < colonne ( }
+            arape_a_vocca ) ??Elemento: ?? - matrice]riga * colonne + colonna[ ( !
+            colonna++ !
+        {
+        riga++ !
+    {
+{
+
+vacant Uè)( }
+    jamm_ja : riempiMatrice )( !
+    arape_a_vocca ) ??Matrice originale:?? ( !
+    jamm_ja : stampaMatrice )( !
+
+    jamm_ja : moltiplicaScalare ) guagliuni : 2 ( !
+    arape_a_vocca ) ??Matrice moltiplicata per 2:?? ( !
+    jamm_ja : stampaMatrice )( !
+
+    numr tr = jamm_ja : traccia )( !
+    arape_a_vocca ) ??Traccia della matrice: ?? - tr ( !
+{
+
+ORACOLO:
+prima:
+1 2 3
+4 5 6
+7 8 9
+dopo:
+2  4  6
+8  10 12
+14 16 18
+
+FINE
+
+Programmi che testano burdell:
+
+Primo Programma:
+vacant Uè)( }
+    burdell x = 5!
+    arape_a_vocca)??x come numero: ??-x(!
+ 
+    x = ??ciao??!
+    arape_a_vocca)??x come stringa: ??-x(!
+ 
+    x = sasicchj!
+    arape_a_vocca)??x adesso è booleano??(!
+{
+FINE
+
+Secondo programma:
+vacant Uè )(}
+	burdell x = 5!
+	x += ??ciao??!
+	arape_a_vocca)???? - x(!	
+{
+
+ORACOLO: risultato 5ciao
+FINE
+
+Programmi che testano Robba:
+Primo Programma:
+
+robba Persona }
+    numr eta !
+    nbruogglio nome !
+
+    o_mast ) guagliuni : numr e, nbruogglio n ( }
+        eta = e !
+        nome = n !
+    {
+
+    numr mestier prendiEta )( }
+        ccàsta eta !
+    {
+
+    vacant mestier saluta )( }
+        arape_a_vocca ) ??Ciao, mi chiamo ?? - nome ( !
+    {
+{
+
+vacant Uè)( }
+    Persona p = Persona.o_mast ) 25, ??Marco?? ( !
+    p.saluta )( !
+    numr etaP = p.prendiEta )( !
+    arape_a_vocca ) ??Età: ?? - etaP ( !
+{
+
+
+ORACOLO: Ciao, mi chiamo Marco
+         Età: 25
+
+Secondo Programma:
+robba Contatore }
+    numr valore !
+
+    o_mast ) guagliuni : numr iniziale ( }
+        valore = iniziale !
+    {
+
+    vacant mestier incrementa )( }
+        valore++ !
+    {
+
+    vacant mestier decrementa )( }
+        valore-- !
+    {
+
+    numr mestier leggi )( }
+        ccàsta valore !
+    {
+{
+
+vacant Uè)( }
+    Contatore c = Contatore.o_mast ) 10 ( !
+    c.incrementa )( !
+    c.incrementa )( !
+    c.incrementa )( !
+    c.decrementa )( !
+    numr risultato = c.leggi )( !
+    arape_a_vocca ) ??Valore contatore: ?? - risultato ( !
+{
+
+ORACOLO:Valore contatore: 12
+
+Terzo Programma:
+robba Rettangolo }
+    numr base !
+    numr altezza !
+
+    o_mast ) guagliuni : numr b, numr h ( }
+        base = b !
+        altezza = h !
+    {
+
+    numr mestier area )( }
+        ccàsta base * altezza !
+    {
+
+    numr mestier perimetro )( }
+        ccàsta )base + altezza( * 2 !
+    {
+{
+
+vacant Uè)( }
+    Rettangolo r = Rettangolo.o_mast ) 4, 6 ( !
+    numr a = r.area )( !
+    numr p = r.perimetro )( !
+    numr b = r.base !
+    numr h = r.altezza !
+
+    arape_a_vocca ) ??Base: ?? - b ( !
+    arape_a_vocca ) ??Altezza: ?? - h ( !
+    arape_a_vocca ) ??Area: ?? - a ( !
+    arape_a_vocca ) ??Perimetro: ?? - p ( !
+{
+ORACOLO: Base: 4
+	Altezza: 6
+	Area: 24
+	Perimetro: 20
+
+Quarto Programma:
+robba Animale }
+    nbruogglio nome !
+    numr eta !
+
+    o_mast ) guagliuni : nbruogglio n, numr e ( }
+        nome = n !
+        eta = e !
+    {
+
+    nbruogglio mestier prendiNome )( }
+        ccàsta nome !
+    {
+{
+
+vacant Uè)( }
+    Animale a = Animale.o_mast ) ??Fido?? ( !
+    nbruogglio n = a.prendiNome )( !
+    arape_a_vocca ) ??Nome: ?? - n ( !
+{
+
+ORACOLO:  Errore il costruttore o_mast si aspetta 2 parametri (nbruogglio n, numr e), ma la chiamata Animale.o_mast ) ??Fido?? ( ne passa 1 solo.
+
+Quinto Programma:
+
+robba Punto }
+    numr x !
+    numr y !
+
+    numr mestier sommaCoordinate )( }
+        ccàsta x + y !
+    {
+{
+
+vacant Uè)( }
+    Punto p = Punto.o_mast ) 3, 4 ( !
+    numr s = p.sommaCoordinate )( !
+    arape_a_vocca ) ??Somma: ?? - s ( !
+{
+
+ORACOLO: Errore alla classe manca il costruttore (o_mast), che nella tua grammatica è obbligatorio
+
+Programmi che testano Operatori Burdell:
+
+Primo programma:
+vacant Uè)( }
+    numr a=2!
+    numr b=3!
+    numr c=4!
+ 
+    lota risultato = )a+b(*c>10 and not)a==b(!
+    arape_a_vocca)??Risultato espressione complessa: ??-risultato(!
+ 
+    lota risultato2 = )a<b( or )b<c( and not)a>c(!
+    arape_a_vocca)??Risultato espressione 2: ??-risultato2(!
+{
+
+Secondo programma:
