@@ -647,7 +647,7 @@ class Transpiler:
                     return f"(strcmp({sx}, {dx}) <= 0)"
                 elif node.op == ">=":
                     return f"(strcmp({sx}, {dx}) >= 0)"
-                elif node.op == "-":  # In Scartellato '-' è l'addizione/concatenazione
+                elif node.op == "+":  # In Scartellato '-' è l'addizione/concatenazione
                     return f"burdell_concat({sx}, {dx})"
 
             # Caso base (es. numr += numr)
