@@ -132,52 +132,15 @@ def compilatore(source: str) -> CompileResult:
 
 compilatore(""" 
 vacant Uè ) ( }
-    nbruogglio v=??ciao??!
-    v= v + ??s??!
-    arape_a_vocca)??scegli tra :??(!
-    arape_a_vocca)??-=??(!
-    arape_a_vocca)??+=??(!
-    arape_a_vocca)??*=??(!
-    arape_a_vocca)??/=??(!
-    arape_a_vocca)??-??(!
-    arape_a_vocca)??+??(!
-    arape_a_vocca)??/??(!
-    arape_a_vocca)??%??(!    
-
-    ric)v(!
-    arape_a_vocca)??v = ??-v(!
-    numr b!
-    numr n!
-    arape_a_vocca)??scegli 2 numeri a cui applicare l'operazione: ??(!
-    ric)b(!
-    ric)n(!
-    arape_a_vocca)??b = ??-b - ??n = ?? - n(!
-    mettimmcà)v == ??-=??(
-        b -= n!
-    
-    mettimmcà)v == ??+=??(
-        b += n!
-    
-    mettimmcà)v == ??/=??(
-        b /= n!
-    
-    mettimmcà)v == ??*=??(
-        b *= n!
-    
-    mettimmcà)v == ??+??(
-        b = b + n!    
-    
-    mettimmcà)v == ??-??(
-        b = b - n!
-    
-    mettimmcà)v == ??%??(
-        b = b % n!
-    
-    mettimmcà)v == ??/??(
-        b = b / n!
-    
-    
-    arape_a_vocca)???? - b(!
-{
+   nbruogglio  s = ??Ciao??! 
+   nbruogglio sc = ??ciao??!
+   lettr u = ?s? !
+   s =  u + s  !    
+   mettimmcà) s== sc(
+            arape_a_vocca)??valore del confronto?? - sasicchj(!
+   
+   arape_a_vocca)????-s ( !
+   
+   {
 """)
 

@@ -227,7 +227,25 @@ class Transpiler:
                           if (a->dati) b_free(a->dati);
                           a->dati = NULL; a->len = 0; a->cap = 0;
                       }
-
+                        
+                      char* burdell_concat_str_char(const char* s, char c) {
+                        if(!s) s = "";
+                        size_t len = strlen(s);
+                        char* res = (char*)b_malloc(len + 2);
+                        strcpy(res, s);
+                        res[len] = c;
+                        res[len + 1] = '\0';
+                        return res;
+                    }
+                    
+                    char* burdell_concat_char_str(char c, const char* s) {
+                        if(!s) s = "";
+                        size_t len = strlen(s);
+                        char* res = (char*)b_malloc(len + 2);
+                        res[0] = c;
+                        strcpy(res + 1, s);
+                        return res;
+                    }
 
                       """
 
@@ -558,7 +576,6 @@ class Transpiler:
             if isinstance(node.left, Variabile):
                 is_lato_sx_burdell = self.burdell_info.get(id(node.left), False)
                 if is_lato_sx_burdell:
-                    # assegnamento all'INTERA struct Burdell, non al campo .val.xxx
                     sx = accesso_base(self, str(node.left.nome))
                 else:
                     sx = self.espr(node.left)
@@ -599,7 +616,7 @@ class Transpiler:
                 tipo_elemento = self.var_array[nome_array]
 
                 if tipo_elemento == "burdell":
-                    valore_wrappato = wrappa_burdell(self,node.right)
+                    valore_wrappato = wrappa_burdell(self, node.right)
                     if node.op == "-=":
                         self.indentazione(f"arr_append(&{nome_array}, {valore_wrappato});")
                     elif node.op == "+=":
@@ -608,13 +625,11 @@ class Transpiler:
                             f'fprintf(stderr, "Elemento non presente nell\\\'array\\n"); exit(1); }}'
                         )
                     return
-
                 else:
                     valore_espr = self.espr(node.right)
                     if node.op == "-=":
                         self.indentazione(f"{tipo_elemento}_array_append(&{nome_array}, {valore_espr});")
                         return
-
                     elif node.op == "+=":
                         self.indentazione(
                             f'if (!{tipo_elemento}_array_contains(&{nome_array}, {valore_espr})) {{ '
@@ -625,35 +640,37 @@ class Transpiler:
             tipo_sx = calcola_tipo(self, node.left)
             tipo_dx = calcola_tipo(self, node.right)
 
-            # ECCO LA MODIFICA CHIAVE! Usiamo l'helper per riconoscere sia i burdell locali che di classe.
             sx_is_burdell = isinstance(node.left, Variabile) and self.burdell_info.get(id(node.left), False)
-
-            sx = self.espr(node.left)  # se burdell: già "z.val.nbruogglio" grazie alla nuova espr_Variabile
+            sx = self.espr(node.left)
             dx = self.espr(node.right)
 
-            # GESTIONE STRINGHE
-            if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
-                sx = self.espr(node.left)
-                dx = self.espr(node.right)
-                if node.op == "==":
-                    return f"(strcmp({sx}, {dx}) == 0)"
-                elif node.op == "!=":
-                    return f"(strcmp({sx}, {dx}) != 0)"
-                elif node.op == "<":
-                    return f"(strcmp({sx}, {dx}) < 0)"
-                elif node.op == ">":
-                    return f"(strcmp({sx}, {dx}) > 0)"
-                elif node.op == "<=":
-                    return f"(strcmp({sx}, {dx}) <= 0)"
-                elif node.op == ">=":
-                    return f"(strcmp({sx}, {dx}) >= 0)"
-                elif node.op == "+":  # In Scartellato '-' è l'addizione/concatenazione
-                    return f"burdell_concat({sx}, {dx})"
+            # Gestione op += / -= con stringhe e caratteri
+            if tipo_sx == "nbruogglio" or tipo_dx == "nbruogglio":
+                if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
+                    risultato = f"burdell_concat({sx}, {dx})"
+                elif tipo_sx == "nbruogglio" and tipo_dx == "numr":
+                    risultato = f"burdell_concat_str_num({sx}, {dx})"
+                elif tipo_sx == "numr" and tipo_dx == "nbruogglio":
+                    risultato = f"burdell_concat_num_str({sx}, {dx})"
+                elif tipo_sx == "nbruogglio" and tipo_dx == "lettr":
+                    risultato = f"burdell_concat_str_char({sx}, {dx})"
+                elif tipo_sx == "lettr" and tipo_dx == "nbruogglio":
+                    risultato = f"burdell_concat_char_str({sx}, {dx})"
+                else:
+                    risultato = f"burdell_concat({sx}, {dx})"
+
+                sx_assign = accesso_base(self, str(node.left.nome)) if isinstance(node.left, Variabile) else sx
+                if sx_is_burdell:
+                    self.indentazione(f"{sx_assign} = burdell_da_nbruogglio({risultato});")
+                else:
+                    self.indentazione(f"{sx_assign} = {risultato};")
+                return
 
             # Caso base (es. numr += numr)
             op_c = self.operatore_c(node.op)
             self.indentazione(f"{sx} {op_c} {dx};")
             return
+
         raise Exception(f"OpBin con operatore '{node.op}' non gestito come istruzione")
 
     def espr_OpBin(self, node: OpBin):
@@ -669,6 +686,7 @@ class Transpiler:
         tipo_dx = self.tipo_di(node.right) if node.right is not None else None
 
         # GESTIONE STRINGHE
+        # ──  Stringa e Stringa ────────────────────
         if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -679,6 +697,7 @@ class Transpiler:
             elif node.op == "+":  # In Scartellato '+' è l'addizione/concatenazione
                 return f"burdell_concat({sx}, {dx})"
 
+        # ──  Stringa e Numero ────────────────────
         if tipo_sx == "nbruogglio" and tipo_dx == "numr":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -690,6 +709,20 @@ class Transpiler:
             dx = self.espr(node.right)
             if node.op == "+":
                 return f"burdell_concat_num_str({sx}, {dx})"
+
+        # ──  Stringa e Carattere ────────────────────
+        if tipo_sx == "nbruogglio" and tipo_dx == "lettr":
+            sx = self.espr(node.left)
+            dx = self.espr(node.right)
+            if node.op in ("+", "-"):
+                return f"burdell_concat_str_char({sx}, {dx})"
+
+            # Carattere + Stringa (lettr + nbruogglio)
+        if tipo_sx == "lettr" and tipo_dx == "nbruogglio":
+            sx = self.espr(node.left)
+            dx = self.espr(node.right)
+            if node.op in ("+", "-"):
+                return f"burdell_concat_char_str({sx}, {dx})"
 
         # GESTIONE OPERATORI BASE CON TRADUZIONE IN C
         op_c = self.operatore_c(node.op)
