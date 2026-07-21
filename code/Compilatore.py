@@ -131,53 +131,87 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-vacant Uè ) ( }
-    nbruogglio v=??ciao??!
-    v= v + ??s??!
-    arape_a_vocca)??scegli tra :??(!
-    arape_a_vocca)??-=??(!
-    arape_a_vocca)??+=??(!
-    arape_a_vocca)??*=??(!
-    arape_a_vocca)??/=??(!
-    arape_a_vocca)??-??(!
-    arape_a_vocca)??+??(!
-    arape_a_vocca)??/??(!
-    arape_a_vocca)??%??(!    
+numr ][arr !
 
-    ric)v(!
-    arape_a_vocca)??v = ??-v(!
-    numr b!
-    numr n!
-    arape_a_vocca)??scegli 2 numeri a cui applicare l'operazione: ??(!
-    ric)b(!
-    ric)n(!
-    arape_a_vocca)??b = ??-b - ??n = ?? - n(!
-    mettimmcà)v == ??-=??(
-        b -= n!
-    
-    mettimmcà)v == ??+=??(
-        b += n!
-    
-    mettimmcà)v == ??/=??(
-        b /= n!
-    
-    mettimmcà)v == ??*=??(
-        b *= n!
-    
-    mettimmcà)v == ??+??(
-        b = b + n!    
-    
-    mettimmcà)v == ??-??(
-        b = b - n!
-    
-    mettimmcà)v == ??%??(
-        b = b % n!
-    
-    mettimmcà)v == ??/??(
-        b = b / n!
-    
-    
-    arape_a_vocca)???? - b(!
+vacant mestier riempi )( }
+    arr -= 8 !
+    arr -= 3 !
+    arr -= 5 !
+    arr -= 1 !
+    arr -= 9 !
+    arr -= 2 !
+    arr -= 7 !
+    arr -= 4 !
+{
+
+vacant mestier merge ) guagliuni : numr sinistra, numr centro, numr destra ( }
+    numr ][temp !
+    numr i = sinistra !
+    numr j = centro + 1 !
+
+    aspe ) i <= centro ( }
+        temp -= arr]i[ !
+        i++ !
+    {
+    aspe ) j <= destra ( }
+        temp -= arr]j[ !
+        j++ !
+    {
+
+    numr metaSinistra = centro - sinistra !
+    numr totale = destra - sinistra !
+    numr p1 = 0 !
+    numr p2 = metaSinistra + 1 !
+    numr k = sinistra !
+
+    aspe ) p1 <= metaSinistra and p2 <= totale ( }
+        mettimmcà ) temp]p1[ <= temp]p2[ ( }
+            arr]k[ = temp]p1[ !
+            p1++ !
+        { allor_fa_accussi }
+            arr]k[ = temp]p2[ !
+            p2++ !
+        {
+        k++ !
+    {
+
+    aspe ) p1 <= metaSinistra ( }
+        arr]k[ = temp]p1[ !
+        p1++ !
+        k++ !
+    {
+
+    aspe ) p2 <= totale ( }
+        arr]k[ = temp]p2[ !
+        p2++ !
+        k++ !
+    {
+{
+
+vacant mestier mergeSort ) guagliuni : numr sinistra, numr destra ( }
+    mettimmcà ) sinistra < destra ( }
+        numr centro = )sinistra + destra( / 2 !
+        jamm_ja : mergeSort ) guagliuni : sinistra, centro ( !
+        jamm_ja : mergeSort ) guagliuni : centro + 1, destra ( !
+        jamm_ja : merge ) guagliuni : sinistra, centro, destra ( !
+    {
+{
+
+vacant mestier stampaArray ) guagliuni : numr n ( }
+    numr i = 0 !
+    aspe ) i <= n ( }
+        arape_a_vocca ) ??Elemento: ?? - arr]i[ ( !
+        i++ !
+    {
+{
+
+vacant Uè)( }
+    jamm_ja : riempi )( !
+    arape_a_vocca ) ??Array prima dell'ordinamento:?? ( !
+    jamm_ja : stampaArray ) guagliuni : 7 ( !
+    jamm_ja : mergeSort ) guagliuni : 0, 7 ( !
+    arape_a_vocca ) ??Array dopo l'ordinamento:?? ( !
+    jamm_ja : stampaArray ) guagliuni : 7 ( !
 {
 """)
 
