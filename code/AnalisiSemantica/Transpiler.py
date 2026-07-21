@@ -234,7 +234,7 @@ class Transpiler:
                         char* res = (char*)b_malloc(len + 2);
                         strcpy(res, s);
                         res[len] = c;
-                        res[len + 1] = '\0';
+                        res[len + 1] = '\\0';
                         return res;
                     }
                     
@@ -438,16 +438,23 @@ class Transpiler:
         if self.classe_corrente is not None and nome in self.campi_classe:
             self.var_locali_shadow.add(nome)
 
+
         if is_array:
             tipo_elemento = node.tipo.nome
             self.var_array[nome] = tipo_elemento  # ← nota: ora è un DICT, non un set
+            if self.indent == 0:
+                if tipo_elemento == "burdell":
+                     self.indentazione(f"ArrayDinamico {nome}= {{0}};")
+                else:
+                    self.indentazione(f"{tipo_elemento}_array {nome} = {{0}};") #inizializza i valori di default
 
-            if tipo_elemento == "burdell":
-                self.indentazione(f"ArrayDinamico {nome};")
-                self.indentazione(f"arr_init(&{nome});")   #inizializza i valori  di default
-            else:
-                self.indentazione(f"{tipo_elemento}_array {nome};")
-                self.indentazione(f"{tipo_elemento}_array_init(&{nome});") #inizializza i valori di default
+            else:  #SE L'ARRAY È LOCALE (dentro una funzione o metodo)
+                if tipo_elemento == "burdell":
+                    self.indentazione(f"ArrayDinamico {nome};")
+                    self.indentazione(f"arr_init(&{nome});")
+                else:
+                    self.indentazione(f"{tipo_elemento}_array {nome};")
+                    self.indentazione(f"{tipo_elemento}_array_init(&{nome});")
             return
 
         tipo_dichiarato = node.tipo.nome
