@@ -682,10 +682,12 @@ class TranspilerC:
         if node.op in ("=", "<->"):
             raise Exception(f"'{node.op}' non può comparire dentro un'espressione")
 
-        tipo_sx = self.tipo_di(node.left)
-        tipo_dx = self.tipo_di(node.right) if node.right is not None else None
+        # USA _calcola_tipo INVECE DI tipo_di!
+        # In questo modo deduce il tipo anche per le stringhe/numeri letterali non presenti in tipi_risolti
+        tipo_sx = self._calcola_tipo(node.left)
+        tipo_dx = self._calcola_tipo(node.right) if node.right is not None else None
 
-        # GESTIONE STRINGHE (ora usando le funzioni helper)
+        # ── GESTIONE STRINGHE (Concatenazione e Confronti) ────────────────
         if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -693,22 +695,24 @@ class TranspilerC:
                 return f"(strcmp({sx}, {dx}) == 0)"
             elif node.op == "!=":
                 return f"(strcmp({sx}, {dx}) != 0)"
-            elif node.op == "+":
+            elif node.op in ("+", "-"):  # Accetta sia '+' che '-' per la concatenazione
                 return f"burdell_concat({sx}, {dx})"
 
+        # Concatenazione Stringa + Numero
         if tipo_sx == "nbruogglio" and tipo_dx == "numr":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
-            if node.op == "+":
+            if node.op in ("+", "-"):
                 return f"burdell_concat_str_num({sx}, {dx})"
 
+        # Concatenazione Numero + Stringa
         if tipo_sx == "numr" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
-            if node.op == "+":
+            if node.op in ("+", "-"):
                 return f"burdell_concat_num_str({sx}, {dx})"
 
-        # GESTIONE OPERATORI BASE
+        # ── GESTIONE OPERATORI BASE (Numeri, Booleani) ───────────────────
         op_c = {"and": "&&", "or": "||", "not": "!"}.get(node.op, node.op)
 
         sx = self.espr(node.left)
