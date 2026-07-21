@@ -136,3 +136,7 @@ class ChiamataCostruttore:
 class AccessoCampo:
     variabile: Variabile   # "c"
     campo: Variabile        # "var"
+
+@dataclass(frozen=True)
+class Ric:
+    variabile : Variabile

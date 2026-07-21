@@ -61,6 +61,7 @@
         SWAP: "<->"           //swap dei valori
         PARAMETRI_TK: "guagliuni" // elenco di parametri
         PRINT: "arape_a_vocca"
+        SCANF : "ric"
 
 
         %ignore /\s+/
@@ -90,6 +91,7 @@
                    | return_stmt
                    | nome_var_semplice SWAP nome_var_semplice TERMINATORE  -> swap
                    | PRINT TONDASINISTRA STRINGA (ADDIZIONE expr_primary)* TONDADESTRA TERMINATORE -> stampante
+                   | SCANF TONDASINISTRA nome_var_semplice TONDADESTRA TERMINATORE -> scanner
                    | assegnamento_composto "!"
 
 

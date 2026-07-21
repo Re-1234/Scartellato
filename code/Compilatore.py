@@ -131,36 +131,14 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-robba ProcessoreDati }
-    numr id !
-    burdell stato !
 
-    o_mast ) guagliuni : numr p_id, burdell p_stato ( }
-        id = p_id !
-        stato = p_stato !
-    {
-
-    vacant mestier aggiornaStato ) guagliuni : burdell nuovo_stato ( }
-        // La variabile burdell cambia tipo al volo
-        stato = nuovo_stato !
-    {
-
-    burdell mestier getStato) ( }
-        ccàsta stato !
-    {
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
+    arape_a_vocca)??dimmi cosa vuoi stronzo:??(!
+    ric)contatore(!
+    arape_a_vocca)????-contatore(!
 {
+    """)
 
-Uè )( }
-    // Inizializza con stato numr (100)
-    ProcessoreDati proc = proc.o_mast) 1, 100 ( !
-    
-    // Cambia il tipo di burdell a stringa nbruogglio
-    proc.aggiornaStato ) ??PRONTO?? ( !
-    
-    burdell res = proc.getStato )( !
-    arape_a_vocca ) ??Nuovo stato: ?? - res ( !
-{
-
-
-
-""")

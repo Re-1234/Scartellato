@@ -608,6 +608,9 @@ class AnalisiSemantica:
                 tipo_rilevato = self.visit(variabile)
                 self.print_types[id(variabile)] = tipo_rilevato
 
+    def visit_Ric(self,node : Ric):
+        for v in node.variabile:
+            self.visit(v)
 
     def control_Ope_Logici(self, oper: str) -> bool:
         """Operatori strettamente logici (richiedono e restituiscono 'lota')"""

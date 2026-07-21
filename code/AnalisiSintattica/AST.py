@@ -12,7 +12,7 @@ class AST_Transformer(Transformer):
         'GRAFFASINISTRA', 'GRAFFADESTRA',
         'QUADRATADESTRA', 'QUADRATASINISTRA', 'METTIMCA', 'ALLORFAACCUSSI',
         'ROBA', 'MESTIER', 'VIRGOLA', 'TERMINATORE', 'O_MAST', 'ASSIGN', 'AMBRESS_AMBRESS', 'CHIAMATA',
-        'PARAMETRI_TK', 'RETURN', 'SCCASCIA', 'ASPE', 'PRINT'
+        'PARAMETRI_TK', 'RETURN', 'SCCASCIA', 'ASPE', 'PRINT', 'SCANF'
     }
 
     def filtra(self, figli):  # funzione per filtrare i token non necessari
@@ -586,6 +586,12 @@ class AST_Transformer(Transformer):
         righe_nodi[id(nodo)] = meta.line
         return nodo
 
+    @v_args(meta=True)
+    def scanner(self, figli, meta):
+        variabile1 = self.filtra(figli)
+        nodo=Ric(variabile=variabile1)
+        righe_nodi[id(nodo)] = meta.line
+        return nodo
 
 def stampa_ast(nodo, prefisso="", e_ultimo=True, e_radice=True):
     if e_radice:

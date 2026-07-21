@@ -352,26 +352,24 @@ class Transpiler:
     # ══════════════════════════════════════════════════════════════
     def visit_OpBin(self, node: OpBin):
         if node.op == "=":
-            # 1. Identifichiamo se il lato sinistro è una variabile Burdell usando l'helper
             is_lato_sx_burdell = False
             if isinstance(node.left, Variabile):
                 is_lato_sx_burdell = self.burdell_info.get(id(node.left), False)
-                sx = self.espr(node.left)  #  espr_Variabile,  gestisce l'indice
+                if is_lato_sx_burdell:
+                    # assegnamento all'INTERA struct Burdell, non al campo .val.xxx
+                    sx = accesso_base(self, str(node.left.nome))
+                else:
+                    sx = self.espr(node.left)
             else:
                 sx = self.espr(node.left)
 
-            # 3. Generiamo il lato destro
             dx = self.espr(node.right)
-
-            #  Calcoliamo i tipi per gestire le conversioni implicite
             tipo_sx = calcola_tipo(self, node.left)
             tipo_dx = calcola_tipo(self, node.right)
 
-            # Applichiamo i wrapper o le conversioni necessarie
             if is_lato_sx_burdell:
                 dx = f"burdell_da_{tipo_dx}({dx})"
             elif tipo_sx == "nbruogglio" and tipo_dx == "numr":
-                # CONVERSIONE IMPLICITA: da int a char*
                 dx = f'burdell_concat_num_str({dx}, "")'
 
             self.indentazione(f"{sx} = {dx};")
@@ -876,6 +874,58 @@ class Transpiler:
         else:
             # Stampa puramente testuale se alla fine non ci sono variabili
             self.indentazione(f'printf("{stringa_formato}");')
+        self.indentazione('fflush(stdout);')
+
+    def visit_Ric(self, node: Ric):
+        """ Genera un UNICO scanf in C per le variabili da leggere """
+
+        stringa_formato = ""
+        argomenti_c = []
+
+        # 1. Controlliamo e gestiamo node.variabile (sia se è lista che singolo nodo)
+        if getattr(node, 'variabile', None):
+            variabili = node.variabile if isinstance(node.variabile, list) else [node.variabile]
+
+            for var in variabili:
+                # Otteniamo la traduzione C della variabile (es. "x", "arr[i]")
+                valore_c = self.espr(var)
+
+                # Recuperiamo il tipo annotato nell'analisi semantica
+                tipo = self.print_types.get(id(var))
+
+                # Separiamo i placeholders nella stringa di formato con uno spazio
+                if stringa_formato:
+                    stringa_formato += " "
+
+                # 2. Mappatura dei tipi per la scanf
+                if tipo == "numr":
+                    stringa_formato += "%d"
+                    argomenti_c.append(f"&{valore_c}")
+
+                elif tipo == "nbruogglio":
+                    # Se è una stringa in C è già un puntatore (non serve &),
+                    # se è un float/double userebbe %f e &
+                    stringa_formato += "%s"
+                    argomenti_c.append(valore_c)
+
+                elif tipo == "lettr":
+                    stringa_formato += " %c"  # Lo spazio prima di %c ignora eventuali \n rimasti nel buffer
+                    argomenti_c.append(f"&{valore_c}")
+
+                elif tipo == "lota":
+                    # I booleani vengono letti come interi (1 o 0)
+                    stringa_formato += "%d"
+                    argomenti_c.append(f"&{valore_c}")
+
+                else:
+                    # Fallback di sicurezza per variabili generiche/non tipizzate
+                    stringa_formato += "%d"
+                    argomenti_c.append(f"&{valore_c}")
+
+        # 3. Generiamo la riga C finale con l'indentazione
+        if argomenti_c:
+            tutti_gli_argomenti = ", ".join(argomenti_c)
+            self.indentazione(f'scanf("{stringa_formato}", {tutti_gli_argomenti});')
     # ══════════════════════════════════════════════════════════════
     #   ESPRESSIONI
     # ══════════════════════════════════════════════════════════════
