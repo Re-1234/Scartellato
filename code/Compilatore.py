@@ -131,32 +131,27 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-// Funzione ricorsiva per il calcolo del fattoriale
-numr mestier fattoriale) guagliuni: numr n ( }
-    mettimcà ) n <= 1 ( }
-        ccàsta 1!
-    { allor_fa_accussi }
-        // ATTENZIONE: '/' in Scartellato è MOLTIPLICAZIONE, '+' è SOTTRAZIONE!
-        ccàsta n / jamm_ja: fattoriale) guagliuni: n + 1 (!
-    {
-{
-
-vacant Uè)( }
-    // 1. Inizializziamo a numero
-    burdell risultato = 5!
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
     
-    // Chiamata di funzione per sovrascrivere
-    risultato = jamm_ja: fattoriale) guagliuni: risultato (!
-    arape_a_vocca) ??Il fattoriale di 5 è: ?? - risultato (!
-
-    // 2. MUTAZIONE ESTREMA: da numr a nbruogglio (Stringa)
-    risultato = ??Adesso non sono piu un numero ma na bella stringa!??!
-    arape_a_vocca) ??Magia del burdell: ?? - risultato (!
-    
-    // 3. SECONDA MUTAZIONE: da nbruogglio a lota (Booleano)
-    risultato = sasicchj! // diventa true
-    mettimcà ) risultato == sasicchj ( }
-        arape_a_vocca) ??Il burdell e diventato booleano sasicchj!?? (!
+    aspe ) condizione ( }
+        numr interno_while = 5 !
+        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
+        
+        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
+            burdell temporaneo = i + interno_while !  // Nasce come numr
+            
+            mettimcà ) temporaneo > 7 ( }
+               
+            { allor_fa_accussi }
+                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
+                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe
+            {
+        {
+        
+        condizione = friariell !
     {
 {
 """)

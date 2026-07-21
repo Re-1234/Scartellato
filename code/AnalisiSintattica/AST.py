@@ -74,6 +74,9 @@ class AST_Transformer(Transformer):
 
     @v_args(meta=True)
     def negato(self, figli, meta):
+        print("negato figli:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
         operatore = self.filtra(figli)[0]
         variabile = self.filtra(figli)[1]
         nodo = OpBin(op=str(operatore), left=None, right=variabile)
@@ -176,13 +179,6 @@ class AST_Transformer(Transformer):
         return nodo
 
     @v_args(meta=True)
-    def diverso(self, figli, meta):
-        left, op1, right = self.filtra(figli)
-        nodo = OpBin(op=str(op1), left=left, right=right)
-        righe_nodi[id(nodo)] = meta.line
-        return nodo
-
-    @v_args(meta=True)
     def divisioneuguale(self, figli, meta):
         left, op1, right = self.filtra(figli)
         nodo = OpBin(op=str(op1), left=left, right=right)
@@ -267,10 +263,19 @@ class AST_Transformer(Transformer):
 
     @v_args(meta=True)
     def variabile_array(self, figli, meta):
+        print("FIGLI variabile array:")
+        for i, f in enumerate(figli):
+            print(f"  [{i}] {type(f).__name__} → {f!r}")
+
         nodi = self.filtra(figli)
         if len(nodi) == 2:
-            id_token, index_tok = nodi  # [NUMERO, ID]
-            nodo = Variabile(nome=str(id_token), index=int(index_tok), is_array=True)
+            id_token, index_tok = nodi
+            # Se è un numero lo convertiamo in int, altrimenti teniamo il Token o il nodo AST
+            try:
+                index_val = int(index_tok)
+            except (ValueError, TypeError):
+                index_val = index_tok  # Può essere un Token('ID', 'j') o un nodo AST (es. Somma/Sottrazione)
+            nodo = Variabile(nome=str(id_token), index=index_val, is_array=True)
             righe_nodi[id(nodo)] = meta.line
             return nodo
         else:

@@ -13,6 +13,23 @@ class Transpiler:
         "burdell": "Burdell",
     }
 
+    OPERATORI_C = {
+        "-": "+",  # ADDIZIONE: '-' nel sorgente -> '+' in C
+        "+": "-",  # MENO: '+' nel sorgente -> '-' in C
+        "/": "*",  # MOLTIPLICA: '/' nel sorgente -> '*' in C
+        "*": "/",  # DIVISIONE: '*' nel sorgente -> '/' in C
+
+        "-=": "+=",  # ADDIZIONEUGUALE: '-=' -> '+=' in C
+        "+=": "-=",  # MENOUGUALE: '+=' -> '-=' in C
+        "/=": "*=",  # MOLTIPLICAUGUALE: '/=' -> '*=' in C
+        "*=": "/=",  # DIVISIONEUGUALE: '*=' -> '/=' in C
+
+        "and": "&&",
+        "or": "||",
+        "not": "!",
+        "!!": "!",
+    }
+
 
     def __init__(self, tipi_risolti: dict, burdell_info: dict, print_types: dict):
             self.tipi_risolti = tipi_risolti
@@ -31,6 +48,7 @@ class Transpiler:
             self.var_array = {}
             self.var_locali_shadow = set()  # nomi dichiarati localmente che oscurano campi di classe
             self.var_classe = {}
+            self.var_array_puntatore = set()
 
 
     def indentazione(self, riga):
@@ -50,12 +68,25 @@ class Transpiler:
         # ricerca nei TIPI.C chiave - valore, se non trova la chiave, fa fallback  sul valore originale
         return self.TIPI_C.get(str(tipo_scart), str(tipo_scart))
 
-
     def tipo_di(self, nodo):
+        if nodo is None:
+            return None
         chiave = id(nodo)
-        if chiave not in self.tipi_risolti:
-            raise Exception(f"Tipo non risolto per {nodo!r}")
-        return self.tipi_risolti[chiave]
+        if chiave in self.tipi_risolti:
+            return self.tipi_risolti[chiave]
+
+        # Fallback per nodi non registrati nell'analisi semantica (es. indici di array)
+        if isinstance(nodo, Variabile):
+            return "numr"
+        if isinstance(nodo, Numr):
+            return "numr"
+
+        return None
+
+    def operatore_c(self, op: str) -> str:
+        """Traduce l'operatore di Scartellato nel corrispondente operatore C."""
+        return self.OPERATORI_C.get(op, op)
+
 
         # ── dispatcher ISTRUZIONI ────────────────────────────────────────
 
@@ -166,17 +197,19 @@ class Transpiler:
     def espr_ChiamataOggetto(self, node: ChiamataOggetto):
         return genera_chiamata_oggetto(self,node)
 
-
     def espr_Variabile(self, node: Variabile):
-        nome_var = str(node.nome)
-        base = accesso_base(self,nome_var)
+            nome_var = str(node.nome)
 
-        if self.burdell_info.get(id(node), False):  #se è un burdell bisogna restituire il tipo corrente non la variabile
-            tipo_corrente = self.tipo_di(node)
-            return f"{base}.val.{tipo_corrente}"
+            if node.is_array and node.index != -1:
+                indice_c = self.espr(node.index) if hasattr(node.index, '__class__') and not isinstance(node.index,(int, str)) else str(  node.index)
+                accesso = "->" if nome_var in self.var_array_puntatore else "."
+                return f"{nome_var}{accesso}data[{indice_c}]"
 
-        return base
-
+            base = accesso_base(self, nome_var)
+            if self.burdell_info.get(id(node), False):
+                tipo_corrente = self.tipo_di(node)
+                return f"{base}.val.{tipo_corrente}"
+            return base
 
     def visit_Dichiarazione(self, node: Dichiarazione):
         nome = str(node.nome.nome)
@@ -223,6 +256,31 @@ class Transpiler:
                        "burdell": "burdell_da_numr(0)"}.get(node.tipo.nome, "0")
             self.indentazione(f"{tipo_c} {nome} = {default};")
 
+    def _genera_prototipo_mestier(self, node: Mestier):
+        nome = str(node.nome.nome)
+
+        if node.is_array:
+            tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
+        else:
+            tipo_ritorno = self.tipo_c(node.ritorno)
+
+        parametri = node.parametri or []
+        if isinstance(parametri, str):
+            parametri = []
+
+        params_parts = []
+        for p in parametri:
+            nome_p = str(p.nome.nome)
+            # Verifichiamo se il parametro è un array usando getattr per sicurezza
+            if getattr(p.nome, 'is_array', False):
+                tipo_elem = p.tipo.nome
+                tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
+            else:
+                tipo_c_param = self.tipo_c(p.tipo.nome)
+            params_parts.append(f"{tipo_c_param} {nome_p}")
+
+        params = ", ".join(params_parts)
+        self.indentazione(f"{tipo_ritorno} {nome}({params});")
 
     def visit_Mestier(self, node: Mestier):
         nome = str(node.nome.nome)  # nome della funzione
@@ -250,9 +308,18 @@ class Transpiler:
             parametri = []
 
         for p in parametri:
-             params_parts.append(f"{self.tipo_c(p.tipo.nome)} {p.nome.nome}")
+            if p.nome.is_array:
+                self.var_array[str(p.nome.nome)] = p.tipo.nome
+                self.var_array_puntatore.add(str(p.nome.nome))
 
-        # costruzione nome completo della funzione
+        for p in parametri:
+            if p.nome.is_array:
+                tipo_elem = self.var_array.get(str(p.nome.nome), p.tipo.nome)
+                tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
+            else:
+                tipo_c_param = self.tipo_c(p.tipo.nome)
+            params_parts.append(f"{tipo_c_param} {p.nome.nome}")
+
         params = ", ".join(params_parts)
         nome_finale = f"{self.classe_corrente}_{nome}" if self.classe_corrente else nome
 
@@ -278,6 +345,7 @@ class Transpiler:
         self.indent -= 1
         self.indentazione("}")
         self.in_main = False
+        self.var_array_puntatore = set()
 
     # ══════════════════════════════════════════════════════════════
     #   OpBin COME ISTRUZIONE  ( = , <-> , +=, -=, ecc. )
@@ -287,8 +355,8 @@ class Transpiler:
             # 1. Identifichiamo se il lato sinistro è una variabile Burdell usando l'helper
             is_lato_sx_burdell = False
             if isinstance(node.left, Variabile):
-                is_lato_sx_burdell = self.burdell_info.get(id(node.left), False)  #mette il valore False se non trova l'id all'interno
-                sx = accesso_base(self,str(node.left.nome))
+                is_lato_sx_burdell = self.burdell_info.get(id(node.left), False)
+                sx = self.espr(node.left)  #  espr_Variabile,  gestisce l'indice
             else:
                 sx = self.espr(node.left)
 
@@ -388,7 +456,8 @@ class Transpiler:
                 return
 
             # Caso base (es. numr += numr)
-            self.indentazione(f"{sx} {node.op} {dx};")
+            op_c = self.operatore_c(node.op)
+            self.indentazione(f"{sx} {op_c} {dx};")
             return
         raise Exception(f"OpBin con operatore '{node.op}' non gestito come istruzione")
 
@@ -396,10 +465,15 @@ class Transpiler:
         if node.op in ("=", "<->"):
             raise Exception(f"'{node.op}' non può comparire dentro un'espressione")
 
+        if node.left is None:  # operatore prefisso unario (es. !!, not)
+            dx = self.espr(node.right)
+            op_c = self.operatore_c(node.op)
+            return f"{op_c}({dx})"
+
         tipo_sx = self.tipo_di(node.left)
         tipo_dx = self.tipo_di(node.right) if node.right is not None else None
 
-        # GESTIONE STRINGHE (ora usando le funzioni helper)
+        # GESTIONE STRINGHE
         if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -407,23 +481,23 @@ class Transpiler:
                 return f"(strcmp({sx}, {dx}) == 0)"
             elif node.op == "!=":
                 return f"(strcmp({sx}, {dx}) != 0)"
-            elif node.op == "+":
+            elif node.op == "-":  # In Scartellato '-' è l'addizione/concatenazione
                 return f"burdell_concat({sx}, {dx})"
 
         if tipo_sx == "nbruogglio" and tipo_dx == "numr":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
-            if node.op == "+":
+            if node.op == "-":
                 return f"burdell_concat_str_num({sx}, {dx})"
 
         if tipo_sx == "numr" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
-            if node.op == "+":
+            if node.op == "-":
                 return f"burdell_concat_num_str({sx}, {dx})"
 
-        # GESTIONE OPERATORI BASE
-        op_c = {"and": "&&", "or": "||", "not": "!"}.get(node.op, node.op)
+        # GESTIONE OPERATORI BASE CON TRADUZIONE IN C
+        op_c = self.operatore_c(node.op)
 
         sx = self.espr(node.left)
         if node.right is None:
@@ -648,6 +722,11 @@ class Transpiler:
                    """)
 
         for decl in node.program:
+            if isinstance(decl, Mestier) and str(decl.nome.nome) != "Uè":
+                self._genera_prototipo_mestier(decl)
+        self.indentazione("")
+
+        for decl in node.program:
             self.visit(decl)
             self.indentazione("")
 
@@ -698,8 +777,9 @@ class Transpiler:
         sx = self.espr(op.left)
         if op.op in ("++", "--"):
             return f"{sx}{op.op}"
+        op_c = self.operatore_c(op.op)
         dx = self.espr(op.right)
-        return f"{sx} {op.op} {dx}"
+        return f"{sx} {op_c} {dx}"
 
     def visit_ReturnStatement(self, node: ReturnStatement):
         if node.valore is None:
@@ -716,6 +796,11 @@ class Transpiler:
     def visit_CallStmt(self, node: CallStmt):
         nome_c, args = risolvi_chiamata(self,node)
         self.indentazione(f"{nome_c}({', '.join(args)});")
+
+    #per le espressioni chiamata durante le assegnazioni
+    def espr_CallStmt(self, node: CallStmt):
+        nome_c, args = risolvi_chiamata(self, node)
+        return f"{nome_c}({', '.join(args)})"
 
     def visit_Arape_a_vocca(self, node: Arape_a_vocca):
         """ Genera un UNICO printf in C unendo le stringhe fisse """

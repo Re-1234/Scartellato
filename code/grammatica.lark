@@ -45,7 +45,7 @@
         QUADRATADESTRA: "["
 
         //Keyword
-        METTIMCA: "mettimcà"                    //if
+        METTIMCA: "mettimmcà"                    //if
         ALLORFAACCUSSI: "allor_fa_accussi"     //else
         ROBA: "robba"                         //classe
         O_MAST: "o_mast"               //costruttore
@@ -88,14 +88,14 @@
                    | if_stmt
                    | break_stmt
                    | return_stmt
-                   | nome_var_semplice SWAP nome_var TERMINATORE  -> swap
+                   | nome_var_semplice SWAP nome_var_semplice TERMINATORE  -> swap
                    | PRINT TONDASINISTRA STRINGA (ADDIZIONE expr_primary)* TONDADESTRA TERMINATORE -> stampante
                    | assegnamento_composto "!"
 
 
         // RETURN E BREAK
 
-        return_stmt: RETURN  tipi_ritorno TERMINATORE ->returnstatement
+        return_stmt: RETURN assegnamento_composto  TERMINATORE ->returnstatement
                    | RETURN TERMINATORE   ->returnstatement
 
 
@@ -113,12 +113,7 @@
             | LETTER_TK -> tipo
             | ID -> tipo
 
-        ?tipi_ritorno : ID -> variabile_semplice
-                | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
-                | NUMERO  -> numero
-                | BOOLEAN -> boolean
-                | STRINGA -> stringa
-                | CARATTERE -> carattere
+
 
         ?nome_var: ID -> variabile_semplice
                 | QUADRATASINISTRA QUADRATADESTRA ID  -> variabile_array
@@ -133,8 +128,8 @@
        ?expr_muls: expr_muls MOLTIPLICA expr_unary  -> moltiplicazione
                 | expr_muls DIVISIONE  expr_unary  -> divisione
                 | expr_muls RESTO      expr_unary  -> resto
-                | NUMERO
-                | ID
+                | NUMERO -> numero
+                | ID -> variabile_semplice
         //CLASSI
 
         ?classe: ROBA nome_var_semplice GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba

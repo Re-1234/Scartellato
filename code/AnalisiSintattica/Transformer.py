@@ -43,11 +43,9 @@ class Carattr:
 @dataclass(frozen=True)
 class Variabile:
     nome : str
-    index: int
+    index: Any = -1
     is_array: bool = False
-    def __post_init__(self):
-        if not isinstance(self.index, int):
-            raise TypeError(f"index deve essere int, ricevuto {type(self.index)}")
+
 
 @dataclass(frozen=True)
 class Dichiarazione:
