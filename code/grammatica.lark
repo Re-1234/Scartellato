@@ -128,8 +128,8 @@
        ?expr_muls: expr_muls MOLTIPLICA expr_unary  -> moltiplicazione
                 | expr_muls DIVISIONE  expr_unary  -> divisione
                 | expr_muls RESTO      expr_unary  -> resto
-                | NUMERO
-                | ID
+                | NUMERO -> numero
+                | ID -> variabile_semplice
         //CLASSI
 
         ?classe: ROBA nome_var_semplice GRAFFASINISTRA membro*  costruttore membro* GRAFFADESTRA -> robba

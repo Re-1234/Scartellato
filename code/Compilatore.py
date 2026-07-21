@@ -131,30 +131,36 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-vacant mestier bubbleSort ) guagliuni : numr ][ arr, numr dim ( }
-    numr i = 0 !
-    aspe ) i < dim ( }
-        numr j = 0 !
-        aspe ) j < dim + i + 1 ( }
-            mettimmcà ) arr]j[ > arr]j - 1[ ( }
-                // Swap tra elementi dell'array
-                arr]j[ <-> arr]j - 1[ !
-            {
-            j-- !
-        {
-        i-- !
+robba ProcessoreDati }
+    numr id !
+    burdell stato !
+
+    o_mast ) guagliuni : numr p_id, burdell p_stato ( }
+        id = p_id !
+        stato = p_stato !
+    {
+
+    vacant mestier aggiornaStato ) guagliuni : burdell nuovo_stato ( }
+        // La variabile burdell cambia tipo al volo
+        stato = nuovo_stato !
+    {
+
+    burdell mestier getStato) ( }
+        ccàsta stato !
     {
 {
 
- Uè )( }
-    numr ][ numeri = 0 !
-    numeri -= 45 !
-    numeri -= 12 !
-    numeri -= 89 !
-    numeri -= 3 !
-
-    jamm_ja : bubbleSort ) guagliuni : numeri, 4 ( !
+Uè )( }
+    // Inizializza con stato numr (100)
+    ProcessoreDati proc = proc.o_mast) 1, 100 ( !
     
-    arape_a_vocca ) ??Array ordinato: ?? - numeri]0[( !
+    // Cambia il tipo di burdell a stringa nbruogglio
+    proc.aggiornaStato ) ??PRONTO?? ( !
+    
+    burdell res = proc.getStato )( !
+    arape_a_vocca ) ??Nuovo stato: ?? - res ( !
 {
+
+
+
 """)

@@ -526,6 +526,12 @@ class AnalisiSemantica:
                 tipo_attuale = info_var['tipo'] if isinstance(info_var, dict) else info_var
 
                 if is_dinamica:
+                    # BLOCCO: Non puoi assegnare un tipo "burdell" a un altro burdell
+                    if rv == "burdell":
+                        self.errori.append(
+                            f"NOO MA CHE E FATT: Impossibile assegnare un tipo 'burdell' a un'altra variabile 'burdell' ('{nome}')")
+                        return "burdell"
+
                     # SALVIAMO IL NUOVO TIPO MANTENENDOLA DINAMICA
                     self.symbolTable.update(nome, {'tipo': rv, 'is_burdell': True})
                     self.tipi_risolti[id(node.left)] = rv
@@ -533,7 +539,7 @@ class AnalisiSemantica:
                 else:
                     if not self._compatibili(tipo_attuale, rv):
                         self.errori.append(f"Impossibile assegnare '{rv}' a '{nome}' "
-                            f"che è di tipo '{tipo_attuale}'")
+                                           f"che è di tipo '{tipo_attuale}'")
                     return tipo_attuale
 
         if rv == "burdell" and node.op != '=':
@@ -566,6 +572,12 @@ class AnalisiSemantica:
                 tipo_valore = self.visit(node.valore)
 
             if tipo_dichiarato == 'burdell':
+                # BLOCCO: Non puoi inizializzare un burdell con un altro burdell
+                if tipo_valore == 'burdell':
+                    self.errori.append(
+                        f"NOO MA CHE E FATT: Impossibile inizializzare la variabile burdell '{nome_variabile}' con un valore di tipo 'burdell'")
+                    return
+
                 self.symbolTable.addId(nome_variabile, {'tipo': tipo_valore, 'is_burdell': True, 'is_array': is_array})
                 tipo_finale = tipo_valore
             else:

@@ -1,4 +1,4 @@
-from code.AnalisiSintattica.Transformer import ChiamataCostruttore, ChiamataOggetto
+from code.AnalisiSintattica.Transformer import ChiamataCostruttore, ChiamataOggetto, Variabile
 
 
 def wrappa_burdell(transpiler, nodo_valore):
@@ -48,7 +48,13 @@ def risolvi_chiamata(transpiler, node):
     aggiungendo prefisso di classe e 'self'/'&self' se la chiamata
     punta a un metodo della classe corrente."""
     nome = str(node.nome_func.nome)
-    args = [transpiler.espr(a) for a in node.args]
+
+    args = []
+    for a in node.args:
+        if isinstance(a, Variabile) and str(a.nome) in transpiler.var_array and a.index == -1:
+            args.append(f"&{a.nome}" if str(a.nome) not in transpiler.var_array_puntatore else str(a.nome))
+        else:
+            args.append(transpiler.espr(a))
 
     if transpiler.classe_corrente is not None and nome in transpiler.metodi_classe:
         nome_c = f"{transpiler.classe_corrente}_{nome}"
