@@ -477,24 +477,6 @@ class AnalisiSemantica:
                             f"dell'array '{tipo_array}' e valore '{rv}'")
                     return tipo_array
 
-
-                if is_dinamico:
-                    print(f"[DEBUG] index={node.left.index!r} tipo={type(node.left.index)}")
-                    tipi_tracciati = self.array_elementi_tipi.get(nome_array, [])
-                    if isinstance(node.left.index, int) and 0 <= node.left.index < len(tipi_tracciati):
-                        # conosciamo il tipo REALE inserito a quell'indice
-                        return tipi_tracciati[node.left.index]
-                    else:
-                        # indice non costante o non ancora tracciato: fallback generico
-                        return "burdell"
-                else:
-                    if tipo_array != rv and node.op == "=":
-                        self.errori.append(
-                            f"NOO MA CHE E FATT: tipi incompatibili tra elemento "
-                            f"dell'array '{tipo_array}' e valore '{rv}'")
-                    return tipo_array
-
-
         if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
             if node.op not in ("=", "-", "+", "<->","<",">"):
                 self.errori.append(f"ERRORE: NOO MA CHE E FATT : Con la notazione indice sull'array non puoi concatenare , hai usato '{node.op}'")
