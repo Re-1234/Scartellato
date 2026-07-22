@@ -1,18 +1,40 @@
+"""Modulo Transpiler per la traduzione dell'Abstract Syntax Tree (AST) in codice C.
+
+Questo modulo definisce la classe `Transpiler`, responsabile di percorrere l'AST
+prodotto dal parser e tradurre ogni nodo nel corrispondente codice sorgente C,
+gestendo tipi di dato, allocazione memoria, strutture e funzioni.
+"""
+
 from code.AnalisiSintattica.Transformer import *
 from code.utility import accesso_base, calcola_tipo, risolvi_chiamata, wrappa_burdell
 from code.utility import *
 
 
 class Transpiler:
+    """Traduttore da AST del linguaggio sorgente a codice C nativo.
+
+    La classe trasforma le strutture sintattiche del dialetto in codice C valido,
+    gestendo le conversioni di tipo, la generazione di macro per array dinamici,
+    la gestione delle classi tramite `struct` e la gestione della memoria.
+
+    Attributes:
+        TIPI_C (dict): Mappatura dai tipi del linguaggio ai tipi C corrispondenti.
+        PAROLE_RISERVATE_C (set): Insieme delle parole chiave del linguaggio C.
+        OPERATORI_C (dict): Mappatura e inversione degli operatori aritmetici/logici.
+        HEADER (str): Definizione del codice C di supporto (gc base, array dinamici, Burdell).
+    """
+
+    # --- MAPPATURA DEI TIPI DI DATO ---
     TIPI_C = {
-        "numr": "int",
-        "lota": "bool",
-        "nbruogglio": "char*",
-        "lettr": "char",
-        "vacant": "void",
-        "burdell": "Burdell",
+        "numr": "int",  # Interi
+        "lota": "bool",  # Booleani
+        "nbruogglio": "char*",  # Stringhe (puntatori a carattere)
+        "lettr": "char",  # Caratteri singoli
+        "vacant": "void",  # Vuoto / Nessun valore di ritorno
+        "burdell": "Burdell",  # Tipo dinamico / eterogeneo
     }
 
+    # --- PAROLE RISERVATE DEL C ---
     PAROLE_RISERVATE_C = {
         "auto", "break", "case", "char", "const", "continue", "default", "do",
         "double", "else", "enum", "extern", "float", "for", "goto", "if",
@@ -22,16 +44,17 @@ class Transpiler:
         "bool", "true", "false"
     }
 
+    # --- MAPPATURA E INVERSIONE OPERATORI ---
     OPERATORI_C = {
-        "-": "+",  # ADDIZIONE: '-' nel sorgente -> '+' in C
-        "+": "-",  # MENO: '+' nel sorgente -> '-' in C
-        "/": "*",  # MOLTIPLICA: '/' nel sorgente -> '*' in C
-        "*": "/",  # DIVISIONE: '*' nel sorgente -> '/' in C
+        "-": "+",  # Inversione intenzionale dell'addizione/sottrazione
+        "+": "-",
+        "/": "*",  # Inversione intenzionale della moltiplicazione/divisione
+        "*": "/",
 
-        "-=": "+=",  # ADDIZIONEUGUALE: '-=' -> '+=' in C
-        "+=": "-=",  # MENOUGUALE: '+=' -> '-=' in C
-        "/=": "*=",  # MOLTIPLICAUGUALE: '/=' -> '*=' in C
-        "*=": "/=",  # DIVISIONEUGUALE: '*=' -> '/=' in C
+        "-=": "+=",
+        "+=": "-=",
+        "/=": "*=",
+        "*=": "/=",
 
         "and": "&&",
         "or": "||",
@@ -39,8 +62,10 @@ class Transpiler:
         "!!": "!",
     }
 
+    # --- HEADER C INIETTATO ALL'INIZIO ---
     HEADER = """
-                #define MAX_ALLOCS 10000
+               // --- GESTIONE E TRACCIAMENTO MEMORIA ALLOCATA ---
+               #define MAX_ALLOCS 10000
                static void* _mem_tracker[MAX_ALLOCS];
                static int _mem_count = 0;
 
@@ -58,17 +83,14 @@ class Transpiler:
                    if (!new_ptr && size > 0) { fprintf(stderr, "Errore fatale: Memoria esaurita!\\n"); exit(1); }
 
                    if (!old_ptr) {
-                       // Se il vecchio puntatore era NULL, si comporta come una malloc
                        if (_mem_count < MAX_ALLOCS) _mem_tracker[_mem_count++] = new_ptr;
                    } else {
-                       // Cerca il vecchio puntatore nel tracker e aggiornalo con la nuova posizione
                        for (int i = 0; i < _mem_count; i++) {
                            if (_mem_tracker[i] == old_ptr) {
                                _mem_tracker[i] = new_ptr;
                                return new_ptr;
                            }
                        }
-                       // Se non l'ha trovato (strano ma possibile), lo aggiunge come nuovo
                        if (_mem_count < MAX_ALLOCS) _mem_tracker[_mem_count++] = new_ptr;
                    }
                    return new_ptr;
@@ -76,7 +98,6 @@ class Transpiler:
 
                static inline void b_free(void* ptr) {
                    if (!ptr) return;
-                   // Cerca il puntatore nel tracker, liberalo e setta a NULL per b_free_all
                    for (int i = 0; i < _mem_count; i++) {
                        if (_mem_tracker[i] == ptr) {
                            free(ptr);
@@ -97,7 +118,7 @@ class Transpiler:
                }
 
 
-
+               // --- MACRO PER DEFINIZIONE ARRAY DINAMICI IN C ---
                #define ARRAY_CHUNK 50                                                
                #define DEFINE_ARRAY(TYPE, NAME, EQ)                                  \\
                typedef struct {                                                      \\
@@ -124,7 +145,6 @@ class Transpiler:
                    a->dati[a->size++] = val;                                         \\
                }                                                                       \\
                                                                                        \\
-                                                                                       \\
               static inline void NAME##_array_free(NAME##_array *a) {               \\
                    if (a->dati) b_free(a->dati);                                       \\
                    a->dati = NULL; a->size = 0; a->capacity = 0;                     \\
@@ -147,164 +167,192 @@ class Transpiler:
                DEFINE_ARRAY(bool, lota, EQ_BOOL)                                       
 
 
-           typedef enum { TIPO_NUMR, TIPO_LOTA, TIPO_NBRUOGGLIO, TIPO_LETTR } TagBurdell;
-                   typedef struct {
-                       TagBurdell tag;
-                       union {
-                           int numr;
-                           bool lota;
-                           char* nbruogglio;
-                           char lettr;
-                       } val;
-                   } Burdell;
+               // --- STRUCT E FUNZIONI TIPO DINAMICO (Burdell) ---
+               typedef enum { TIPO_NUMR, TIPO_LOTA, TIPO_NBRUOGGLIO, TIPO_LETTR } TagBurdell;
+               typedef struct {
+                   TagBurdell tag;
+                   union {
+                       int numr;
+                       bool lota;
+                       char* nbruogglio;
+                       char lettr;
+                   } val;
+               } Burdell;
 
-                   typedef struct {
-                       Burdell* dati;
-                       int len;
-                       int cap;
-                   } ArrayDinamico;
+               typedef struct {
+                   Burdell* dati;
+                   int len;
+                   int cap;
+               } ArrayDinamico;
 
+               Burdell burdell_da_numr(int v) {
+                   Burdell b; b.tag = TIPO_NUMR; b.val.numr = v; return b;
+               }
+               Burdell burdell_da_lota(bool v) {
+                   Burdell b; b.tag = TIPO_LOTA; b.val.lota = v; return b;
+               }
+               Burdell burdell_da_nbruogglio(char* v) {
+                   Burdell b; b.tag = TIPO_NBRUOGGLIO; b.val.nbruogglio = v; return b;
+               }
+               Burdell burdell_da_lettr(char v) {
+                   Burdell b; b.tag = TIPO_LETTR; b.val.lettr = v; return b;
+               }
 
-           Burdell burdell_da_numr(int v) {
-                       Burdell b; b.tag = TIPO_NUMR; b.val.numr = v; return b;
+               char* burdell_concat(const char* s1, const char* s2) {
+                   if(!s1) s1 = ""; if(!s2) s2 = "";
+                   char* res = (char*)b_malloc(strlen(s1) + strlen(s2) + 1);
+                   strcpy(res, s1); strcat(res, s2);
+                   return res;
+               }
+               char* burdell_concat_str_num(const char* s, int n) {
+                   if(!s) s = "";
+                   char* res = (char*)b_malloc(strlen(s) + 32);
+                   sprintf(res, "%s%d", s, n);
+                   return res;
+               }
+               char* burdell_concat_num_str(int n, const char* s) {
+                   if(!s) s = "";
+                   char* res = (char*)b_malloc(strlen(s) + 32);
+                   sprintf(res, "%d%s", n, s);
+                   return res;
+               }
+               int burdell_equals(Burdell a, Burdell b) {
+                   if (a.tag != b.tag) return 0;
+                   switch (a.tag) {
+                       case TIPO_NUMR: return a.val.numr == b.val.numr;
+                       case TIPO_LOTA: return a.val.lota == b.val.lota;
+                       case TIPO_NBRUOGGLIO: return strcmp(a.val.nbruogglio, b.val.nbruogglio) == 0;
+                       case TIPO_LETTR: return a.val.lettr == b.val.lettr;
                    }
-                   Burdell burdell_da_lota(bool v) {
-                       Burdell b; b.tag = TIPO_LOTA; b.val.lota = v; return b;
-                   }
-                   Burdell burdell_da_nbruogglio(char* v) {
-                       Burdell b; b.tag = TIPO_NBRUOGGLIO; b.val.nbruogglio = v; return b;
-                   }
-                   Burdell burdell_da_lettr(char v) {
-                       Burdell b; b.tag = TIPO_LETTR; b.val.lettr = v; return b;
-                   }
+                   return 0;
+               }
 
-                   char* burdell_concat(const char* s1, const char* s2) {
-                       if(!s1) s1 = ""; if(!s2) s2 = "";
-                       char* res = (char*)b_malloc(strlen(s1) + strlen(s2) + 1);
-                       strcpy(res, s1); strcat(res, s2);
-                       return res;
-                   }
-                   char* burdell_concat_str_num(const char* s, int n) {
-                       if(!s) s = "";
-                       char* res = (char*)b_malloc(strlen(s) + 32);
-                       sprintf(res, "%s%d", s, n);
-                       return res;
-                   }
-                   char* burdell_concat_num_str(int n, const char* s) {
-                       if(!s) s = "";
-                       char* res = (char*)b_malloc(strlen(s) + 32);
-                       sprintf(res, "%d%s", n, s);
-                       return res;
-                   }
-                  int burdell_equals(Burdell a, Burdell b) {
-                       if (a.tag != b.tag) return 0;
-                       switch (a.tag) {
-                           case TIPO_NUMR: return a.val.numr == b.val.numr;
-                           case TIPO_LOTA: return a.val.lota == b.val.lota;
-                           case TIPO_NBRUOGGLIO: return strcmp(a.val.nbruogglio, b.val.nbruogglio) == 0;
-                           case TIPO_LETTR: return a.val.lettr == b.val.lettr;
+               void arr_init(ArrayDinamico* a) {
+                   a->dati = NULL; a->len = 0; a->cap = 0;
+               }
+
+               void arr_append(ArrayDinamico* a, Burdell v) {
+                   if (a->len >= a->cap) {
+                       int new_cap = a->cap == 0 ? 4 : a->cap * 2;
+                       Burdell* temp = b_realloc(a->dati, new_cap * sizeof(Burdell));
+                       if (!temp) {
+                           fprintf(stderr, "Errore: realloc fallita in ArrayDinamico!\\n");
+                           exit(1);
                        }
-                       return 0;
+                       a->dati = temp;
+                       a->cap = new_cap;
                    }
+                   a->dati[a->len++] = v;
+               }
 
+               bool arr_contains(ArrayDinamico* a, Burdell v) {
+                   for (int i = 0; i < a->len; i++)
+                       if (burdell_equals(a->dati[i], v)) return true;
+                   return false;
+               }
 
-                      void arr_init(ArrayDinamico* a) {
-                          a->dati = NULL; a->len = 0; a->cap = 0;
-                      }
+               void arr_free(ArrayDinamico* a) {
+                   if (a->dati) b_free(a->dati);
+                   a->dati = NULL; a->len = 0; a->cap = 0;
+               }
 
-                      void arr_append(ArrayDinamico* a, Burdell v) {
-                        if (a->len >= a->cap) {
-                              int new_cap = a->cap == 0 ? 4 : a->cap * 2;
-                              Burdell* temp = b_realloc(a->dati, new_cap * sizeof(Burdell));
-                              if (!temp) {
-                                  fprintf(stderr, "Errore: realloc fallita in ArrayDinamico!\\n");
-                                  exit(1);
-                              }
-                              a->dati = temp;
-                              a->cap = new_cap;
-                          }
-                          a->dati[a->len++] = v;
-                      }
+               char* burdell_concat_str_char(const char* s, char c) {
+                   if(!s) s = "";
+                   size_t len = strlen(s);
+                   char* res = (char*)b_malloc(len + 2);
+                   strcpy(res, s);
+                   res[len] = c;
+                   res[len + 1] = '\\0';
+                   return res;
+               }
 
-                       bool arr_contains(ArrayDinamico* a, Burdell v) {
-                          for (int i = 0; i < a->len; i++)
-                              if (burdell_equals(a->dati[i], v)) return true;
-                          return false;
-                      }
-
-                      void arr_free(ArrayDinamico* a) {
-                          if (a->dati) b_free(a->dati);
-                          a->dati = NULL; a->len = 0; a->cap = 0;
-                      }
-                        
-                      char* burdell_concat_str_char(const char* s, char c) {
-                        if(!s) s = "";
-                        size_t len = strlen(s);
-                        char* res = (char*)b_malloc(len + 2);
-                        strcpy(res, s);
-                        res[len] = c;
-                        res[len + 1] = '\\0';
-                        return res;
-                    }
-                    
-                    char* burdell_concat_char_str(char c, const char* s) {
-                        if(!s) s = "";
-                        size_t len = strlen(s);
-                        char* res = (char*)b_malloc(len + 2);
-                        res[0] = c;
-                        strcpy(res + 1, s);
-                        return res;
-                    }
-
-                      """
-
-
+               char* burdell_concat_char_str(char c, const char* s) {
+                   if(!s) s = "";
+                   size_t len = strlen(s);
+                   char* res = (char*)b_malloc(len + 2);
+                   res[0] = c;
+                   strcpy(res + 1, s);
+                   return res;
+               }
+               """
 
     def __init__(self, tipi_risolti: dict, burdell_info: dict, print_types: dict):
-            self.tipi_risolti = tipi_risolti
-            self.burdell_info = burdell_info
-            self.print_types = print_types
-            self.output = []
-            self.indent = 0
-            self.temp_counter = 0
-            self.classe_corrente = None   # serve per generare self.campo dentro i metodi
-            self.campi_classe = set()
-            self.metodi_classe = set()
-            self.in_costruttore = False
-            self.in_main = False   #controllo se siamo all'interno del main
-            self.var_burdell = set()
-            self.campi_burdell_classe = set()
-            self.var_array = {}
-            self.var_locali_shadow = set()  # nomi dichiarati localmente che oscurano campi di classe
-            self.var_classe = {}
-            self.var_array_puntatore = set()
+        """Inizializza il Transpiler con i dati ricavati dall'analisi semantica.
 
+        Args:
+            tipi_risolti (dict): Dizionario contenente i tipi risolti associati agli ID dei nodi.
+            burdell_info (dict): Mappa che indica quali nodi sono gestiti come tipo 'Burdell'.
+            print_types (dict): Mappa per la determinazione del formato di stampa dei nodi.
+        """
+        self.tipi_risolti = tipi_risolti
+        self.burdell_info = burdell_info
+        self.print_types = print_types
+        self.output = []
+        self.indent = 0
+        self.temp_counter = 0
+        self.classe_corrente = None
+        self.campi_classe = set()
+        self.metodi_classe = set()
+        self.in_costruttore = False
+        self.in_main = False
+        self.var_burdell = set()
+        self.campi_burdell_classe = set()
+        self.var_array = {}
+        self.var_locali_shadow = set()
+        self.var_classe = {}
+        self.var_array_puntatore = set()
 
-    def indentazione(self, riga):
+    def indentazione(self, riga: str):
+        """Aggiunge una riga di codice al buffer di output applicando il livello di indentazione corrente.
+
+        Args:
+            riga (str): La riga di codice da formattare.
+        """
         self.output.append("    " * self.indent + riga)
 
+    def get_output(self) -> str:
+        """Restituisce il codice C completo generato.
 
-    def get_output(self):
+        Returns:
+            str: Il codice sorgente C risultante unito da a capo.
+        """
         return "\n".join(self.output)
 
+    def nuova_temp(self) -> str:
+        """Genera un nome di variabile temporanea univoco.
 
-    def nuova_temp(self):
+        Returns:
+            str: Identificatore univoco del tipo `__tmp1`, `__tmp2`, ecc.
+        """
         self.temp_counter += 1
         return f"__tmp{self.temp_counter}"
 
+    def tipo_c(self, tipo_scart: str) -> str:
+        """Converte il tipo del linguaggio sorgente nel tipo nativo C corrispondente.
 
-    def tipo_c(self, tipo_scart):
-        # ricerca nei TIPI.C chiave - valore, se non trova la chiave, fa fallback  sul valore originale
+        Args:
+            tipo_scart (str): Nome del tipo sorgente.
+
+        Returns:
+            str: Tipo C corrispondente o il nome della classe stessa in caso di tipo custom.
+        """
         return self.TIPI_C.get(str(tipo_scart), str(tipo_scart))
 
-    def tipo_di(self, nodo):
+    def tipo_di(self, nodo) -> str:
+        """Determina il tipo di un nodo consultando la tabella semantica o la struttura del nodo.
+
+        Args:
+            nodo: Il nodo dell'AST da analizzare.
+
+        Returns:
+            str | None: Il nome del tipo inferito o `None` se non reperibile.
+        """
         if nodo is None:
             return None
         chiave = id(nodo)
         if chiave in self.tipi_risolti:
             return self.tipi_risolti[chiave]
 
-        # Fallback per nodi non registrati nell'analisi semantica (es. indici di array)
         if isinstance(nodo, Variabile):
             return "numr"
         if isinstance(nodo, Numr):
@@ -313,14 +361,27 @@ class Transpiler:
         return None
 
     def operatore_c(self, op: str) -> str:
-        """Traduce l'operatore di Scartellato nel corrispondente operatore C."""
+        """Restituisce l'operatore C equivalente a quello fornito in input.
+
+        Args:
+            op (str): L'operatore del linguaggio sorgente.
+
+        Returns:
+            str: L'operatore tradotto per C.
+        """
         return self.OPERATORI_C.get(op, op)
 
-
-        # ── dispatcher ISTRUZIONI ────────────────────────────────────────
-
+    # ── DISPATCHER ISTRUZIONI E ESPRESSIONI ──────────────────────────
 
     def visit(self, node):
+        """Esegue il dispatching dinamico sulle istruzioni basandosi sulla classe del nodo.
+
+        Args:
+            node: Il nodo o la lista di nodi da visitare.
+
+        Raises:
+            Exception: Se non viene trovato alcun generatore per il nodo istruzione.
+        """
         if isinstance(node, list):
             for n in node:
                 self.visit(n)
@@ -333,10 +394,18 @@ class Transpiler:
             raise Exception(f"Nessun generatore ISTRUZIONE per {node.__class__.__name__}")
         method(node)
 
-        # ── dispatcher ESPRESSIONI ───────────────────────────────────────
+    def espr(self, node) -> str:
+        """Esegue il dispatching dinamico per la valutazione delle espressioni.
 
+        Args:
+            node: Il nodo espressione da convertire.
 
-    def espr(self, node):
+        Returns:
+            str: La stringa contenente il frammento di codice C generato.
+
+        Raises:
+            Exception: Se non viene trovato alcun generatore per il nodo espressione.
+        """
         method_name = f"espr_{node.__class__.__name__}"
         method = getattr(self, method_name, None)
         if method is None:
@@ -344,25 +413,33 @@ class Transpiler:
         return method(node)
 
     def visit_Block(self, node: Block):
+        """Traduce un blocco di istruzioni sequenziali.
+
+        Args:
+            node (Block): Il nodo blocco contenente gli statement.
+        """
         for stmt in node.statements:
-             self.visit(stmt)
+            self.visit(stmt)
 
     # ══════════════════════════════════════════════════════════════
-    #   CLASSI
+    #   CLASSI E METODI
     # ══════════════════════════════════════════════════════════════
 
     def visit_Robba(self, node: Robba):
+        """Traduce la dichiarazione di una classe ('Robba') in una struct C e relative funzioni.
+
+        Args:
+            node (Robba): Il nodo AST che definisce una classe.
+        """
         nome_classe = str(node.nome.nome)
 
         self.campi_classe = {v.nome.nome for v in node.variabili}
         self.campi_burdell_classe = {v.nome.nome for v in node.variabili if v.tipo.nome == "burdell"}
 
         self.metodi_classe = {str(f.nome.nome) for f in node.funzioni}
-        # Impostiamo la classe corrente GIA' PRIMA del costruttore, così le
-        # chiamate a metodi della stessa classe fatte dentro il costruttore
-        # vengono riconosciute correttamente (vedi _risolvi_chiamata).
         self.classe_corrente = nome_classe
 
+        # 1. Definizione struct C
         self.indentazione(f"typedef struct {{")
         self.indent += 1
         for v in node.variabili:
@@ -371,6 +448,7 @@ class Transpiler:
         self.indent -= 1
         self.indentazione(f"}} {nome_classe};")
 
+        # 2. Prototipi dei metodi con puntatore 'self'
         self.indentazione(f"// Prototipi dei metodi della classe {nome_classe}")
         for f in node.funzioni:
             if f.is_array:
@@ -390,6 +468,7 @@ class Transpiler:
             self.indentazione(f"{tipo_ritorno} {nome_classe}_{nome_metodo}({params});")
         self.indentazione("")
 
+        # 3. Costruttore della classe
         if node.costruttore is not None:
             params_list = []
             for p in node.costruttore.parametri:
@@ -410,6 +489,7 @@ class Transpiler:
             self.indentazione("}")
             self.indentazione("")
 
+        # 4. Traduzione dei corpi dei metodi
         for f in node.funzioni:
             self.visit(f)
             self.indentazione("")
@@ -421,44 +501,71 @@ class Transpiler:
         self.var_locali_shadow = set()
 
     def visit_ChiamataOggetto(self, node: ChiamataOggetto):
-        self.indentazione(f"{genera_chiamata_oggetto(self,node)};")
+        """Traduce l'invocazione di un metodo di un oggetto come istruzione isolata.
 
-    def espr_ChiamataOggetto(self, node: ChiamataOggetto):
-        return genera_chiamata_oggetto(self,node)
+        Args:
+            node (ChiamataOggetto): Il nodo rappresentante la chiamata di metodo.
+        """
+        self.indentazione(f"{genera_chiamata_oggetto(self, node)};")
 
-    def espr_Variabile(self, node: Variabile):
-            nome_var = str(node.nome)
+    def espr_ChiamataOggetto(self, node: ChiamataOggetto) -> str:
+        """Traduce l'invocazione di un metodo di un oggetto come espressione.
 
-            if node.is_array and node.index != -1:
-                indice_c = self.espr(node.index) if hasattr(node.index, '__class__') and not isinstance(node.index,(int, str)) else str(  node.index)
-                accesso = "->" if nome_var in self.var_array_puntatore else "."
-                return f"{nome_var}{accesso}dati[{indice_c}]"
+        Args:
+            node (ChiamataOggetto): Il nodo della chiamata.
 
-            base = accesso_base(self, nome_var)
-            if self.burdell_info.get(id(node), False):
-                tipo_corrente = self.tipo_di(node)
-                return f"{base}.val.{tipo_corrente}"
-            return base
+        Returns:
+            str: Frammento C della chiamata a funzione.
+        """
+        return genera_chiamata_oggetto(self, node)
+
+    def espr_Variabile(self, node: Variabile) -> str:
+        """Traduce il riferimento a una variabile, considerando indici, puntatori e tipi union.
+
+        Args:
+            node (Variabile): Il nodo variabile.
+
+        Returns:
+            str: Nome o espressione di accesso alla variabile in C.
+        """
+        nome_var = str(node.nome)
+
+        if node.is_array and node.index != -1:
+            indice_c = self.espr(node.index) if hasattr(node.index, '__class__') and not isinstance(node.index, (int,
+                                                                                                                 str)) else str(
+                node.index)
+            accesso = "->" if nome_var in self.var_array_puntatore else "."
+            return f"{nome_var}{accesso}dati[{indice_c}]"
+
+        base = accesso_base(self, nome_var)
+        if self.burdell_info.get(id(node), False):
+            tipo_corrente = self.tipo_di(node)
+            return f"{base}.val.{tipo_corrente}"
+        return base
 
     def visit_Dichiarazione(self, node: Dichiarazione):
+        """Traduce la dichiarazione di una nuova variabile o istanza.
+
+        Args:
+            node (Dichiarazione): Il nodo della dichiarazione.
+        """
         nome_raw = str(node.nome.nome)
-        nome = c_nome(self,nome_raw) #controlla se è una parola chiave del C e nel caso la sostituisce in maniera sicura
+        nome = c_nome(self, nome_raw)
         is_array = node.nome.is_array
 
         if self.classe_corrente is not None and nome in self.campi_classe:
             self.var_locali_shadow.add(nome)
 
-
         if is_array:
             tipo_elemento = node.tipo.nome
-            self.var_array[nome] = tipo_elemento  # ← nota: ora è un DICT, non un set
+            self.var_array[nome] = tipo_elemento
             if self.indent == 0:
                 if tipo_elemento == "burdell":
-                     self.indentazione(f"ArrayDinamico {nome}= {{0}};")
+                    self.indentazione(f"ArrayDinamico {nome}= {{0}};")
                 else:
-                    self.indentazione(f"{tipo_elemento}_array {nome} = {{0}};") #inizializza i valori di default
+                    self.indentazione(f"{tipo_elemento}_array {nome} = {{0}};")
 
-            else:  #SE L'ARRAY È LOCALE (dentro una funzione o metodo)
+            else:
                 if tipo_elemento == "burdell":
                     self.indentazione(f"ArrayDinamico {nome};")
                     self.indentazione(f"arr_init(&{nome});")
@@ -471,14 +578,11 @@ class Transpiler:
 
         if tipo_dichiarato == "burdell":
             tipo_c = "Burdell"
-
         elif tipo_dichiarato not in self.TIPI_C:
             self.var_classe[nome] = tipo_dichiarato
             tipo_c = tipo_dichiarato
         else:
-            tipo_c = self.tipo_c(tipo_dichiarato) # traduzione del tipo
-
-
+            tipo_c = self.tipo_c(tipo_dichiarato)
 
         if node.valore is not None:
             if isinstance(node.valore, ChiamataCostruttore):
@@ -486,8 +590,6 @@ class Transpiler:
             else:
                 valore = self.espr(node.valore)
                 if node.tipo.nome == "burdell":
-                    # Se il valore letto è GIÀ una struct C 'Burdell' (lettura indicizzata
-                    # da un array eterogeneo 'burdell ][ '), non richiuderlo di nuovo.
                     gia_burdell_struct = (
                             isinstance(node.valore, Variabile)
                             and getattr(node.valore, 'is_array', False)
@@ -499,14 +601,18 @@ class Transpiler:
             self.indentazione(f"{tipo_c} {nome} = {valore};")
 
     def _genera_prototipo_mestier(self, node: Mestier):
+        """Genera la firma / prototipo in C per una funzione globale.
+
+        Args:
+            node (Mestier): Il nodo funzione di cui generare il prototipo.
+        """
         nome_raw = str(node.nome.nome)
 
-        # Gestione main o sanitizzazione nome funzione
         if nome_raw == "Uè":
             nome = "main"
             tipo_ritorno = "int"
         else:
-            nome = c_nome(self,nome_raw)
+            nome = c_nome(self, nome_raw)
             if node.is_array:
                 tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
             else:
@@ -518,10 +624,8 @@ class Transpiler:
 
         params_parts = []
         for p in parametri:
-            # Sanitizziamo anche il nome del parametro nel prototipo!
-            nome_p = c_nome(self,str(p.nome.nome))
+            nome_p = c_nome(self, str(p.nome.nome))
 
-            # Verifichiamo se il parametro è un array usando getattr per sicurezza
             if getattr(p.nome, 'is_array', False):
                 tipo_elem = p.tipo.nome
                 tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
@@ -534,87 +638,93 @@ class Transpiler:
         self.indentazione(f"{tipo_ritorno} {nome}({params});")
 
     def visit_Mestier(self, node: Mestier):
-            nome_raw = str(node.nome.nome)  # nome della funzione
+        """Traduce la definizione di una funzione ('Mestier') o dell'entrypoint 'Uè' (main).
 
-            if node.is_array:
-                # se non è un array Burdell allora è uno dei casi dell'header
-                tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
+        Args:
+            node (Mestier): Il nodo rappresentante la funzione.
+        """
+        nome_raw = str(node.nome.nome)
+
+        if node.is_array:
+            tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
+        else:
+            tipo_ritorno = self.tipo_c(node.ritorno)
+
+        is_main = (nome_raw == "Uè")
+        if is_main:
+            nome = "main"
+            tipo_ritorno = "int"
+        else:
+            nome = c_nome(self, nome_raw)
+
+        self.in_main = is_main
+
+        params_parts = []
+        if self.classe_corrente is not None:
+            params_parts.append(f"{self.classe_corrente}* self")
+
+        parametri = node.parametri or []
+        if isinstance(parametri, str):
+            parametri = []
+
+        for p in parametri:
+            p_nome = c_nome(self, str(p.nome.nome))
+
+            if p.nome.is_array:
+                self.var_array[p_nome] = p.tipo.nome
+                self.var_array_puntatore.add(p_nome)
+            elif p.tipo.nome == "burdell":
+                self.var_burdell.add(p_nome)
+
+        for p in parametri:
+            p_nome = c_nome(self, str(p.nome.nome))
+
+            if p.nome.is_array:
+                tipo_elem = self.var_array.get(p_nome, p.tipo.nome)
+                tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
             else:
-                tipo_ritorno = self.tipo_c(node.ritorno)
+                tipo_c_param = self.tipo_c(p.tipo.nome)
 
-            is_main = (nome_raw == "Uè")  # true se siamo nel main
-            if is_main:
-                nome = "main"
-                tipo_ritorno = "int"
-            else:
-                # Sanitizziamo il nome della funzione se non è il main
-                nome = c_nome(self,nome_raw)
+            params_parts.append(f"{tipo_c_param} {p_nome}")
 
-            self.in_main = is_main
+        params = ", ".join(params_parts)
+        nome_finale = f"{self.classe_corrente}_{nome}" if self.classe_corrente else nome
 
-            # ---- parametri  ----
-            params_parts = []
-            if self.classe_corrente is not None:  # se assegnato allora ci troviamo nella classe
-                params_parts.append(f"{self.classe_corrente}* self")
+        self.indentazione(f"{tipo_ritorno} {nome_finale}({params}) {{")
+        self.indent += 1
 
-            parametri = node.parametri or []
-            if isinstance(parametri, str):
-                parametri = []
+        if is_main:
+            self.indentazione("atexit(b_free_all);")
 
-            # Primo ciclo: tracciamento e sanitizzazione nomi parametri
-            for p in parametri:
-                p_nome =  c_nome(self,str(p.nome.nome))
+        self.visit(node.corpo)
 
-                if p.nome.is_array:
-                    self.var_array[p_nome] = p.tipo.nome
-                    self.var_array_puntatore.add(p_nome)
-                elif p.tipo.nome == "burdell":
-                    self.var_burdell.add(p_nome)
+        if is_main:
+            ha_return = False
+            if node.corpo and hasattr(node.corpo, 'statements') and node.corpo.statements:
+                if isinstance(node.corpo.statements[-1], ReturnStatement):
+                    ha_return = True
 
-            # Secondo ciclo: generazione firma parametri in C
-            for p in parametri:
-                p_nome = c_nome(self,str(p.nome.nome))
+            if not ha_return:
+                self.indentazione("return 0;")
 
-                if p.nome.is_array:
-                    tipo_elem = self.var_array.get(p_nome, p.tipo.nome)
-                    tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
-                else:
-                    tipo_c_param = self.tipo_c(p.tipo.nome)
-
-                params_parts.append(f"{tipo_c_param} {p_nome}")
-
-            # costruzione nome completo della funzione
-            params = ", ".join(params_parts)
-            nome_finale = f"{self.classe_corrente}_{nome}" if self.classe_corrente else nome
-
-            self.indentazione(f"{tipo_ritorno} {nome_finale}({params}) {{")
-            self.indent += 1
-
-            # ---- corpo ----
-
-            if is_main:
-                self.indentazione("atexit(b_free_all);")
-
-            self.visit(node.corpo)
-
-            if is_main:
-                ha_return = False
-                if node.corpo and hasattr(node.corpo, 'statements') and node.corpo.statements:
-                    if isinstance(node.corpo.statements[-1], ReturnStatement):
-                        ha_return = True
-
-                if not ha_return:
-                    self.indentazione("return 0;")
-
-            self.indent -= 1
-            self.indentazione("}")
-            self.in_main = False
-            self.var_array_puntatore = set()
+        self.indent -= 1
+        self.indentazione("}")
+        self.in_main = False
+        self.var_array_puntatore = set()
 
     # ══════════════════════════════════════════════════════════════
-    #   OpBin COME ISTRUZIONE  ( = , <-> , +=, -=, ecc. )
+    #   OPERAZIONI BINARIE
     # ══════════════════════════════════════════════════════════════
+
     def visit_OpBin(self, node: OpBin):
+        """Traduce un'operazione binaria usata come istruzione (es. assegnamento, incremento, swap).
+
+        Args:
+            node (OpBin): Il nodo operazione binaria.
+
+        Raises:
+            Exception: Se l'operatore non è gestito come istruzione standalone.
+        """
         if node.op == "=":
             is_lato_sx_burdell = False
             if isinstance(node.left, Variabile):
@@ -688,7 +798,6 @@ class Transpiler:
             sx = self.espr(node.left)
             dx = self.espr(node.right)
 
-            # Gestione op += / -= con stringhe e caratteri
             if tipo_sx == "nbruogglio" or tipo_dx == "nbruogglio":
                 if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
                     risultato = f"burdell_concat({sx}, {dx})"
@@ -710,18 +819,28 @@ class Transpiler:
                     self.indentazione(f"{sx_assign} = {risultato};")
                 return
 
-            # Caso base (es. numr += numr)
             op_c = self.operatore_c(node.op)
             self.indentazione(f"{sx} {op_c} {dx};")
             return
 
         raise Exception(f"OpBin con operatore '{node.op}' non gestito come istruzione")
 
-    def espr_OpBin(self, node: OpBin):
+    def espr_OpBin(self, node: OpBin) -> str:
+        """Traduce un'operazione binaria/unaria all'interno di un'espressione.
+
+        Args:
+            node (OpBin): Il nodo operazione binaria.
+
+        Returns:
+            str: Espressione C formattata.
+
+        Raises:
+            Exception: Se vengono trovati operatori non ammessi nelle espressioni.
+        """
         if node.op in ("=", "<->"):
             raise Exception(f"'{node.op}' non può comparire dentro un'espressione")
 
-        if node.left is None:  # operatore prefisso unario (es. !!, not)
+        if node.left is None:
             dx = self.espr(node.right)
             op_c = self.operatore_c(node.op)
             return f"{op_c}({dx})"
@@ -729,8 +848,6 @@ class Transpiler:
         tipo_sx = self.tipo_di(node.left)
         tipo_dx = self.tipo_di(node.right) if node.right is not None else None
 
-        # GESTIONE STRINGHE
-        # ──  Stringa e Stringa ────────────────────
         if tipo_sx == "nbruogglio" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -738,10 +855,9 @@ class Transpiler:
                 return f"(strcmp({sx}, {dx}) == 0)"
             elif node.op == "!=":
                 return f"(strcmp({sx}, {dx}) != 0)"
-            elif node.op == "+":  # In Scartellato '+' è l'addizione/concatenazione
+            elif node.op == "+":
                 return f"burdell_concat({sx}, {dx})"
 
-        # ──  Stringa e Numero ────────────────────
         if tipo_sx == "nbruogglio" and tipo_dx == "numr":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
@@ -754,21 +870,18 @@ class Transpiler:
             if node.op == "+":
                 return f"burdell_concat_num_str({sx}, {dx})"
 
-        # ──  Stringa e Carattere ────────────────────
         if tipo_sx == "nbruogglio" and tipo_dx == "lettr":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
             if node.op in ("+", "-"):
                 return f"burdell_concat_str_char({sx}, {dx})"
 
-            # Carattere + Stringa (lettr + nbruogglio)
         if tipo_sx == "lettr" and tipo_dx == "nbruogglio":
             sx = self.espr(node.left)
             dx = self.espr(node.right)
             if node.op in ("+", "-"):
                 return f"burdell_concat_char_str({sx}, {dx})"
 
-        # GESTIONE OPERATORI BASE CON TRADUZIONE IN C
         op_c = self.operatore_c(node.op)
 
         sx = self.espr(node.left)
@@ -778,13 +891,16 @@ class Transpiler:
         dx = self.espr(node.right)
         return f"({sx} {op_c} {dx})"
 
-
-
     # ══════════════════════════════════════════════════════════════
-    #   RADICE
+    #   PUNTO DI INGRESSO (Start)
     # ══════════════════════════════════════════════════════════════
 
     def visit_Start(self, node: Start):
+        """Traduce l'intero programma partendo dal nodo radice dell'AST.
+
+        Args:
+            node (Start): Nodo principale del programma AST.
+        """
         self.indentazione("#include <stdio.h>")
         self.indentazione("#include <stdbool.h>")
         self.indentazione("#include <string.h>")
@@ -792,7 +908,6 @@ class Transpiler:
         self.indentazione("")
 
         self.indentazione(self.HEADER)
-
 
         for decl in node.program:
             if isinstance(decl, Mestier) and str(decl.nome.nome) != "Uè":
@@ -803,12 +918,22 @@ class Transpiler:
             self.visit(decl)
             self.indentazione("")
 
-
+    # ── CONTROLLO FLUSSO ─────────────────────────────────────────────
 
     def visit_Break(self, node):
+        """Traduce l'istruzione di interruzione di un ciclo (`break`).
+
+        Args:
+            node: Il nodo break.
+        """
         self.indentazione("break;\n")
 
     def visit_Mettimmca(self, node: Mettimmca):
+        """Traduce l'istruzione condizionale 'Mettimmca' (`if` / `else`).
+
+        Args:
+            node (Mettimmca): Il nodo condizionale.
+        """
         cond = self.espr(node.condizione)
         self.indentazione(f"if ({cond}) {{")
         self.indent += 1
@@ -822,6 +947,11 @@ class Transpiler:
         self.indentazione("}")
 
     def visit_Aspe(self, node: Aspe):
+        """Traduce il ciclo iterativo 'Aspe' (`while`).
+
+        Args:
+            node (Aspe): Il nodo del ciclo while.
+        """
         cond = self.espr(node.Condizione)
         self.indentazione(f"while ({cond}) {{")
         self.indent += 1
@@ -830,6 +960,11 @@ class Transpiler:
         self.indentazione("}")
 
     def visit_Ambress_Ambress(self, node: Ambress_Ambress):
+        """Traduce il ciclo iterativo 'Ambress_Ambress' (`for`).
+
+        Args:
+            node (Ambress_Ambress): Il nodo del ciclo for.
+        """
         init = self._for_init(node.dichiarazione)
         cond = self.espr(node.condizione)
         step = self._for_step(node.VarOperation)
@@ -840,13 +975,29 @@ class Transpiler:
         self.indent -= 1
         self.indentazione("}")
 
-    def _for_init(self, dich):
+    def _for_init(self, dich) -> str:
+        """Costruisce la clausola di inizializzazione per il ciclo for C.
+
+        Args:
+            dich: Nodo dichiarazione del ciclo.
+
+        Returns:
+            str: Stringa C di inizializzazione (es. `int i = 0`).
+        """
         tipo_c = self.tipo_c(dich.tipo.nome)
         nome = dich.nome.nome
         valore = self.espr(dich.valore)
         return f"{tipo_c} {nome} = {valore}"
 
-    def _for_step(self, op: OpBin):
+    def _for_step(self, op: OpBin) -> str:
+        """Costruisce l'espressione di incremento/passo per il ciclo for C.
+
+        Args:
+            op (OpBin): Nodo dell'operazione di incremento.
+
+        Returns:
+            str: Espressione C del passo.
+        """
         sx = self.espr(op.left)
         if op.op in ("++", "--"):
             return f"{sx}{op.op}"
@@ -855,6 +1006,11 @@ class Transpiler:
         return f"{sx} {op_c} {dx}"
 
     def visit_ReturnStatement(self, node: ReturnStatement):
+        """Traduce l'istruzione di ritorno (`return`).
+
+        Args:
+            node (ReturnStatement): Il nodo del return.
+        """
         if node.valore is None:
             if getattr(self, "in_main", False):
                 self.indentazione("return 0;")
@@ -864,53 +1020,60 @@ class Transpiler:
             valore = self.espr(node.valore)
             self.indentazione(f"return {valore};")
 
-        # ── chiamate a funzione/metodo ───────────────────────────────────
+    # ── CHIAMATE A FUNZIONE ──────────────────────────────────────────
 
     def visit_CallStmt(self, node: CallStmt):
-        nome_c, args = risolvi_chiamata(self,node)
+        """Traduce una chiamata a funzione usata come istruzione singola.
+
+        Args:
+            node (CallStmt): Il nodo della chiamata.
+        """
+        nome_c, args = risolvi_chiamata(self, node)
         self.indentazione(f"{nome_c}({', '.join(args)});")
 
-    #per le espressioni chiamata durante le assegnazioni
-    def espr_CallStmt(self, node: CallStmt):
+    def espr_CallStmt(self, node: CallStmt) -> str:
+        """Traduce una chiamata a funzione all'interno di un'espressione.
+
+        Args:
+            node (CallStmt): Il nodo della chiamata.
+
+        Returns:
+            str: Stringa di chiamata C.
+        """
         nome_c, args = risolvi_chiamata(self, node)
         return f"{nome_c}({', '.join(args)})"
 
-    def visit_Arape_a_vocca(self, node: Arape_a_vocca):
-        """ Genera un UNICO printf in C unendo le stringhe fisse """
+    # ── INPUT / OUTPUT ───────────────────────────────────────────────
 
+    def visit_Arape_a_vocca(self, node: Arape_a_vocca):
+        """Traduce la stampa su stdout ('Arape_a_vocca') in una chiamata `printf` in C.
+
+        Args:
+            node (Arape_a_vocca): Nodo per l'operazione di output.
+        """
         stringa_formato = ""
         argomenti_c = []
 
-        # 1. Prendiamo il primo pezzo di testo (se presente)
         if getattr(node, 'valore', None) is not None:
-            # Puliamo i punti interrogativi
             testo_pulito = str(node.valore).replace("??", "")
             stringa_formato += testo_pulito
 
-        # 2. Iteriamo su tutti gli altri elementi (variabili o altre stringhe)
         if getattr(node, 'variabili', None):
             for var in node.variabili:
-                # Otteniamo come si scriverebbe in C (es. "d", oppure '"valore di test "')
                 valore_c = self.espr(var)
 
-                # TRUCCO: Se il valore valutato è racchiuso tra virgolette, è una stringa fissa!
                 if valore_c.startswith('"') and valore_c.endswith('"'):
                     testo_fisso = valore_c[1:-1]
                     testo_fisso = testo_fisso.replace("%", "%%")
 
-                    # CONTROLLO SPAZIATURE ---
-                    # Se la stringa di formato ha già qualcosa, non finisce con spazio,
-                    # e il nuovo testo non inizia con spazio, inseriamo uno spazio in mezzo.
                     if stringa_formato and not stringa_formato.endswith(" ") and not testo_fisso.startswith(" "):
                         stringa_formato += " "
 
                     stringa_formato += testo_fisso
 
                 else:
-                    # È una VERA variabile
                     tipo = self.print_types.get(id(var))
 
-                    # --- NUOVO CONTROLLO SPAZIATURE PER LE VARIABILI ---
                     if stringa_formato and not stringa_formato.endswith(" "):
                         stringa_formato += " "
 
@@ -920,40 +1083,34 @@ class Transpiler:
                     elif tipo == "nbruogglio":
                         stringa_formato += "%s"
                         argomenti_c.append(valore_c)
-
                     elif tipo == "lettr":
                         stringa_formato += "%c"
                         argomenti_c.append(valore_c)
-
                     elif tipo == "lota":
                         stringa_formato += "%s"
-                        # Traduciamo in true/false letterale come in Java
                         argomenti_c.append(f"({valore_c}) ? \"true\" : \"false\"")
-
                     elif tipo == "burdell":
                         stringa_formato += "%s"
                         argomenti_c.append(f"burdell_a_stringa({valore_c})")
-
                     else:
-                        # Fallback di sicurezza
                         stringa_formato += "%s"
                         argomenti_c.append(valore_c)
 
-        # Aggiungiamo il rinvio a capo finale
         stringa_formato += "\\n"
 
-        # 3. Generiamo la riga C finale
         if argomenti_c:
             tutti_gli_argomenti = ", ".join(argomenti_c)
             self.indentazione(f'printf("{stringa_formato}", {tutti_gli_argomenti});')
         else:
-            # Stampa puramente testuale se alla fine non ci sono variabili
             self.indentazione(f'printf("{stringa_formato}");')
         self.indentazione('fflush(stdout);')
 
     def visit_Ric(self, node: Ric):
-        """ Genera la scanf in C per le variabili da leggere """
+        """Traduce l'input da tastiera ('Ric') in una chiamata `scanf` in C.
 
+        Args:
+            node (Ric): Nodo per l'operazione di lettura da stdin.
+        """
         stringa_formato = ""
         argomenti_c = []
 
@@ -963,16 +1120,11 @@ class Transpiler:
             for var in variabili:
                 valore_c = self.espr(var) if hasattr(self, 'espr') else self.visit(var)
 
-                # 1. RECUPERO DEL NOME DELLA VARIABILE E RECUPERATA COME STRINGA
                 nome_var = str(var.nome) if hasattr(var, 'nome') else str(var)
-
-                # 2. RECUPERO ROBUSTO DEL TIPO
                 tipo = self.print_types.get(id(var))
 
                 if not tipo and hasattr(self, 'tabella_simboli'):
                     simbolo = self.tabella_simboli.get(nome_var)
-
-                    # Se la tabella dei simboli contiene un oggetto
                     if hasattr(simbolo, 'tipo'):
                         tipo = simbolo.tipo
                     elif isinstance(simbolo, str):
@@ -981,51 +1133,85 @@ class Transpiler:
                 if stringa_formato:
                     stringa_formato += " "
 
-                # 3. MAPPATURA DEI TIPI PER SCANF
                 if tipo == "nbruogglio":
-                    # Per le stringhe in C (%s): NESSUNA '&'
                     stringa_formato += "%s"
                     argomenti_c.append(valore_c)
-
                 elif tipo == "numr":
                     stringa_formato += "%d"
                     argomenti_c.append(f"&{valore_c}")
-
                 elif tipo == "lettr":
                     stringa_formato += " %c"
                     argomenti_c.append(f"&{valore_c}")
-
                 elif tipo == "lota":
                     stringa_formato += "%d"
                     argomenti_c.append(f"&{valore_c}")
-
                 else:
-                    # FALLBACK SE IL TIPO NON È STATO TROVATO
-                    # Se il nome della variabile è "v" o contiene "str", forziamo %s
                     stringa_formato += "%d"
                     argomenti_c.append(f"&{valore_c}")
 
         if argomenti_c:
             tutti_gli_argomenti = ", ".join(argomenti_c)
-            self.indentazione(f'scanf("{stringa_formato}", {tutti_gli_argomenti});') # ══════════════════════════════════════════════════════════════
-    #   ESPRESSIONI
+            self.indentazione(f'scanf("{stringa_formato}", {tutti_gli_argomenti});')
+
+    # ══════════════════════════════════════════════════════════════
+    #   LITERAL E PRIMITIVI
     # ══════════════════════════════════════════════════════════════
 
-    def espr_Numr(self, node: Numr):
+    def espr_Numr(self, node: Numr) -> str:
+        """Traduce un valore letterale numerico.
+
+        Args:
+            node (Numr): Nodo valore numerico.
+
+        Returns:
+            str: Il valore sotto forma di stringa numerica per C.
+        """
         v = node.value
         return str(int(v)) if v == int(v) else str(v)
 
-    def espr_Boolean(self, node: Boolean):
+    def espr_Boolean(self, node: Boolean) -> str:
+        """Traduce un valore booleano sorgente in 'true' o 'false'.
+
+        Args:
+            node (Boolean): Nodo booleano.
+
+        Returns:
+            str: `"true"` o `"false"`.
+        """
         return "true" if str(node.value) == "sasicchj" else "false"
 
-    def espr_Stringa(self, node: Stringa):
+    def espr_Stringa(self, node: Stringa) -> str:
+        """Traduce una stringa letterale racchiudendola tra doppi apici C.
+
+        Args:
+            node (Stringa): Nodo valore testuale.
+
+        Returns:
+            str: Stringa formattata con doppi apici.
+        """
         return f'"{node.value}"'
 
-    def espr_Carattr(self, node: Carattr):
+    def espr_Carattr(self, node: Carattr) -> str:
+        """Traduce un singolo carattere letterale racchiudendolo tra apici singoli.
+
+        Args:
+            node (Carattr): Nodo singolo carattere.
+
+        Returns:
+            str: Carattere racchiuso in apici singoli.
+        """
         return f"'{node.value}'"
 
-    def espr_AccessoCampo(self, node):
+    def espr_AccessoCampo(self, node) -> str:
+        """Traduce l'accesso ad un campo/proprietà di uno struct (`istanza.campo`).
+
+        Args:
+            node: Il nodo di accesso al campo.
+
+        Returns:
+            str: Espressione di accesso al campo in C.
+        """
         nome_var = str(node.variabile.nome)
         nome_campo = str(node.campo.nome)
-        base = accesso_base(self,nome_var)
+        base = accesso_base(self, nome_var)
         return f"{base}.{nome_campo}"
