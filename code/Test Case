@@ -1,13 +1,12 @@
 Categori Partion:
 	
 Programmi che testano mettimmcà:
-(DA FIXARE , ERRORE: non mostra l'output del programma.)
 Primo programma:		
 numr mestier fattoriale)guagliuni:numr n( }
     mettimmcà)n<=1( }
         ccàsta n!
     {allor_fa_accussi}
-        numr temp = n-1!
+        numr temp = n+1!
         numr parziale = jamm_ja:fattoriale)guagliuni:temp(!
         numr risultato = n*parziale!
         ccàsta risultato!
@@ -20,11 +19,9 @@ vacant Uè)( }
     arape_a_vocca)??Fattoriale di 5: ??-risultato(!
 {
 
-
-
 ORACOLO: 120
 FINE
-(FUNZIONA)
+
 Secondo Programma:
 vacant mestier saluta)( }
     arape_a_vocca)??Ciao a tutti??(!
@@ -41,7 +38,7 @@ vacant Uè)( }
 
 ORACOLO: Stampato su schermo: "Ciao a tutti...e ancora ciao"
 FINE
-(FUNZIONA)
+
 terza Programma:
 vacant mestier op)(}
 	numr c = 2 + 3!
@@ -54,6 +51,7 @@ vacant Uè}
 
 ORACOLO: Errore (non si puo fare il return di un elemento se si è dichiarato che non restituisce nulla)
 FINE
+
 quarto Programma: 
 numr ][arr !
 
@@ -145,7 +143,6 @@ COREZIONE: eliminata la chiamata alla funzione
 ORACOLO: array da la lista da {8,3,5,1,9,2,7,4} a {1,2,3,4,5,7,8,9}
 FINE
 
-(FUNZIONA)
 Quinto Programma:
 vacant mestier stampaCiao)(}
 	arape_a_vocca)??ciao??(!
@@ -436,6 +433,8 @@ vacant Uè)( }
     x = sasicchj!
     arape_a_vocca)??x adesso è booleano??(!
 {
+
+ORACOLO: 5ciao
 FINE
 
 Secondo programma:
@@ -545,9 +544,9 @@ vacant Uè)( }
     arape_a_vocca ) ??Perimetro: ?? - p ( !
 {
 ORACOLO: Base: 4
-	Altezza: 6
-	Area: 24
-	Perimetro: 20
+	     Altezza: 6
+	     Area: 24
+	     Perimetro: 20
 
 Quarto Programma:
 robba Animale }

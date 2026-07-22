@@ -2,6 +2,9 @@ from code.AnalisiSintattica.Transformer import *
 
 
 class TranspilerC:
+    #DIZIONARIO CHE SERVE PER LA TRADUZIONE DEI TIPI NEL TRASPILER
+    #Mappa i tipi di dato del linguaggio sorgente (dal linguaggio Scartellato al linguaggio C)
+    #nei corrispondenti tipi di dato validi per il linguaggio C (o C++).
     TIPI_C = {
         "numr": "int",
         "lota": "bool",
@@ -12,35 +15,72 @@ class TranspilerC:
     }
 
     def __init__(self, tipi_risolti: dict):
+        """
+        Costruttore del generatore di codice (Code Generator).
+
+        Inizializza lo stato interno necessario per la traduzione del codice.
+        Imposta le strutture per accumulare del codice di output (lista e indentazione),
+        i contatori per le variabili temporanee e i flag/registri per tracciare il
+        contesto della semantica (es. per sapere in ogni momento se il generatore si trova
+        all'interno di una classe, di un costruttore, nel blocco main o se sta
+        gestendo tipi complessi e array).
+        """
         self.tipi_risolti = tipi_risolti
         self.output = []
         self.indent = 0
         self.temp_counter = 0
+
         self.classe_corrente = None  # serve per generare self.campo dentro i metodi
         self.campi_classe = set()
         self.metodi_classe = set()
+
         self.in_costruttore = False
         self.in_main = False  # controllo se siamo all'interno del main
+
         self.var_burdell = set()
         self.campi_burdell_classe = set()
         self.var_array = {}
 
     # ── utility di stampa ────────────────────────────────────────────
+
+    """
+            Aggiunge una nuova riga di codice all'output finale, 
+            applicando automaticamente gli spazi iniziali in base 
+            al livello di indentazione corrente.
+    """
     def indentazione(self, riga):
         self.output.append("    " * self.indent + riga)
 
+    """
+            Restituisce l'intero codice generato sotto forma di un'unica stringa, 
+            unendo tutte le righe accumulate nell'array 'output' con dei ritorni a capo.
+    """
     def get_output(self):
         return "\n".join(self.output)
 
     def nuova_temp(self):
+        """
+        Genera e restituisce un nome univoco per una nuova variabile temporanea
+        (es. '__tmp1', '__tmp2'), utile per la valutazione di espressioni complesse,
+        incrementando l'apposito contatore interno.
+        """
         self.temp_counter += 1
         return f"__tmp{self.temp_counter}"
 
     def tipo_c(self, tipo_scart):
-        # ricerca nei TIPI.C chiave - valore, se non trova la chiave, fa fallback  sul valore originale
+        """
+        Converte un tipo di dato dal linguaggio sorgente al corrispondente tipo in C
+        usando il dizionario TIPI_C. Se il tipo non è presente nel dizionario,
+        restituisce il tipo originale come meccanismo di fallback (utile ad esempio per le classi).
+        """
         return self.TIPI_C.get(str(tipo_scart), str(tipo_scart))
 
     def tipo_di(self, nodo):
+        """
+        Recupera il tipo di dato associato a uno specifico nodo dell'albero sintattico (AST)
+        usando l'ID del nodo stesso. Genera un'eccezione se il tipo del nodo
+        non è stato risolto dall'analizzatore semantico in precedenza.
+        """
         chiave = id(nodo)
         if chiave not in self.tipi_risolti:
             raise Exception(f"Tipo non risolto per {nodo!r}")
