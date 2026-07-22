@@ -101,38 +101,38 @@ class Transpiler:
                #define ARRAY_CHUNK 50                                                
                #define DEFINE_ARRAY(TYPE, NAME, EQ)                                  \\
                typedef struct {                                                      \\
-                   TYPE *data;                                                       \\
+                   TYPE *dati;                                                       \\
                    int size;                                                         \\
                    int capacity;                                                     \\
                } NAME##_array;                                                       \\
                                                                                        \\
                static inline void NAME##_array_init(NAME##_array *a) {               \\
-                   a->data = NULL; a->size = 0; a->capacity = 0;                     \\
+                   a->dati = NULL; a->size = 0; a->capacity = 0;                     \\
                }                                                                     \\
                                                                                        \\
                static inline void NAME##_array_append(NAME##_array *a, TYPE val) {   \\
                 if (a->size >= a->capacity) {                                     \\
                        int new_capacity = a->capacity + ARRAY_CHUNK;                 \\
-                       TYPE *temp = b_realloc(a->data, new_capacity * sizeof(TYPE));   \\
+                       TYPE *temp = b_realloc(a->dati, new_capacity * sizeof(TYPE));   \\
                        if (!temp) {                                                  \\
                            fprintf(stderr, "Errore: realloc fallita in %s_array!\\n", #NAME); \\
                            exit(1);                                                  \\
                        }                                                             \\
-                       a->data = temp;                                               \\
+                       a->dati = temp;                                               \\
                        a->capacity = new_capacity;                                   \\
                    }                                                                 \\
-                   a->data[a->size++] = val;                                         \\
+                   a->dati[a->size++] = val;                                         \\
                }                                                                       \\
                                                                                        \\
                                                                                        \\
               static inline void NAME##_array_free(NAME##_array *a) {               \\
-                   if (a->data) b_free(a->data);                                       \\
-                   a->data = NULL; a->size = 0; a->capacity = 0;                     \\
+                   if (a->dati) b_free(a->dati);                                       \\
+                   a->dati = NULL; a->size = 0; a->capacity = 0;                     \\
                }                                                                      \\
                                                                                        \\
               static inline bool NAME##_array_contains(NAME##_array *a, TYPE val) {  \\
                    for (int i = 0; i < a->size; i++) {                                 \\
-                       if (EQ(a->data[i], val))                                        \\
+                       if (EQ(a->dati[i], val))                                        \\
                            return true;                                                \\
                    }                                                                   \\
                    return false;                                                       \\

@@ -10,7 +10,8 @@ from code.AnalisiSintattica.AST import *
 from code.AnalisiSemantica.PatternVisitor import AnalisiSemantica
 from code.AnalisiSemantica.Transpiler import *
 
-from estrai_test_cases import estrai_test_cases
+from test.estrai_test_cases import estrai_test_cases
+from test.coverage_grammatica import REGOLE_COPERTE_GLOBALI, raccogli_regole_usate, stampa_coverage_grammatica
 
 
 def trova_gcc():
@@ -43,7 +44,7 @@ def generatore(analisiSemantica, esegui=True):
     transpiler.visit(ast)
     codice_c = transpiler.get_output()
 
-    output_path = "output.c"
+    output_path = "../output.c"
     cartella_corrente = os.path.dirname(os.path.abspath(__file__))
     percorso_sorgente = os.path.join(cartella_corrente, output_path)
 
@@ -122,22 +123,28 @@ def compilatore(source: str, esegui: bool = True) -> CompileResult:
     global tree
     global ast
     parser = Lark.open(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "grammatica.lark"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "grammatica.lark"),
         parser="lalr", propagate_positions=True
     )
 
     try:
         tree = parser.parse(source)
+        REGOLE_COPERTE_GLOBALI.update(raccogli_regole_usate(tree))
         print(tree.pretty())
         ast = AST_Transformer().transform(tree)
         stampa_ast(ast)
     except UnexpectedToken as e:
         print(f"Errore sintattico alla riga {e.line}, col {e.column}")
         print(f"Token inatteso: {e.token!r}")
-        print(f"Token attesi: {e.expected}")
+
+        # Ordiniamo alfabeticamente e formattiamo come una stringa di set { ... }
+        token_attesi_ordinati = sorted(list(e.expected))
+        token_attesi_str = "{" + ", ".join(repr(t) for t in token_attesi_ordinati) + "}"
+
+        print(f"Token attesi: {token_attesi_str}")
         print(e.get_context(source))
         return CompileResult(False,
-                             [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {e.expected}"])
+                             [f"Errore sintattico riga {e.line}, col {e.column}: token inatteso {e.token!r}, attesi {token_attesi_str}"])
     except UnexpectedCharacters as e:
         print(f"Errore lessicale: {e.char!r}")
         return CompileResult(False, [f"Errore lessicale: carattere inatteso {e.char!r}"])
@@ -173,8 +180,11 @@ def normalizza(testo: str) -> str:
     testo = re.sub(r'\s+', ' ', testo)
     return testo
 
+def e_test_di_errore(oracolo: str) -> bool:
+    testo_pulito = re.sub(r'^[\["\'\s]+', '', normalizza(oracolo))
+    return testo_pulito.startswith("errore")
 
-def confronta(oracolo: str, ottenuto: str, manuale: bool) -> str:
+def confronta(oracolo: str, output: str | None, errori: list[str], manuale: bool) -> str:
     """Ritorna 'OK', 'FALLITO', 'DA VERIFICARE' o 'MANUALE'."""
     if manuale:
         return "MANUALE (test con scanf: compilazione riuscita, esecuzione da fare a mano)"
@@ -182,40 +192,56 @@ def confronta(oracolo: str, ottenuto: str, manuale: bool) -> str:
     if not oracolo.strip():
         return "DA VERIFICARE (nessun oracolo indicato nel file)"
 
+    if e_test_di_errore(oracolo):
+        # ---- TEST NEGATIVO: ci si aspetta un fallimento ----
+        if not errori:
+            return ("FALLITO (il programma doveva fallire con un errore "
+                    "semantico/sintattico, ma è stato compilato con successo)")
+
+        n_oracolo = normalizza(oracolo)
+        n_prodotto = normalizza(" | ".join(errori))
+
+        atteso = n_oracolo.removeprefix("errore").lstrip(": ").strip()
+
+        if not atteso or atteso in n_prodotto:
+            return "OK (errore atteso rilevato)"
+        return (f"DA VERIFICARE (fallito come atteso, ma il messaggio non combacia: "
+                f"atteso frammento '{atteso}', ottenuti: {errori})")
+
+    # ---- TEST POSITIVO: ci si aspetta output valido ----
+    if errori:
+        return f"FALLITO (doveva compilare/eseguire, ma sono stati rilevati errori: {errori})"
+
     n_oracolo = normalizza(oracolo)
-    n_ottenuto = normalizza(ottenuto)
+    n_ottenuto = normalizza(output or "")
 
     if not n_ottenuto:
         return "FALLITO (nessun output prodotto)"
-
     if n_oracolo == n_ottenuto:
         return "OK"
     if n_oracolo in n_ottenuto or n_ottenuto in n_oracolo:
         return "OK (match parziale)"
     return "DA VERIFICARE (output diverso dall'oracolo, controllare a mano)"
 
-
 def esegui_test(test: dict):
-    """Lancia compilatore() sul codice del test e restituisce (output, manuale)."""
+    """Ritorna (output, errori, manuale). output è None se la compilazione
+    è fallita; errori è la lista di messaggi (vuota se tutto ok)."""
     manuale = richiede_input_utente(test["codice"])
     try:
         risultato = compilatore(test["codice"], esegui=not manuale)
     except Exception as e:
-        return f"ECCEZIONE PYTHON: {e!r}", manuale
+        return None, [f"ECCEZIONE PYTHON: {e!r}"], manuale
 
     if risultato is None:
-        return "(nessun CompileResult restituito)", manuale
+        return None, ["(nessun CompileResult restituito)"], manuale
 
     if not risultato.ok:
-        return "ERRORE: " + " | ".join(risultato.errors), manuale
+        return None, risultato.errors, manuale
 
     if manuale:
-        return "COMPILATO OK - richiede input utente (scanf)", manuale
+        return "COMPILATO OK - richiede input utente (scanf)", [], manuale
 
-    if risultato.output:
-        return risultato.output, manuale
-
-    return "(compilazione OK, ma nessun output prodotto)", manuale
+    return risultato.output or "(compilazione OK, ma nessun output prodotto)", [], manuale
 
 
 def esegui_tutti_i_test(percorso_file: str = "Categori Partion.txt"):
@@ -230,11 +256,13 @@ def esegui_tutti_i_test(percorso_file: str = "Categori Partion.txt"):
         if test["note"]:
             print(f"Note: {test['note']}")
 
-        ottenuto, manuale = esegui_test(test)
-        esito = confronta(test["oracolo"], ottenuto, manuale)
+        output, errori, manuale = esegui_test(test)
+        esito = confronta(test["oracolo"], output, errori, manuale)
 
         print(f"Oracolo atteso:\n  {test['oracolo'] or '(non specificato)'}")
-        print(f"Risultato ottenuto:\n  {ottenuto}")
+        print(f"Risultato ottenuto:\n  {output}")
+        if errori:
+            print(f"Errori rilevati:\n  {errori}")
         print(f"Esito: {esito}")
 
         if esito.startswith("MANUALE"):
@@ -246,8 +274,16 @@ def esegui_tutti_i_test(percorso_file: str = "Categori Partion.txt"):
         else:
             boh += 1
 
-    print(f"\n===== Riepilogo: {len(tests)} test totali | OK: {ok} | FALLITI: {fail} | "
-          f"DA VERIFICARE: {boh} | MANUALI (scanf): {manuale_count} =====")
+    # ---- Riepilogo finale: FUORI dal ciclo for (nota l'indentazione) ----
+    totale = len(tests)
+    validity_rate = 100 * ok / totale if totale else 0
+
+    print(f"\n===== Riepilogo: {totale} test totali =====")
+    print(f"OK: {ok} | FALLITI: {fail} | DA VERIFICARE: {boh} | MANUALI (scanf): {manuale_count}")
+    print(f"Validity rate (pass/totale): {validity_rate:.1f}%")
+
+    percorso_grammatica = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "grammatica.lark")
+    stampa_coverage_grammatica(percorso_grammatica)
 
 
 if __name__ == "__main__":

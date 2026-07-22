@@ -131,21 +131,33 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-numr mestier prima_funzione ) guagliuni : numr x ( }
-    // Qui chiamiamo 'seconda_funzione', che è definita più in basso.
-    // Il compilatore gestisce questa chiamata come "pending".
-    numr ris = jamm_ja : seconda_funzione ) guagliuni : x ( !
-    ccàsta ris !
-{
-
-numr mestier seconda_funzione ) guagliuni : numr y ( }
-    numr r = y * 2 !
-    ccàsta r !
-{
-
-Uè ) ( }
-    numr finale = jamm_ja : prima_funzione ) guagliuni : 10 ( !
-    arape_a_vocca ) ??Risultato: ?? - finale ( !
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
+    
+    aspe ) condizione ( }
+        numr interno_while = 5 !
+        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
+        
+        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
+            burdell temporaneo = i + interno_while !  // Nasce come numr
+            
+            mettimmcà ) temporaneo > 7 ( }
+               
+            { allor_fa_accussi }
+                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
+                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe   
+            {
+        {
+        
+        burdell x = ??ciao?? !
+        x = sasicchj!
+        condizione = friariell !
+    {
+    
+    arape_a_vocca)??valore di mutante?? -mutante(!
+    
 {
 
 """)

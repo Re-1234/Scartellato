@@ -18,7 +18,7 @@ Ogni elemento restituito e' un dict:
 """
 import re
 
-RE_CATEGORIA = re.compile(r'^Programmi che testano (.+?):?\s*$', re.IGNORECASE)
+RE_CATEGORIA = re.compile(r'^Programm[ai]\s+che\s+testano\s+(.+?):?\s*$', re.IGNORECASE)
 RE_HEADER = re.compile(
     r'^(primo|prima|secondo|seconda|terzo|terza|quarto|quarta|quinto|quinta)\s+programm[ai]?\s*:?\s*$',
     re.IGNORECASE
