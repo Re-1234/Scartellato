@@ -963,7 +963,7 @@ class Transpiler:
             for var in variabili:
                 valore_c = self.espr(var) if hasattr(self, 'espr') else self.visit(var)
 
-                # 1. RECUPERO DEL NOME DELLA VARIABILE COME STRINGA (es. "v")
+                # 1. RECUPERO DEL NOME DELLA VARIABILE E RECUPERATA COME STRINGA
                 nome_var = str(var.nome) if hasattr(var, 'nome') else str(var)
 
                 # 2. RECUPERO ROBUSTO DEL TIPO
@@ -972,7 +972,7 @@ class Transpiler:
                 if not tipo and hasattr(self, 'tabella_simboli'):
                     simbolo = self.tabella_simboli.get(nome_var)
 
-                    # Se la tabella dei simboli contiene un oggetto (es. simbolo.tipo)
+                    # Se la tabella dei simboli contiene un oggetto
                     if hasattr(simbolo, 'tipo'):
                         tipo = simbolo.tipo
                     elif isinstance(simbolo, str):
