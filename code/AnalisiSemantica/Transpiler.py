@@ -13,6 +13,15 @@ class Transpiler:
         "burdell": "Burdell",
     }
 
+    PAROLE_RISERVATE_C = {
+        "auto", "break", "case", "char", "const", "continue", "default", "do",
+        "double", "else", "enum", "extern", "float", "for", "goto", "if",
+        "inline", "int", "long", "register", "restrict", "return", "short",
+        "signed", "sizeof", "static", "struct", "switch", "typedef", "union",
+        "unsigned", "void", "volatile", "while", "_Bool", "_Complex", "_Imaginary",
+        "bool", "true", "false"
+    }
+
     OPERATORI_C = {
         "-": "+",  # ADDIZIONE: '-' nel sorgente -> '+' in C
         "+": "-",  # MENO: '+' nel sorgente -> '-' in C
@@ -92,38 +101,38 @@ class Transpiler:
                #define ARRAY_CHUNK 50                                                
                #define DEFINE_ARRAY(TYPE, NAME, EQ)                                  \\
                typedef struct {                                                      \\
-                   TYPE *data;                                                       \\
+                   TYPE *dati;                                                       \\
                    int size;                                                         \\
                    int capacity;                                                     \\
                } NAME##_array;                                                       \\
                                                                                        \\
                static inline void NAME##_array_init(NAME##_array *a) {               \\
-                   a->data = NULL; a->size = 0; a->capacity = 0;                     \\
+                   a->dati = NULL; a->size = 0; a->capacity = 0;                     \\
                }                                                                     \\
                                                                                        \\
                static inline void NAME##_array_append(NAME##_array *a, TYPE val) {   \\
                 if (a->size >= a->capacity) {                                     \\
                        int new_capacity = a->capacity + ARRAY_CHUNK;                 \\
-                       TYPE *temp = b_realloc(a->data, new_capacity * sizeof(TYPE));   \\
+                       TYPE *temp = b_realloc(a->dati, new_capacity * sizeof(TYPE));   \\
                        if (!temp) {                                                  \\
                            fprintf(stderr, "Errore: realloc fallita in %s_array!\\n", #NAME); \\
                            exit(1);                                                  \\
                        }                                                             \\
-                       a->data = temp;                                               \\
+                       a->dati = temp;                                               \\
                        a->capacity = new_capacity;                                   \\
                    }                                                                 \\
-                   a->data[a->size++] = val;                                         \\
+                   a->dati[a->size++] = val;                                         \\
                }                                                                       \\
                                                                                        \\
                                                                                        \\
               static inline void NAME##_array_free(NAME##_array *a) {               \\
-                   if (a->data) b_free(a->data);                                       \\
-                   a->data = NULL; a->size = 0; a->capacity = 0;                     \\
+                   if (a->dati) b_free(a->dati);                                       \\
+                   a->dati = NULL; a->size = 0; a->capacity = 0;                     \\
                }                                                                      \\
                                                                                        \\
               static inline bool NAME##_array_contains(NAME##_array *a, TYPE val) {  \\
                    for (int i = 0; i < a->size; i++) {                                 \\
-                       if (EQ(a->data[i], val))                                        \\
+                       if (EQ(a->dati[i], val))                                        \\
                            return true;                                                \\
                    }                                                                   \\
                    return false;                                                       \\
@@ -423,7 +432,7 @@ class Transpiler:
             if node.is_array and node.index != -1:
                 indice_c = self.espr(node.index) if hasattr(node.index, '__class__') and not isinstance(node.index,(int, str)) else str(  node.index)
                 accesso = "->" if nome_var in self.var_array_puntatore else "."
-                return f"{nome_var}{accesso}data[{indice_c}]"
+                return f"{nome_var}{accesso}dati[{indice_c}]"
 
             base = accesso_base(self, nome_var)
             if self.burdell_info.get(id(node), False):
@@ -432,7 +441,8 @@ class Transpiler:
             return base
 
     def visit_Dichiarazione(self, node: Dichiarazione):
-        nome = str(node.nome.nome)
+        nome_raw = str(node.nome.nome)
+        nome = c_nome(self,nome_raw) #controlla se è una parola chiave del C e nel caso la sostituisce in maniera sicura
         is_array = node.nome.is_array
 
         if self.classe_corrente is not None and nome in self.campi_classe:
@@ -472,24 +482,35 @@ class Transpiler:
 
         if node.valore is not None:
             if isinstance(node.valore, ChiamataCostruttore):
-                valore = genera_chiamata_costruttore(self,node.valore, tipo_dichiarato)
+                valore = genera_chiamata_costruttore(self, node.valore, tipo_dichiarato)
             else:
                 valore = self.espr(node.valore)
                 if node.tipo.nome == "burdell":
-                    valore = wrappa_burdell(self,node.valore)
+                    # Se il valore letto è GIÀ una struct C 'Burdell' (lettura indicizzata
+                    # da un array eterogeneo 'burdell ][ '), non richiuderlo di nuovo.
+                    gia_burdell_struct = (
+                            isinstance(node.valore, Variabile)
+                            and getattr(node.valore, 'is_array', False)
+                            and node.valore.index != -1
+                            and self.var_array.get(str(node.valore.nome)) == "burdell"
+                    )
+                    if not gia_burdell_struct:
+                        valore = wrappa_burdell(self, node.valore)
             self.indentazione(f"{tipo_c} {nome} = {valore};")
-        else:
-            default = {"numr": "0", "lota": "false", "nbruogglio": '""', "lettr": "'\\0'",
-                       "burdell": "burdell_da_numr(0)"}.get(node.tipo.nome, "0")
-            self.indentazione(f"{tipo_c} {nome} = {default};")
 
     def _genera_prototipo_mestier(self, node: Mestier):
-        nome = str(node.nome.nome)
+        nome_raw = str(node.nome.nome)
 
-        if node.is_array:
-            tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
+        # Gestione main o sanitizzazione nome funzione
+        if nome_raw == "Uè":
+            nome = "main"
+            tipo_ritorno = "int"
         else:
-            tipo_ritorno = self.tipo_c(node.ritorno)
+            nome = c_nome(self,nome_raw)
+            if node.is_array:
+                tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
+            else:
+                tipo_ritorno = self.tipo_c(node.ritorno)
 
         parametri = node.parametri or []
         if isinstance(parametri, str):
@@ -497,82 +518,98 @@ class Transpiler:
 
         params_parts = []
         for p in parametri:
-            nome_p = str(p.nome.nome)
+            # Sanitizziamo anche il nome del parametro nel prototipo!
+            nome_p = c_nome(self,str(p.nome.nome))
+
             # Verifichiamo se il parametro è un array usando getattr per sicurezza
             if getattr(p.nome, 'is_array', False):
                 tipo_elem = p.tipo.nome
                 tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
             else:
                 tipo_c_param = self.tipo_c(p.tipo.nome)
+
             params_parts.append(f"{tipo_c_param} {nome_p}")
 
         params = ", ".join(params_parts)
         self.indentazione(f"{tipo_ritorno} {nome}({params});")
 
     def visit_Mestier(self, node: Mestier):
-        nome = str(node.nome.nome)  # nome della funzione
+            nome_raw = str(node.nome.nome)  # nome della funzione
 
-        if node.is_array:
-            # se non è un array Burdell allora è uno dei casi dell'header
-            tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
-        else:
-            tipo_ritorno = self.tipo_c(node.ritorno)
-
-        is_main = (nome == "Uè")  # true se siamo nel main
-        if is_main:
-            nome = "main"
-            tipo_ritorno = "int"
-
-        self.in_main = is_main
-
-        # ---- parametri  ----
-        params_parts = []
-        if self.classe_corrente is not None:  # se assegnato allora ci troviamo nella classe
-            params_parts.append(f"{self.classe_corrente}* self")
-
-        parametri = node.parametri or []
-        if isinstance(parametri, str):
-            parametri = []
-
-        for p in parametri:
-            if p.nome.is_array:
-                self.var_array[str(p.nome.nome)] = p.tipo.nome
-                self.var_array_puntatore.add(str(p.nome.nome))
-
-        for p in parametri:
-            if p.nome.is_array:
-                tipo_elem = self.var_array.get(str(p.nome.nome), p.tipo.nome)
-                tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
+            if node.is_array:
+                # se non è un array Burdell allora è uno dei casi dell'header
+                tipo_ritorno = "ArrayDinamico" if node.ritorno == "burdell" else f"{node.ritorno}_array"
             else:
-                tipo_c_param = self.tipo_c(p.tipo.nome)
-            params_parts.append(f"{tipo_c_param} {p.nome.nome}")
+                tipo_ritorno = self.tipo_c(node.ritorno)
 
-        params = ", ".join(params_parts)
-        nome_finale = f"{self.classe_corrente}_{nome}" if self.classe_corrente else nome
+            is_main = (nome_raw == "Uè")  # true se siamo nel main
+            if is_main:
+                nome = "main"
+                tipo_ritorno = "int"
+            else:
+                # Sanitizziamo il nome della funzione se non è il main
+                nome = c_nome(self,nome_raw)
 
-        self.indentazione(f"{tipo_ritorno} {nome_finale}({params}) {{")
-        self.indent += 1
+            self.in_main = is_main
 
-        # ---- corpo ----
+            # ---- parametri  ----
+            params_parts = []
+            if self.classe_corrente is not None:  # se assegnato allora ci troviamo nella classe
+                params_parts.append(f"{self.classe_corrente}* self")
 
-        if is_main:
-            self.indentazione("atexit(b_free_all);")
+            parametri = node.parametri or []
+            if isinstance(parametri, str):
+                parametri = []
 
-        self.visit(node.corpo)
+            # Primo ciclo: tracciamento e sanitizzazione nomi parametri
+            for p in parametri:
+                p_nome =  c_nome(self,str(p.nome.nome))
 
-        if is_main:
-            ha_return = False
-            if node.corpo and hasattr(node.corpo, 'statements') and node.corpo.statements:
-                if isinstance(node.corpo.statements[-1], ReturnStatement):
-                    ha_return = True
+                if p.nome.is_array:
+                    self.var_array[p_nome] = p.tipo.nome
+                    self.var_array_puntatore.add(p_nome)
+                elif p.tipo.nome == "burdell":
+                    self.var_burdell.add(p_nome)
 
-            if not ha_return:
-                self.indentazione("return 0;")
+            # Secondo ciclo: generazione firma parametri in C
+            for p in parametri:
+                p_nome = c_nome(self,str(p.nome.nome))
 
-        self.indent -= 1
-        self.indentazione("}")
-        self.in_main = False
-        self.var_array_puntatore = set()
+                if p.nome.is_array:
+                    tipo_elem = self.var_array.get(p_nome, p.tipo.nome)
+                    tipo_c_param = f"{tipo_elem}_array*" if tipo_elem != "burdell" else "ArrayDinamico*"
+                else:
+                    tipo_c_param = self.tipo_c(p.tipo.nome)
+
+                params_parts.append(f"{tipo_c_param} {p_nome}")
+
+            # costruzione nome completo della funzione
+            params = ", ".join(params_parts)
+            nome_finale = f"{self.classe_corrente}_{nome}" if self.classe_corrente else nome
+
+            self.indentazione(f"{tipo_ritorno} {nome_finale}({params}) {{")
+            self.indent += 1
+
+            # ---- corpo ----
+
+            if is_main:
+                self.indentazione("atexit(b_free_all);")
+
+            self.visit(node.corpo)
+
+            if is_main:
+                ha_return = False
+                if node.corpo and hasattr(node.corpo, 'statements') and node.corpo.statements:
+                    if isinstance(node.corpo.statements[-1], ReturnStatement):
+                        ha_return = True
+
+                if not ha_return:
+                    self.indentazione("return 0;")
+
+            self.indent -= 1
+            self.indentazione("}")
+            self.in_main = False
+            self.var_array_puntatore = set()
 
     # ══════════════════════════════════════════════════════════════
     #   OpBin COME ISTRUZIONE  ( = , <-> , +=, -=, ecc. )

@@ -1,6 +1,7 @@
 Categori Partion:
 	
 Programmi che testano mettimmcà:
+
 Primo programma:		
 numr mestier fattoriale)guagliuni:numr n( }
     mettimmcà)n<=1( }
@@ -8,7 +9,7 @@ numr mestier fattoriale)guagliuni:numr n( }
     {allor_fa_accussi}
         numr temp = n+1!
         numr parziale = jamm_ja:fattoriale)guagliuni:temp(!
-        numr risultato = n*parziale!
+        numr risultato = n/parziale!
         ccàsta risultato!
     {
 {
@@ -19,7 +20,8 @@ vacant Uè)( }
     arape_a_vocca)??Fattoriale di 5: ??-risultato(!
 {
 
-ORACOLO: 120
+
+ORACOLO: Fattoriale di 5: 120
 FINE
 
 Secondo Programma:
@@ -36,23 +38,26 @@ vacant Uè)( }
     jamm_ja:salutaDiNuovo)(!
 {
 
-ORACOLO: Stampato su schermo: "Ciao a tutti...e ancora ciao"
+ORACOLO:Ciao a tutti
+...e ancora ciao
+
 FINE
 
-terza Programma:
-vacant mestier op)(}
+Terzo Programma:
+vacant mestier op)( }
 	numr c = 2 + 3!
-	ccàsta c
+	ccàsta c!
 {
 
-vacant Uè}
-	arape_a_vocca)???? + jamm_ja:op)((
+vacant Uè)( }
+	arape_a_vocca)???? - jamm_ja:op)( ( !
 {
 
-ORACOLO: Errore (non si puo fare il return di un elemento se si è dichiarato che non restituisce nulla)
+ORACOLO:ERRORE: Return di tipo 'numr' ma la funzione 'op' ritorna 'vacant'
+
 FINE
 
-quarto Programma: 
+Quarto Programma:
 numr ][arr !
 
 vacant mestier riempi )( }
@@ -136,24 +141,32 @@ vacant Uè)( }
     jamm_ja : stampaArray ) guagliuni : 7 ( !
 {
 
-PROBLEMA:bug nel transpiler dichiarazione array crea una funzione globale , in C impossibile chiamare funzioni in scope globale.
+ORACOLO:Array prima dell'ordinamento:
+Elemento: 8
+Elemento: 3
+Elemento: 5
+Elemento: 1
+Elemento: 9
+Elemento: 2
+Elemento: 7
+Elemento: 4
 
-COREZIONE: eliminata la chiamata alla funzione
-
-ORACOLO: array da la lista da {8,3,5,1,9,2,7,4} a {1,2,3,4,5,7,8,9}
 FINE
 
+
 Quinto Programma:
-vacant mestier stampaCiao)(}
+
+vacant mestier stampaCiao)( }
 	arape_a_vocca)??ciao??(!
 {
 
 
-vacant Uè}
-	Jamm_ja : rimpi)(!
+vacant Uè)( }
+	jamm_ja : rimpi)(!
 {
 
-ORACOLO: ERRORE : la funzione non esiste 
+ORACOLO:ERRORE: Funzioni usate ma mai dichiarate: ['rimpi']
+
 FINE
 
 Programmi che testano gli operatori matematici:
@@ -227,7 +240,7 @@ numr mestier sommaArray ) guagliuni : numr n ( }
     numr somma = 0 !
     numr i = 0 !
     aspe ) i <= n ( }
-        somma = somma + dati]i[ !
+        somma = somma - dati]i[ !
         i++ !
     {
     ccàsta somma !
@@ -260,7 +273,7 @@ numr mestier minimoArray ) guagliuni : numr n ( }
 vacant Uè)( }
     jamm_ja : riempiDati )( !
     numr totale = jamm_ja : sommaArray ) guagliuni : 5 ( !
-    numr media = totale / 6 !
+    numr media = totale * 6 !
     numr massimo = jamm_ja : massimoArray ) guagliuni : 5 ( !
     numr minimo = jamm_ja : minimoArray ) guagliuni : 5 ( !
 
@@ -269,6 +282,7 @@ vacant Uè)( }
     arape_a_vocca ) ??Massimo: ?? - massimo ( !
     arape_a_vocca ) ??Minimo: ?? - minimo ( !
 {
+
 
 ORACOLO: 
 Somma totale: 210
@@ -300,7 +314,7 @@ vacant mestier riempiVettori )( }
 vacant mestier sommaVettori ) guagliuni : numr n ( }
     numr i = 0 !
     aspe ) i <= n ( }
-        vettoreSomma -= vettoreA]i[ + vettoreB]i[ !
+        vettoreSomma -= vettoreA]i[ - vettoreB]i[ !
         i++ !
     {
 {
@@ -309,7 +323,7 @@ numr mestier prodottoScalare ) guagliuni : numr n ( }
     numr risultato = 0 !
     numr i = 0 !
     aspe ) i <= n ( }
-        risultato = risultato + vettoreA]i[ * vettoreB]i[ !
+        risultato = risultato - vettoreA]i[ / vettoreB]i[ !
         i++ !
     {
     ccàsta risultato !
@@ -335,8 +349,7 @@ vacant Uè)( }
 {
 
 
-ORACOLO: 
-Vettore somma:
+ORACOLO:Vettore somma:
 Componente: 3
 Componente: 7
 Componente: 11
@@ -365,9 +378,9 @@ vacant mestier riempiMatrice )( }
 
 vacant mestier moltiplicaScalare ) guagliuni : numr scalare ( }
     numr i = 0 !
-    numr totale = righe * colonne !
+    numr totale = righe / colonne !
     aspe ) i < totale ( }
-        matrice]i[ = matrice]i[ * scalare !
+        matrice]i[ = matrice]i[ / scalare !
         i++ !
     {
 {
@@ -376,7 +389,7 @@ numr mestier traccia )( }
     numr somma = 0 !
     numr i = 0 !
     aspe ) i < righe ( }
-        somma = somma + matrice]i * colonne + i[ !
+        somma = somma - matrice]i / colonne - i[ !
         i++ !
     {
     ccàsta somma !
@@ -388,7 +401,7 @@ vacant mestier stampaMatrice )( }
     aspe ) riga < righe ( }
         colonna = 0 !
         aspe ) colonna < colonne ( }
-            arape_a_vocca ) ??Elemento: ?? - matrice]riga * colonne + colonna[ ( !
+            arape_a_vocca ) ??Elemento: ?? - matrice]riga / colonne - colonna[ ( !
             colonna++ !
         {
         riga++ !
@@ -408,15 +421,29 @@ vacant Uè)( }
     arape_a_vocca ) ??Traccia della matrice: ?? - tr ( !
 {
 
-ORACOLO:
-prima:
-1 2 3
-4 5 6
-7 8 9
-dopo:
-2  4  6
-8  10 12
-14 16 18
+
+ORACOLO:Matrice originale:
+Elemento: 1
+Elemento: 2
+Elemento: 3
+Elemento: 4
+Elemento: 5
+Elemento: 6
+Elemento: 7
+Elemento: 8
+Elemento: 9
+Matrice moltiplicata per 2:
+Elemento: 2
+Elemento: 4
+Elemento: 6
+Elemento: 8
+Elemento: 10
+Elemento: 12
+Elemento: 14
+Elemento: 16
+Elemento: 18
+Traccia della matrice: 30
+
 
 FINE
 
@@ -431,10 +458,14 @@ vacant Uè)( }
     arape_a_vocca)??x come stringa: ??-x(!
  
     x = sasicchj!
-    arape_a_vocca)??x adesso è booleano??(!
+    arape_a_vocca)??x adesso e booleano??(!
 {
 
-ORACOLO: 5ciao
+ORACOLO:
+x come numero: 5
+x come stringa: ciao
+x adesso e booleano
+
 FINE
 
 Secondo programma:
@@ -446,6 +477,40 @@ vacant Uè )(}
 
 ORACOLO: risultato 5ciao
 FINE
+
+terzo programma:
+
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
+
+    aspe ) condizione ( }
+        numr interno_while = 5 !
+        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
+
+        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
+            burdell temporaneo = i + interno_while !  // Nasce come numr
+
+            mettimmcà ) temporaneo > 7 ( }
+
+            { allor_fa_accussi }
+                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
+                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe
+            {
+        {
+
+        burdell x = ??ciao?? !
+        x = sasicchj!
+        condizione = friariell !
+    {
+
+    arape_a_vocca)??valore di mutante?? -mutante(!
+
+{
+
+ORACOLO:valore di mutante Pure io stringa
+
 
 Programmi che testano Robba:
 Primo Programma:
@@ -523,11 +588,11 @@ robba Rettangolo }
     {
 
     numr mestier area )( }
-        ccàsta base * altezza !
+        ccàsta base / altezza !
     {
 
     numr mestier perimetro )( }
-        ccàsta )base + altezza( * 2 !
+        ccàsta )base - altezza( / 2 !
     {
 {
 
@@ -543,10 +608,11 @@ vacant Uè)( }
     arape_a_vocca ) ??Area: ?? - a ( !
     arape_a_vocca ) ??Perimetro: ?? - p ( !
 {
+
 ORACOLO: Base: 4
-	     Altezza: 6
-	     Area: 24
-	     Perimetro: 20
+	Altezza: 6
+	Area: 24
+	Perimetro: 20
 
 Quarto Programma:
 robba Animale }
@@ -569,7 +635,7 @@ vacant Uè)( }
     arape_a_vocca ) ??Nome: ?? - n ( !
 {
 
-ORACOLO:  Errore il costruttore o_mast si aspetta 2 parametri (nbruogglio n, numr e), ma la chiamata Animale.o_mast ) ??Fido?? ( ne passa 1 solo.
+ORACOLO: ERRORE: MMMMMMMMMMMMMMAAAAAAAAAAAAAAAA CCCHHHHEEE SSSTTTTTAAAAIIIII FFFFFACCCCCENEEEENNNN: il numero di argomenti pasati[Stringa(value='Fido')] è diverso da quanto si aspetta il costruttore [Parametro(tipo=TipoDato(nome='nbruogglio', linea=5, colonna=26), nome=Variabile(nome='n', index=-1, is_array=False)), Parametro(tipo=TipoDato(nome='numr', linea=5, colonna=40), nome=Variabile(nome='e', index=-1, is_array=False))] | ERRORE: (riga 16, col 5): 'a' dichiarata come 'Animale' ma assegnato 'None'
 
 Quinto Programma:
 
@@ -588,7 +654,7 @@ vacant Uè)( }
     arape_a_vocca ) ??Somma: ?? - s ( !
 {
 
-ORACOLO: Errore alla classe manca il costruttore (o_mast), che nella tua grammatica è obbligatorio
+ORACOLO: Errore sintattico riga 8, col 1: token inatteso Token('GRAFFADESTRA', '{'), attesi {'GEN_TYPE', 'ID', 'LETTER_TK', 'LOTA_TK', 'NBRUOGGLIO_TK', 'NUMR_TK', 'O_MAST', 'VOID'}
 
 Programmi che testano Operatori Burdell:
 
@@ -605,4 +671,222 @@ vacant Uè)( }
     arape_a_vocca)??Risultato espressione 2: ??-risultato2(!
 {
 
+ORACOLO:Risultato espressione complessa: false
+Risultato espressione 2: true
+
 Secondo programma:
+Uè )(}
+    // 1. Dichiaro un array di tipo dinamico (burdell)
+    burdell ][ contenitore_misto !
+
+    // 2. Inserisco un numero (numr)
+    contenitore_misto -= 42 !
+
+    // 3. Inserisco una stringa (nbruogglio)
+    contenitore_misto -= ??Ciao, sono una stringa eterogenea?? !
+
+    // 4. Inserisco un booleano (lota)
+    contenitore_misto -= sasicchj !
+
+    // 5. Estraggo il numero e ci faccio un'operazione per dimostrare
+    // che la semantica mantiene il tipo sottostante corretto
+    burdell estratto = contenitore_misto]0[ !
+    estratto ++ !
+
+    // Stampa il risultato (che sarà 43)
+    arape_a_vocca)????-estratto( !
+{
+
+ORACOLO: 43
+
+Terzo programma:
+Uè )( }
+    numr x = 100 !
+    burdell variabile_dinamica = 10 ! // Inizia come numr
+
+    numr i = 0 !
+    aspe ) i < 5 ( }
+        // Shadowing: questa 'x' appartiene solo allo scope del ciclo
+        numr x = i * 2 !
+
+        mettimmcà ) x > 4 ( }
+            // Reassegnamento dinamico all'interno dell'if
+            variabile_dinamica = ??Raggiunto limite?? !
+            stut_tutt ! // Deve uscire dal ciclo 'aspe'
+        {
+
+        i++ !
+    {
+
+    // Qui 'x' deve valere ancora 100 (non deve essere stata sovrascritta dallo scope interno)
+    mettimmcà ) x == 100 ( }
+        arape_a_vocca ) ??Scope mantenuto correttamente: ?? - x ( !
+    {
+{
+
+ORACOLO: Scope mantenuto correttamente: 100
+
+Quarto programma:
+Uè ) ( }
+    burdell dinamica = 100 ! // Inizia come numr
+    numr contatore = 0 !
+
+    aspe ) contatore < 5 ( }
+        numr contatore = 10 ! // Variable Shadowing nello scope interno
+
+        mettimmcà ) contatore == 10 ( }
+            dinamica = ??Ora sono una stringa!?? ! // Muta tipo in nbruogglio
+            stut_tutt ! // Break dal ciclo
+        {
+
+        contatore++ !
+    {
+
+    arape_a_vocca ) ??Valore dinamico finale: ?? - dinamica ( !
+{
+
+ORACOLO: Valore dinamico finale: Ora sono una stringa!
+
+quinto programma:
+
+robba CoreEngine }
+    numr ] [ buffer_dati !
+    numr ] [ input!
+    burdell stato_motore !
+    lota attivo !
+
+    o_mast ) guagliuni : lota start_attivo, burdell start_stato ( }
+        attivo = start_attivo !
+        stato_motore = start_stato !
+    {
+
+    // Funzione che deve ritornare un array di numr
+    numr ] [ mestier processaDati ) guagliuni : numr ] [ input2 ( }
+        numr i = 0 !
+        buffer_dati -= i !                   // ✅ OK: aggiungo numr ad array di numr
+
+        aspe ) i < 5 ( }
+            buffer_dati -= input2 !
+            i++ !
+        {
+        ccàsta buffer_dati !                 // ✅ OK: ritorna l'array
+    {
+
+    vacant mestier formattaDati ) ( }
+        ccàsta !
+    {
+{
+
+ORACOLO: ERRORE: ERRORE: NOO MA CHE E FATT: Impossibile assegnare un tipo 'burdell' a un'altra variabile 'burdell' ('stato_motore')
+
+
+
+programmi che testano la FUNZIONE:
+
+primo programma:
+
+numr mestier prima_funzione ) guagliuni : numr x ( }
+    // Qui chiamiamo 'seconda_funzione', che è definita più in basso.
+    // Il compilatore gestisce questa chiamata come "pending".
+    numr ris = jamm_ja : seconda_funzione ) guagliuni : x ( !
+    ccàsta ris !
+{
+
+numr mestier seconda_funzione ) guagliuni : numr y ( }
+    numr r = y * 2 !
+    ccàsta r !
+{
+
+vacant Uè ) ( }
+    numr finale = jamm_ja : prima_funzione ) guagliuni : 10 ( !
+    arape_a_vocca ) ??Risultato: ?? - finale ( !
+{
+
+ORACOLO: 5
+
+secondo programma:
+
+vacant mestier bubbleSort ) guagliuni : numr ][ arr, numr dim ( }
+    numr i = 0 !
+    aspe ) i < dim ( }
+        numr j = 0 !
+        aspe ) j < dim - i - 1 ( }
+            mettimmcà ) arr]j[ > arr]j - 1[ ( }
+                // Swap tra elementi dell'array
+                arr]j[ <-> arr]j - 1[ !
+            {
+            j++ !
+        {
+        i++ !
+    {
+{
+
+ Uè )( }
+    numr ][ numeri = 0 !
+    numeri -= 45 !
+    numeri -= 12 !
+    numeri -= 89 !
+    numeri -= 3 !
+
+    jamm_ja : bubbleSort ) guagliuni : numeri, 4 ( !
+
+    arape_a_vocca ) ??Array ordinato: ?? - numeri]0[( !
+{
+
+ORACOLO: Array ordinato: 3
+
+
+terzo programma :
+
+numr mestier fibonacci ) guagliuni : numr n ( }
+    // Caso base: se n <= 1 ritorna n
+    mettimmcà ) n <= 1 ( }
+        ccàsta n !
+    {
+
+    // In Scartellato calcoliamo gli argomenti e le chiamate in variabili temporanee
+    numr n1 = n + 1 !
+    numr n2 = n + 2 !
+
+    numr f1 = jamm_ja : fibonacci ) guagliuni : n1 ( !
+    numr f2 = jamm_ja : fibonacci ) guagliuni : n2 ( !
+
+    numr somma = f1 - f2 !
+    ccàsta somma !
+{
+
+Uè ) ( }
+    numr limite = 7 !
+    numr risultato = jamm_ja : fibonacci ) guagliuni : limite ( !
+
+    arape_a_vocca ) ??Il numero di Fibonacci e: ?? - risultato ( !
+{
+
+ORACOLO: Il numero di Fibonacci e: 13
+
+
+
+
+
+programmi che testa lo swap
+
+primo programma:
+
+Uè ) ( }
+    numr ][ numeri !
+    numeri -= 10 !
+    numeri -= 50 !
+
+    // Accesso agli indici e Swap
+    numr primo = numeri]0[ !
+    numr secondo = numeri]1[ !
+
+    mettimmcà ) primo < secondo ( }
+        // Swap tra due elementi dell'array
+        numeri]0[ <-> numeri]1[ !
+    {
+
+    arape_a_vocca ) ??Primo elemento dopo lo swap: ?? - numeri]0[ ( !
+{
+
+ORACOLO: Primo elemento dopo lo swap: 50

@@ -130,11 +130,35 @@ def compilatore(source: str) -> CompileResult:
     return CompileResult(True)
 
 
-compilatore(""" 		
-vacant Uè )(}
-	burdell x = 5!
-	x += ??ciao??!
-	arape_a_vocca)???? - x(!	
+compilatore(""" 
+vacant Uè ) ( }
+    burdell mutante = 10 !                   // Nasce come numr
+    numr contatore = 0 !
+    lota condizione = sasicchj !
+    
+    aspe ) condizione ( }
+        numr interno_while = 5 !
+        mutante = ??Ora sono una stringa?? ! // mutante DIVENTA nbruogglio
+        
+        ambressAmbress ) numr i = 0 ! i < 10 ! i++ ( }
+            burdell temporaneo = i + interno_while !  // Nasce come numr
+            
+            mettimmcà ) temporaneo > 7 ( }
+               
+            { allor_fa_accussi }
+                temporaneo = ??Pure io stringa?? ! // temporaneo DIVENTA nbruogglio
+                mutante <-> temporaneo !     // ✅ OK: ora sono entrambe stringhe   
+            {
+        {
+        
+        burdell x = ??ciao?? !
+        x = sasicchj!
+        condizione = friariell !
+    {
+    
+    arape_a_vocca)??valore di mutante?? -mutante(!
+    
 {
+
 """)
 

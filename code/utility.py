@@ -14,11 +14,12 @@ def wrappa_burdell(transpiler, nodo_valore):
 
 def accesso_base(transpiler, nome):
     """Decide come accedere a 'nome': campo di classe (self./self->) o variabile normale."""
+    nome_c =c_nome(transpiler,nome)
     if nome in transpiler.var_locali_shadow:
-        return nome
+        return nome_c
     if transpiler.classe_corrente is not None and nome in transpiler.campi_classe:
-        return f"self.{nome}" if transpiler.in_costruttore else f"self->{nome}"
-    return nome
+        return f"self.{nome_c}" if transpiler.in_costruttore else f"self->{nome_c}"
+    return nome_c
 
 def calcola_tipo(transpiler, node):
     """Cerca il tipo nella symbol table, se non c'è lo deduce ricorsivamente."""
@@ -68,6 +69,11 @@ def risolvi_chiamata(transpiler, node):
 
 def is_burdell(self, node):
         return self.burdell_info.get(id(node), False)
+
+def c_nome(transpiler, nome: str) -> str:
+    if nome in transpiler.PAROLE_RISERVATE_C:
+        return f"var_{nome}"  # Es. 'bool' diventa 'var_bool'
+    return nome
 
 def genera_chiamata_costruttore(transpiler, node: ChiamataCostruttore, nome_classe):
     args = [transpiler.espr(a) for a in (node.parametri or [])]
