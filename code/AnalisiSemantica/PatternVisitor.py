@@ -14,6 +14,7 @@ class AnalisiSemantica:
         self.print_types = {}
         self.funzione_corrente = None
         self.dentro_ciclo = 0
+        self.array_elementi_tipi = {}
 
 
     def visit(self, node):
@@ -106,11 +107,45 @@ class AnalisiSemantica:
             riga = righe_nodi.get(id(node), "sconosciuta")
             self.errori.append(f"riga {riga}: variabile '{node.nome}' non dichiarata")
             return
+
+        is_array = self.symbolTable.is_array(node.nome) if hasattr(self.symbolTable, 'is_array') else False
+
+        # Lettura indicizzata di un array 'burdell' dinamico: risolvi il tipo REALE
+        if is_array and getattr(node, 'index', -1) != -1:
+            tipo_dichiarato = info['tipo'] if isinstance(info, dict) else info
+            if tipo_dichiarato == "burdell":
+                idx = self._indice_costante(node.index)
+                tipi_tracciati = self.array_elementi_tipi.get(node.nome, [])
+                if idx is not None and 0 <= idx < len(tipi_tracciati):
+                    tipo_reale = tipi_tracciati[idx]
+                    self.burdell_info[id(node)] = True
+                    return tipo_reale
+                else:
+                    self.burdell_info[id(node)] = True
+                    return "burdell"
+
         if isinstance(info, dict):
             self.burdell_info[id(node)] = info.get('is_burdell', False)
             return info.get('tipo', 'burdell')
         self.burdell_info[id(node)] = False
         return info
+
+    def _indice_costante(self, indice):
+        """Prova a estrarre un intero Python da un indice, qualunque sia la sua rappresentazione."""
+        if isinstance(indice, int):
+            return indice
+        if isinstance(indice, Numr):  # nodo AST letterale numerico
+            try:
+                return int(indice.value)
+            except (TypeError, ValueError):
+                return None
+        if hasattr(indice, 'value'):
+            try:
+                return int(indice.value)
+            except (TypeError, ValueError):
+                return None
+        return None
+
 
     #   ---FUNZIONI-----
     def visit_Mestier(self, node: Mestier):
@@ -317,6 +352,8 @@ class AnalisiSemantica:
             self.errori.append(f"BOTT_A_MUR: Ma ch stai facen!!!!! e mis '{tipo_cond}'! non puoi inserire una espressione che ha come risultato un valore diverso da boolean")
             return
 
+
+
         if node.VarOperation is not None:
             self.visit(node.VarOperation)
 
@@ -385,26 +422,59 @@ class AnalisiSemantica:
         rv = self.visit(node.right)
 
         #gestione array
-        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
-            info_array = self.symbolTable.lookup(node.left.nome)
+        if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome):
+            nome_array = node.left.nome
+            info_array = self.symbolTable.lookup(nome_array)
             tipo_array = info_array['tipo'] if isinstance(info_array, dict) else info_array
-            tipo_valore = rv
+            is_dinamico = (tipo_array == "burdell")
 
-            if tipo_array != "burdell" and tipo_array != tipo_valore:
-                self.errori.append(
-                    f"NOO MA CHE E FATT: Tipi incompatibili tra l'elemento dell'array '{tipo_array}' e valore '{tipo_valore}'")
-                return
+            # CASO 1: SENZA INDICE -> inserimento/rimozione con -= e +=
+            if node.left.index == -1:
+                if node.op not in ("-=", "+="):
+                    self.errori.append(
+                        f"NOO MA CHE E FATT: su un array puoi usare solo '-=' (inserisci) "
+                        f"o '+=' (rimuovi), non '{node.op}'")
+                    return tipo_array
 
-            # Confronti tra elementi (>, <, ==, !=, >=, <=) -> restituiscono "lota"
-            if self.control_Ope_Confronto(node.op):
-                return "lota"
+                if is_dinamico:
+                    # array eterogeneo 'burdell ][': accetta qualunque tipo,
+                    # ma tiene traccia dell'ordine di inserimento
+                    if node.op == "-=":
+                        self.array_elementi_tipi.setdefault(nome_array, []).append(rv)
+                    return "burdell"
+                else:
+                    # array tipizzato (es. numr ][): il valore deve combaciare
+                    if rv != tipo_array:
+                        self.errori.append(
+                            f"NOO MA CHE E FATT: impossibile inserire un valore di tipo "
+                            f"'{rv}' in un array di '{tipo_array}'")
+                    return tipo_array
 
-            # Operazioni aritmetiche, assegnamento o swap -> restituiscono il tipo dell'elemento (es. "numr")
-            if self.control_Ope_Aritmetic(node.op) or node.op in ("=", "<->"):
-                return tipo_array
+            # CASO 2: CON INDICE -> accesso puntuale
+            else:
+                if node.op not in ("=", "-", "+", "<->", "<", ">", "==", "!="):
+                    self.errori.append(
+                        f"NOO MA CHE E FATT: con la notazione a indice non puoi "
+                        f"concatenare, hai usato '{node.op}'")
+                    return tipo_array
 
-            self.errori.append(f"NOO MA CHE E FATT : Operatore '{node.op}' non supportato sull'elemento dell'array")
-            return tipo_array
+
+
+                if is_dinamico:
+                    print(f"[DEBUG] index={node.left.index!r} tipo={type(node.left.index)}")
+                    tipi_tracciati = self.array_elementi_tipi.get(nome_array, [])
+                    if isinstance(node.left.index, int) and 0 <= node.left.index < len(tipi_tracciati):
+                        # conosciamo il tipo REALE inserito a quell'indice
+                        return tipi_tracciati[node.left.index]
+                    else:
+                        # indice non costante o non ancora tracciato: fallback generico
+                        return "burdell"
+                else:
+                    if tipo_array != rv and node.op == "=":
+                        self.errori.append(
+                            f"NOO MA CHE E FATT: tipi incompatibili tra elemento "
+                            f"dell'array '{tipo_array}' e valore '{rv}'")
+                    return tipo_array
 
 
         if isinstance(node.left, Variabile) and self.symbolTable.is_array(node.left.nome) and node.left.index != -1:
@@ -575,6 +645,9 @@ class AnalisiSemantica:
             self.errori.append(f"Variabile '{nome_variabile}' già dichiarata")
 
         tipo_finale = tipo_dichiarato
+        if is_array and tipo_dichiarato == 'burdell':
+            self.array_elementi_tipi[nome_variabile] = []
+
         if node.valore is not None:
             if isinstance(node.valore, ChiamataCostruttore):
                 self._tipo_atteso_costruttore = tipo_dichiarato

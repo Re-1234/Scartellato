@@ -432,7 +432,7 @@ class Transpiler:
             if node.is_array and node.index != -1:
                 indice_c = self.espr(node.index) if hasattr(node.index, '__class__') and not isinstance(node.index,(int, str)) else str(  node.index)
                 accesso = "->" if nome_var in self.var_array_puntatore else "."
-                return f"{nome_var}{accesso}data[{indice_c}]"
+                return f"{nome_var}{accesso}dati[{indice_c}]"
 
             base = accesso_base(self, nome_var)
             if self.burdell_info.get(id(node), False):
@@ -482,16 +482,21 @@ class Transpiler:
 
         if node.valore is not None:
             if isinstance(node.valore, ChiamataCostruttore):
-                valore = genera_chiamata_costruttore(self,node.valore, tipo_dichiarato)
+                valore = genera_chiamata_costruttore(self, node.valore, tipo_dichiarato)
             else:
                 valore = self.espr(node.valore)
                 if node.tipo.nome == "burdell":
-                    valore = wrappa_burdell(self,node.valore)
+                    # Se il valore letto è GIÀ una struct C 'Burdell' (lettura indicizzata
+                    # da un array eterogeneo 'burdell ][ '), non richiuderlo di nuovo.
+                    gia_burdell_struct = (
+                            isinstance(node.valore, Variabile)
+                            and getattr(node.valore, 'is_array', False)
+                            and node.valore.index != -1
+                            and self.var_array.get(str(node.valore.nome)) == "burdell"
+                    )
+                    if not gia_burdell_struct:
+                        valore = wrappa_burdell(self, node.valore)
             self.indentazione(f"{tipo_c} {nome} = {valore};")
-        else:
-            default = {"numr": "0", "lota": "false", "nbruogglio": '""', "lettr": "'\\0'",
-                       "burdell": "burdell_da_numr(0)"}.get(node.tipo.nome, "0")
-            self.indentazione(f"{tipo_c} {nome} = {default};")
 
     def _genera_prototipo_mestier(self, node: Mestier):
         nome_raw = str(node.nome.nome)

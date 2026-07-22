@@ -140,7 +140,7 @@ vacant Uè)( }
 
 PROBLEMA:bug nel transpiler dichiarazione array crea una funzione globale , in C impossibile chiamare funzioni in scope globale.
 
-COREZIONE: eliminata la chiamata alla funzione
+CORREZIONE: eliminata la chiamata alla funzione
 
 ORACOLO: array da la lista da {8,3,5,1,9,2,7,4} a {1,2,3,4,5,7,8,9}
 FINE

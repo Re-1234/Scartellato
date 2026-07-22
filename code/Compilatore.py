@@ -131,15 +131,22 @@ def compilatore(source: str) -> CompileResult:
 
 
 compilatore(""" 
-Uè )( }
-    numr x = 100 !
-    nbruogglio stringa = ??ciao??!
-    lota bool = sasicchj! 
-    burdell variabile_dinamica = x ! // Inizia come numr
-    variabile_dinamica = stringa!
-    variabile_dinamica = bool !
-    
-    arape_a_vocca)??il valore di variabile è ?? - variabile_dinamica( !
+numr mestier prima_funzione ) guagliuni : numr x ( }
+    // Qui chiamiamo 'seconda_funzione', che è definita più in basso.
+    // Il compilatore gestisce questa chiamata come "pending".
+    numr ris = jamm_ja : seconda_funzione ) guagliuni : x ( !
+    ccàsta ris !
 {
+
+numr mestier seconda_funzione ) guagliuni : numr y ( }
+    numr r = y * 2 !
+    ccàsta r !
+{
+
+Uè ) ( }
+    numr finale = jamm_ja : prima_funzione ) guagliuni : 10 ( !
+    arape_a_vocca ) ??Risultato: ?? - finale ( !
+{
+
 """)
 
