@@ -3,7 +3,8 @@
 Benvenuti nel repository ufficiale di Scartellato, il linguaggio più napoletano che esista
 
 
-🚀 Requisiti di Sistema
+🚀 Requisiti di Sistema:
+
 Per compilare e testare il progetto sul proprio sistema, l'unico prerequisito fondamentale è la presenza di un compilatore compatibile con il C:
 
 GCC (GNU Compiler Collection) installato e configurato nel PATH di sistema.
