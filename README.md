@@ -1,6 +1,6 @@
 # Scartellato 🤌 
 
-> **Benvenuti epository ufficiale del linguaggio di programmazione più napoletano che esista.**
+> **Benvenuti repository ufficiale del linguaggio di programmazione più napoletano che esista.**
 
 **Scartellato** è un progetto universitario creato ad Unisa nell'anno 2025/2026 nato con l'obiettivo di acquisire conoscenze sulle architetture dei linguaggi di programmazione.
 
