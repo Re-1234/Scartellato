@@ -5,14 +5,15 @@ import subprocess
 import shutil
 
 from lark import Lark, UnexpectedToken, UnexpectedCharacters
-
 from code.AnalisiSintattica.AST import *
+from test.coverage_grammatica import REGOLE_COPERTE_GLOBALI, raccogli_regole_usate, stampa_coverage_grammatica, estrai_mappa_regole
 from code.AnalisiSemantica.PatternVisitor import AnalisiSemantica
 from code.AnalisiSemantica.Transpiler import *
 
 from test.estrai_test_cases import estrai_test_cases
-from test.coverage_grammatica import REGOLE_COPERTE_GLOBALI, raccogli_regole_usate, stampa_coverage_grammatica
 
+
+_MAPPA_REGOLE = estrai_mappa_regole(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "grammatica.lark"))
 
 def trova_gcc():
     """Cerca gcc nel PATH di sistema. Se non lo trova, prova percorsi comuni di fallback su Windows."""
@@ -55,7 +56,7 @@ def generatore(analisiSemantica, esegui=True):
 
     sistema = platform.system()
     nome_eseguibile = "scartellato.exe" if sistema == "Windows" else "scartellato"
-    percorso_output = os.path.join(cartella_corrente, nome_eseguibile)
+    percorso_output = os.path.join(cartella_corrente, "..",nome_eseguibile)
 
     percorso_gcc = trova_gcc()
     if percorso_gcc is None:
@@ -129,10 +130,8 @@ def compilatore(source: str, esegui: bool = True) -> CompileResult:
 
     try:
         tree = parser.parse(source)
-        REGOLE_COPERTE_GLOBALI.update(raccogli_regole_usate(tree))
-        print(tree.pretty())
+        REGOLE_COPERTE_GLOBALI.update(raccogli_regole_usate(tree, _MAPPA_REGOLE))
         ast = AST_Transformer().transform(tree)
-        stampa_ast(ast)
     except UnexpectedToken as e:
         print(f"Errore sintattico alla riga {e.line}, col {e.column}")
         print(f"Token inatteso: {e.token!r}")
